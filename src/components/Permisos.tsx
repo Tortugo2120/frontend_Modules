@@ -1,21 +1,49 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
+import UsuarioServices from '../services/UsuariosServices.tsx';
+
+
+interface UserModule {
+  moduleId: string;
+  ModuleName: string;
+}
+
+interface Usuario {
+  userId: string;
+  userName: string;
+  roleId: string;
+  roleName: string;
+  officeName: string;
+  modules: UserModule[];
+}
+
+interface Module {
+  id_modulo: string;
+  nombre_modulo: string;
+}
 
 const PermissionsManager = () => {
-    const [searchName, setSearchName] = useState('');
-    const [selectedUser, setSelectedUser] = useState(null);
-    const [filteredEmployees, setFilteredEmployees] = useState([]);
-    const [showSuggestions, setShowSuggestions] = useState(false);
+    const [userId, setUserId] = useState('');
+    const [selectedUser, setSelectedUser] = useState<Usuario | null>(null);
+    const [modules, setModules] = useState<Module[]>([]);
+    const [userPermissions, setUserPermissions] = useState<Set<string>>(new Set());
+    const [loading, setLoading] = useState(false);
+    const [error, setError] = useState('');
+    const [successMessage, setSuccessMessage] = useState('');
 
-    const employees = [
-        { id: 1, dni: '12345678', name: 'Juan Pérez', role: 'Desarrollador' },
-        { id: 2, dni: '87654321', name: 'María García', role: 'Diseñadora' },
-        { id: 3, dni: '11223344', name: 'Carlos Rodríguez', role: 'Gerente' },
-        { id: 4, dni: '44332211', name: 'Ana Martínez', role: 'Analista' },
-        { id: 5, dni: '73974061', name: 'Dickens Labán', role: 'Desarrollador' },
-        { id: 6, dni: '99887766', name: 'Laura Fernández', role: 'Marketing' },
-    ];
+    useEffect(() => {
+        loadModules();
+    }, []);
 
-    const getInitials = (fullName) => {
+    const loadModules = async () => {
+        const response = await UsuarioServices.getAllModules();
+        if (response.success && response.data) {
+            setModules(response.data);
+        } else {
+            setError('Error al cargar módulos: ' + response.message);
+        }
+    };
+
+    const getInitials = (fullName: string) => {
         const nameParts = fullName.trim().split(' ');
         if (nameParts.length >= 2) {
             return (nameParts[0][0] + nameParts[1][0]).toUpperCase();
@@ -23,116 +51,120 @@ const PermissionsManager = () => {
         return fullName.substring(0, 2).toUpperCase();
     };
 
-    const modules = [
-        {
-            id: 1,
-            name: 'Recursos Humanos',
-            description: 'Gestión de personal y nóminas',
-            icon: 'RH'
-        },
-        {
-            id: 2,
-            name: 'Finanzas',
-            description: 'Control de gastos e ingresos',
-            icon: 'FI'
-        },
-        {
-            id: 3,
-            name: 'Defensa civil',
-            description: 'Gestión de emergencias y seguridad',
-            icon: 'DC'
-        },
-        {
-            id: 4,
-            name: 'Seguridad',
-            description: 'Monitoreo y control de accesos',
-            icon: 'SE'
-        },
-        {
-            id: 5,
-            name: 'OTIC',
-            description: 'Gestión de capacitación y desarrollo',
-            icon: 'OT'
-        },
-    ];
-
-    const [userPermissions, setUserPermissions] = useState({});
-
-    const handleSearchChange = (e) => {
+    const handleSearchChange = (e: React.ChangeEvent<HTMLInputElement>) => {
         const value = e.target.value;
-        setSearchName(value);
+        setUserId(value);
+        setError('');
+        setSuccessMessage('');
+    };
 
-        if (value.trim() === '') {
-            setFilteredEmployees([]);
-            setShowSuggestions(false);
+    const handleSearchUser = async () => {
+        if (!userId.trim()) {
+            setError('Por favor ingrese un ID de usuario');
             return;
         }
 
-        // Filtrar empleados por nombre
-        const filtered = employees.filter(emp =>
-            emp.name.toLowerCase().includes(value.toLowerCase())
-        );
-        setFilteredEmployees(filtered);
-        setShowSuggestions(true);
-    };
-
-    const handleSelectUser = (user) => {
-        setSelectedUser(user);
-        setSearchName(user.name);
-        setShowSuggestions(false);
-
-        if (!userPermissions[user.id]) {
-            const initialPermissions = {};
-            modules.forEach(module => {
-                initialPermissions[module.id] = [];
-            });
-            setUserPermissions({ ...userPermissions, [user.id]: initialPermissions });
+        setLoading(true);
+        setError('');
+        setSuccessMessage('');
+        
+        const response = await UsuarioServices.getUserById(userId);
+        
+        if (response.success && response.data) {
+            setSelectedUser(response.data);
+            // Inicializar permisos del usuario
+            const userModuleIds = new Set(response.data.modules.map(m => m.moduleId));
+            setUserPermissions(userModuleIds);
+        } else {
+            setError(response.message || 'Usuario no encontrado');
+            setSelectedUser(null);
+            setUserPermissions(new Set());
         }
+        
+        setLoading(false);
     };
 
-    const togglePermission = (moduleId, permission) => {
+    const togglePermission = async (moduleId: string, currentHasPermission: boolean) => {
         if (!selectedUser) return;
 
-        const currentPerms = userPermissions[selectedUser.id][moduleId] || [];
-        const newPerms = currentPerms.includes(permission)
-            ? currentPerms.filter(p => p !== permission)
-            : [...currentPerms, permission];
+        const newHasPermission = !currentHasPermission;
+        
+    
+        const newPermissions = new Set(userPermissions);
+        if (newHasPermission) {
+            newPermissions.add(moduleId);
+        } else {
+            newPermissions.delete(moduleId);
+        }
+        setUserPermissions(newPermissions);
 
-        setUserPermissions({
-            ...userPermissions,
-            [selectedUser.id]: {
-                ...userPermissions[selectedUser.id],
-                [moduleId]: newPerms
-            }
-        });
-    };
+      
+        const response = await UsuarioServices.updateUserPermission(
+            selectedUser.userId,
+            moduleId,
+            newHasPermission
+        );
 
-    const handleSave = () => {
-        alert('¡Permisos guardados exitosamente!');
+        if (response.success) {
+            setSuccessMessage(
+                newHasPermission 
+                    ? 'Permiso otorgado exitosamente' 
+                    : 'Permiso revocado exitosamente'
+            );
+            setTimeout(() => setSuccessMessage(''), 3000);
+        } else {
+           
+            setUserPermissions(userPermissions);
+            setError('Error al actualizar permiso: ' + response.message);
+            setTimeout(() => setError(''), 3000);
+        }
     };
 
     const handleClear = () => {
         setSelectedUser(null);
-        setSearchName('');
-        setFilteredEmployees([]);
-        setShowSuggestions(false);
+        setUserId('');
+        setUserPermissions(new Set());
+        setError('');
+        setSuccessMessage('');
+    };
+
+    const getModuleIcon = (moduleName: string) => {
+        return moduleName.substring(0, 2).toUpperCase();
     };
 
     return (
         <div className="min-h-screen bg-gradient-to-br from-blue-50 via-indigo-50 to-purple-50 p-6">
-            <div className="max-w-7xl mx-auto">
-                {/* Header */}
+            <div className="max-w-4xl mx-auto">
+          
                 <div className="mb-8 text-center">
                     <div className="flex justify-center items-center gap-3 mb-2">
-                        <h1 className="text-3xl font-bold text-gray-800">Gestión de Permisos</h1>
+                        <h1 className="text-3xl font-bold text-gray-800">Administración de Accesos</h1>
                     </div>
-                    <p className="text-gray-600">Asigna y administra permisos de acceso a los módulos del sistema</p>
+                    <p className="text-gray-600">Sistema de Gestión Municipal (SGM) - Control de Usuarios</p>
                 </div>
 
-                {/* Búsqueda de usuario */}
+            
+                {successMessage && (
+                    <div className="mb-4 p-4 bg-green-50 border-2 border-green-200 rounded-xl flex items-center gap-3">
+                        <svg className="w-6 h-6 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                        </svg>
+                        <p className="text-green-700 font-medium">{successMessage}</p>
+                    </div>
+                )}
+
+                {error && (
+                    <div className="mb-4 p-4 bg-red-50 border-2 border-red-200 rounded-xl flex items-center gap-3">
+                        <svg className="w-6 h-6 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                        </svg>
+                        <p className="text-red-700 font-medium">{error}</p>
+                    </div>
+                )}
+
                 <div className="bg-white rounded-2xl shadow-lg p-6 mb-6 border border-gray-100">
                     <label className="block text-sm font-semibold text-gray-700 mb-3">
-                        Buscar trabajador por nombre
+                        Buscar usuario por nombre
                     </label>
                     <div className="relative">
                         <div className="flex gap-3">
@@ -142,14 +174,22 @@ const PermissionsManager = () => {
                                 </svg>
                                 <input
                                     type="text"
-                                    value={searchName}
+                                    value={userId}
                                     onChange={handleSearchChange}
-                                    placeholder="Ingrese el nombre del trabajador"
+                                    onKeyPress={(e) => e.key === 'Enter' && handleSearchUser()}
+                                    placeholder="Ingrese el ID del usuario"
                                     className="w-full pl-12 pr-4 py-3 border-2 border-gray-200 rounded-xl focus:border-indigo-500 focus:outline-none transition-colors"
-                                    onFocus={() => searchName && setShowSuggestions(true)}
+                                    disabled={loading}
                                 />
                             </div>
-                            {searchName && (
+                            <button
+                                onClick={handleSearchUser}
+                                disabled={loading}
+                                className="px-6 py-3 bg-indigo-600 text-white rounded-xl hover:bg-indigo-700 transition-colors font-medium shadow-md hover:shadow-lg disabled:opacity-50 disabled:cursor-not-allowed"
+                            >
+                                {loading ? 'Buscando...' : 'Buscar'}
+                            </button>
+                            {userId && (
                                 <button
                                     onClick={handleClear}
                                     className="px-6 py-3 bg-gray-500 text-white rounded-xl hover:bg-gray-600 transition-colors font-medium shadow-md hover:shadow-lg"
@@ -158,52 +198,19 @@ const PermissionsManager = () => {
                                 </button>
                             )}
                         </div>
-
-                        {/* Sugerencias de búsqueda */}
-                        {showSuggestions && filteredEmployees.length > 0 && (
-                            <div className="absolute z-10 w-full mt-2 bg-white border-2 border-indigo-200 rounded-xl shadow-lg max-h-60 overflow-y-auto">
-                                {filteredEmployees.map((emp) => (
-                                    <div
-                                        key={emp.id}
-                                        onClick={() => handleSelectUser(emp)}
-                                        className="p-4 hover:bg-indigo-50 cursor-pointer transition-colors border-b border-gray-100 last:border-b-0 flex items-center gap-3"
-                                    >
-                                        <div className="w-10 h-10 bg-indigo-600 rounded-full flex items-center justify-center text-white font-bold text-sm">
-                                            {getInitials(emp.name)}
-                                        </div>
-                                        <div className="flex-1">
-                                            <p className="font-semibold text-gray-800">{emp.name}</p>
-                                            <p className="text-sm text-gray-600">DNI: {emp.dni} • {emp.role}</p>
-                                        </div>
-                                    </div>
-                                ))}
-                            </div>
-                        )}
-
-                        {/* Sin resultados */}
-                        {showSuggestions && searchName && filteredEmployees.length === 0 && (
-                            <div className="absolute z-10 w-full mt-2 bg-white border-2 border-red-200 rounded-xl shadow-lg p-4">
-                                <div className="flex items-center gap-3">
-                                    <svg className="w-6 h-6 text-red-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-                                    </svg>
-                                    <p className="text-red-700 font-medium">No se encontraron trabajadores con ese nombre</p>
-                                </div>
-                            </div>
-                        )}
                     </div>
 
-                    {/* Usuario seleccionado */}
                     {selectedUser && (
                         <div className="mt-6 p-4 bg-gradient-to-r from-indigo-50 to-purple-50 rounded-xl border-2 border-indigo-200">
                             <div className="flex items-center gap-4">
                                 <div className="w-16 h-16 bg-indigo-600 rounded-full flex items-center justify-center text-white font-bold text-xl shadow-md">
-                                    {getInitials(selectedUser.name)}
+                                    {getInitials(selectedUser.userName)}
                                 </div>
                                 <div className="flex-1">
-                                    <h3 className="text-xl font-bold text-gray-800">{selectedUser.name}</h3>
-                                    <p className="text-gray-600">DNI: {selectedUser.dni}</p>
-                                    <p className="text-sm text-indigo-600 font-medium">{selectedUser.role}</p>
+                                    <h3 className="text-xl font-bold text-gray-800">{selectedUser.userName}</h3>
+                                   
+                                    <p className="text-sm text-indigo-600 font-medium">{selectedUser.roleName}</p>
+                                    <p className="text-sm text-gray-500">{selectedUser.officeName}</p>
                                 </div>
                                 <svg className="w-8 h-8 text-indigo-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
@@ -213,63 +220,76 @@ const PermissionsManager = () => {
                     )}
                 </div>
 
-                {/* Módulos y permisos */}
-                {selectedUser && (
+
+                {selectedUser && modules.length > 0 && (
                     <div className="bg-white rounded-2xl shadow-lg p-6 border border-gray-100">
                         <h2 className="text-2xl font-bold text-gray-800 mb-6">Módulos del Sistema</h2>
 
                         <div className="space-y-4">
-                            {modules.map((module) => (
-                                <div
-                                    key={module.id}
-                                    className="border-2 border-gray-200 rounded-xl p-5 hover:border-indigo-300 transition-all hover:shadow-md flex justify-between items-center"
-                                >
-                                    <div className="flex items-start gap-4">
-                                        <div className="w-12 h-12 bg-indigo-100 rounded-lg flex items-center justify-center">
-                                            <span className="text-indigo-600 font-bold text-sm">{module.icon}</span>
-                                        </div>
-                                        <div className="flex-1">
-                                            <h3 className="text-lg font-bold text-gray-800">{module.name}</h3>
-                                            <p className="text-sm text-gray-600">{module.description}</p>
-                                        </div>
-                                    </div>
-
-                                    <button
-                                        onClick={() => togglePermission(module.id, 'Ver')}
-                                        className={`px-6 py-2 rounded-lg font-medium transition-all flex items-center gap-2 whitespace-nowrap ${userPermissions[selectedUser.id]?.[module.id]?.includes('Ver')
-                                                ? 'bg-green-600 text-white shadow-md hover:bg-green-700'
-                                                : 'bg-indigo-600 text-white hover:bg-indigo-700'
-                                            }`}
+                            {modules.map((module) => {
+                                const hasPermission = userPermissions.has(module.id_modulo);
+                                return (
+                                    <div
+                                        key={module.id_modulo}
+                                        className="border-2 border-gray-200 rounded-xl p-5 hover:border-indigo-300 transition-all hover:shadow-md flex justify-between items-center"
                                     >
-                                        {userPermissions[selectedUser.id]?.[module.id]?.includes('Ver') ? (
-                                            <>
-                                                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
-                                                </svg>
-                                                Permiso Otorgado
-                                            </>
-                                        ) : (
-                                            'Dar Permiso'
-                                        )}
-                                    </button>
-                                </div>
-                            ))}
+                                        <div className="flex items-start gap-4">
+                                            <div className="w-12 h-12 bg-indigo-100 rounded-lg flex items-center justify-center">
+                                                <span className="text-indigo-600 font-bold text-sm">
+                                                    {getModuleIcon(module.nombre_modulo)}
+                                                </span>
+                                            </div>
+                                            <div className="flex-1">
+                                                <h3 className="text-lg font-bold text-gray-800">{module.nombre_modulo}</h3>
+                                                
+                                            </div>
+                                        </div>
+
+                                        <button
+                                            onClick={() => togglePermission(module.id_modulo, hasPermission)}
+                                            className={`px-6 py-2 rounded-lg font-medium transition-all flex items-center gap-2 whitespace-nowrap ${
+                                                hasPermission
+                                                    ? 'bg-green-600 text-white shadow-md hover:bg-green-700'
+                                                    : 'bg-gray-400 text-white hover:bg-indigo-600'
+                                            }`}
+                                        >
+                                            {hasPermission ? (
+                                                <>
+                                                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                                                    </svg>
+                                                    Permiso Otorgado
+                                                </>
+                                            ) : (
+                                                'Dar Permiso'
+                                            )}
+                                        </button>
+                                    </div>
+                                );
+                            })}
                         </div>
 
-                        <div className="mt-8 flex justify-end gap-3">
-                            <button
-                                onClick={handleClear}
-                                className="px-6 py-3 bg-gray-100 text-gray-700 rounded-xl hover:bg-gray-200 transition-colors font-medium"
-                            >
-                                Cancelar
-                            </button>
-                            <button
-                                onClick={handleSave}
-                                className="px-8 py-3 bg-gradient-to-r from-indigo-600 to-purple-600 text-white rounded-xl hover:from-indigo-700 hover:to-purple-700 transition-all font-medium shadow-lg hover:shadow-xl"
-                            >
-                                Guardar Permisos
-                            </button>
+                        <div className="mt-8 p-4 bg-blue-50 border-2 border-blue-200 rounded-xl">
+                            <div className="flex items-start gap-3">
+                                <svg className="w-6 h-6 text-blue-600 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                                </svg>
+                                <div>
+                                    <p className="text-blue-800 font-medium">Información</p>
+                                    <p className="text-blue-700 text-sm">Los cambios se guardan automáticamente al hacer clic en los botones de permisos.</p>
+                                </div>
+                            </div>
                         </div>
+                    </div>
+                )}
+
+                {!selectedUser && !loading && (
+                    <div className="bg-white rounded-2xl shadow-lg p-12 border border-gray-100 text-center">
+                        <svg className="w-16 h-16 text-gray-400 mx-auto mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+                        </svg>
+                        <h3 className="text-xl font-bold text-gray-600 mb-2">Busca un usuario para comenzar</h3>
+                        <p className="text-gray-500">Ingresa el nombre del usuario en el campo de búsqueda</p>
                     </div>
                 )}
             </div>

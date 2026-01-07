@@ -1,19 +1,28 @@
-// UsuarioServices.tsx
-const API_BASE_URL = 'http://localhost:8080'; // Cambia esto a tu URL base
+import axios from 'axios';
 
-interface Usuario {
-  id: number;
-  dni: string;
-  username: string;
-  name: string;
-  role: string;
-  permissions?: Permiso[];
+const API_BASE_URL = 'http://localhost:8080';
+
+interface UserModule {
+  moduleId: string;
+  ModuleName: string;
 }
 
-interface Permiso {
-  moduleId: number;
-  moduleName: string;
-  access: string[];
+interface Usuario {
+  userId: string;
+  userName: string;
+  roleId: string;
+  roleName: string;
+  officeName: string;
+  modules: UserModule[];
+}
+
+interface Module {
+  id_modulo: string;
+  nombre_modulo: string;
+}
+
+interface ModulesResponse {
+  modules: Module[];
 }
 
 interface ApiResponse<T> {
@@ -23,117 +32,66 @@ interface ApiResponse<T> {
 }
 
 export const UsuarioServices = {
-  // Obtener usuario por username
-  getUserByUsername: async (username: string): Promise<ApiResponse<Usuario>> => {
+  getUserById: async (userId: string): Promise<ApiResponse<Usuario>> => {
     try {
-      const response = await fetch(`${API_BASE_URL}/api/user/username/${username}`, {
-        method: 'GET',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-      });
-
-      if (!response.ok) {
-        throw new Error(`Error ${response.status}: ${response.statusText}`);
-      }
-
-      const data = await response.json();
+      const response = await axios.get<Usuario>(`${API_BASE_URL}/api/user/${userId}`);
       return {
         success: true,
-        data: data,
+        data: response.data,
       };
     } catch (error) {
       console.error('Error al obtener usuario:', error);
       return {
         success: false,
-        message: error instanceof Error ? error.message : 'Error desconocido',
+        message: axios.isAxiosError(error) 
+          ? error.response?.data?.message || error.message 
+          : 'Error desconocido',
       };
     }
   },
 
-  // Buscar usuarios por nombre (si tienes este endpoint)
-  searchUsersByName: async (name: string): Promise<ApiResponse<Usuario[]>> => {
+  getAllModules: async (): Promise<ApiResponse<Module[]>> => {
     try {
-      const response = await fetch(`${API_BASE_URL}/api/users/search?name=${encodeURIComponent(name)}`, {
-        method: 'GET',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-      });
-
-      if (!response.ok) {
-        throw new Error(`Error ${response.status}: ${response.statusText}`);
-      }
-
-      const data = await response.json();
+      const response = await axios.get<ModulesResponse>(`${API_BASE_URL}/modules/`);
       return {
         success: true,
-        data: data,
+        data: response.data.modules,
       };
     } catch (error) {
-      console.error('Error al buscar usuarios:', error);
+      console.error('Error al obtener módulos:', error);
       return {
         success: false,
         data: [],
-        message: error instanceof Error ? error.message : 'Error desconocido',
+        message: axios.isAxiosError(error) 
+          ? error.response?.data?.message || error.message 
+          : 'Error desconocido',
       };
     }
   },
 
-  // Actualizar permisos de usuario
-  updateUserPermissions: async (userId: number, permissions: any): Promise<ApiResponse<any>> => {
+  updateUserPermission: async (
+    userId: string, 
+    moduleId: string, 
+    hasPermission: boolean
+  ): Promise<ApiResponse<any>> => {
     try {
-      const response = await fetch(`${API_BASE_URL}/api/user/${userId}/permissions`, {
-        method: 'PUT',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ permissions }),
+      const response = await axios.post(`${API_BASE_URL}/api/user/permissions`, {
+        userId,
+        moduleId,
+        hasPermission,
       });
-
-      if (!response.ok) {
-        throw new Error(`Error ${response.status}: ${response.statusText}`);
-      }
-
-      const data = await response.json();
+      
       return {
         success: true,
-        data: data,
+        data: response.data,
       };
     } catch (error) {
-      console.error('Error al actualizar permisos:', error);
+      console.error('Error al actualizar permiso:', error);
       return {
         success: false,
-        message: error instanceof Error ? error.message : 'Error desconocido',
-      };
-    }
-  },
-
-  // Obtener todos los usuarios
-  getAllUsers: async (): Promise<ApiResponse<Usuario[]>> => {
-    try {
-      const response = await fetch(`${API_BASE_URL}/api/users`, {
-        method: 'GET',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-      });
-
-      if (!response.ok) {
-        throw new Error(`Error ${response.status}: ${response.statusText}`);
-      }
-
-      const data = await response.json();
-      return {
-        success: true,
-        data: data,
-      };
-    } catch (error) {
-      console.error('Error al obtener usuarios:', error);
-      return {
-        success: false,
-        data: [],
-        message: error instanceof Error ? error.message : 'Error desconocido',
+        message: axios.isAxiosError(error) 
+          ? error.response?.data?.message || error.message 
+          : 'Error desconocido',
       };
     }
   },
