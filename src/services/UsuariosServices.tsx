@@ -71,16 +71,14 @@ export const UsuarioServices = {
   },
 
   updateUserPermission: async (
-    userId: string, 
-    moduleId: string, 
-    hasPermission: boolean
+    id_usuario: string, 
+    id_modulo: string, 
   ): Promise<ApiResponse<any>> => {
     try {
 
-      const response = await axios.post(`${API_BASE_URL}/api/user/permissions`, {
-        userId,
-        moduleId,
-        hasPermission,
+      const response = await axios.post(`${API_BASE_URL}/api/permission/update`, {
+        id_usuario,
+        id_modulo,
       });
       
       return {

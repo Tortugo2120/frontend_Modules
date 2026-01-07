@@ -102,7 +102,6 @@ const PermissionsManager = () => {
         const response = await UsuarioServices.updateUserPermission(
             selectedUser.userId,
             moduleId,
-            newHasPermission
         );
 
         if (response.success) {
