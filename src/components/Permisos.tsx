@@ -167,7 +167,7 @@ const PermissionsManager = () => {
                         Buscar usuario por nombre
                     </label>
                     <div className="relative">
-                        <div className="flex gap-3">
+                        <div className="flex flex-col sm:flex-row gap-3">
                             <div className="relative flex-1">
                                 <svg className="absolute left-4 top-1/2 transform -translate-y-1/2 text-gray-400 w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
@@ -182,17 +182,18 @@ const PermissionsManager = () => {
                                     disabled={loading}
                                 />
                             </div>
+                            
                             <button
                                 onClick={handleSearchUser}
                                 disabled={loading}
-                                className="px-6 py-3 bg-indigo-600 text-white rounded-xl hover:bg-indigo-700 transition-colors font-medium shadow-md hover:shadow-lg disabled:opacity-50 disabled:cursor-not-allowed"
+                                className="px-6 py-3 bg-indigo-600 text-white rounded-xl hover:bg-indigo-700 transition-colors font-medium shadow-md hover:shadow-lg disabled:opacity-50 disabled:cursor-not-allowed w-full sm:w-auto"
                             >
                                 {loading ? 'Buscando...' : 'Buscar'}
                             </button>
                             {userId && (
                                 <button
                                     onClick={handleClear}
-                                    className="px-6 py-3 bg-gray-500 text-white rounded-xl hover:bg-gray-600 transition-colors font-medium shadow-md hover:shadow-lg"
+                                    className="px-6 py-3 bg-gray-500 text-white rounded-xl hover:bg-gray-600 transition-colors font-medium shadow-md hover:shadow-lg w-full sm:w-auto"
                                 >
                                     Limpiar
                                 </button>
@@ -202,11 +203,11 @@ const PermissionsManager = () => {
 
                     {selectedUser && (
                         <div className="mt-6 p-4 bg-gradient-to-r from-indigo-50 to-purple-50 rounded-xl border-2 border-indigo-200">
-                            <div className="flex items-center gap-4">
-                                <div className="w-16 h-16 bg-indigo-600 rounded-full flex items-center justify-center text-white font-bold text-xl shadow-md">
+                            <div className="flex flex-col sm:flex-row items-center gap-4">
+                                <div className="w-16 h-16 bg-indigo-600 rounded-full flex items-center justify-center text-white font-bold text-xl shadow-md flex-shrink-0">
                                     {getInitials(selectedUser.userName)}
                                 </div>
-                                <div className="flex-1">
+                                <div className="flex-1 text-center sm:text-left">
                                     <h3 className="text-xl font-bold text-gray-800">{selectedUser.userName}</h3>
                                    
                                     <p className="text-sm text-indigo-600 font-medium">{selectedUser.roleName}</p>
@@ -222,8 +223,8 @@ const PermissionsManager = () => {
 
 
                 {selectedUser && modules.length > 0 && (
-                    <div className="bg-white rounded-2xl shadow-lg p-6 border border-gray-100">
-                        <h2 className="text-2xl font-bold text-gray-800 mb-6">Módulos del Sistema</h2>
+                    <div className="bg-white rounded-2xl shadow-lg p-4 sm:p-6 border border-gray-100">
+                        <h2 className="text-xl sm:text-2xl font-bold text-gray-800 mb-4 sm:mb-6">Módulos del Sistema</h2>
 
                         <div className="space-y-4">
                             {modules.map((module) => {
@@ -231,23 +232,23 @@ const PermissionsManager = () => {
                                 return (
                                     <div
                                         key={module.id_modulo}
-                                        className="border-2 border-gray-200 rounded-xl p-5 hover:border-indigo-300 transition-all hover:shadow-md flex justify-between items-center"
+                                        className="border-2 border-gray-200 rounded-xl p-4 sm:p-5 hover:border-indigo-300 transition-all hover:shadow-md flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4"
                                     >
-                                        <div className="flex items-start gap-4">
-                                            <div className="w-12 h-12 bg-indigo-100 rounded-lg flex items-center justify-center">
+                                        <div className="flex items-start gap-3 sm:gap-4 w-full sm:w-auto">
+                                            <div className="w-12 h-12 bg-indigo-100 rounded-lg flex items-center justify-center flex-shrink-0">
                                                 <span className="text-indigo-600 font-bold text-sm">
                                                     {getModuleIcon(module.nombre_modulo)}
                                                 </span>
                                             </div>
-                                            <div className="flex-1">
-                                                <h3 className="text-lg font-bold text-gray-800">{module.nombre_modulo}</h3>
+                                            <div className="flex-1 min-w-0">
+                                                <h3 className="text-base sm:text-lg font-bold text-gray-800">{module.nombre_modulo}</h3>
                                                 
                                             </div>
                                         </div>
 
                                         <button
                                             onClick={() => togglePermission(module.id_modulo, hasPermission)}
-                                            className={`px-6 py-2 rounded-lg font-medium transition-all flex items-center gap-2 whitespace-nowrap ${
+                                            className={`self-center sm:self-auto w-auto px-6 py-2 rounded-lg font-medium transition-all flex items-center justify-center gap-2 whitespace-nowrap ${
                                                 hasPermission
                                                     ? 'bg-green-600 text-white shadow-md hover:bg-green-700'
                                                     : 'bg-gray-400 text-white hover:bg-indigo-600'
