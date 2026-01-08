@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { useLocation, useNavigate, Link } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext.tsx';
@@ -26,7 +25,11 @@ const Login: React.FC = () => {
       await login(username.trim(), password);
       navigate(from, { replace: true });
     } catch (err: any) {
-      setError(err?.message || 'Credenciales inválidas');
+      console.error('Error en login:', err);
+      // Manejar el mensaje de error de la API
+      const errorMessage = err?.response?.data?.messages?.error || err?.message || 'Credenciales inválidas';
+      setError(errorMessage);
+    } finally {
       setLoading(false);
     }
   };

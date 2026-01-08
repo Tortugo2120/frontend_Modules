@@ -1,6 +1,6 @@
-
 import React, { createContext, useContext, useEffect, useMemo, useState } from "react";
-import { apiLogin, AuthResponse, User } from "../services/auth.ts";
+import { apiLogin, User } from "../services/auth.ts";
+import { jwtDecode } from "jwt-decode";
 
 interface StoredAuth {
   user: User | null;
@@ -8,7 +8,14 @@ interface StoredAuth {
   expiresAt: number | null; 
 }
 
-const STORAGE_KEY = "sgm_auth";
+interface JwtPayload {
+  sub: string;
+  iat: number;
+  exp: number;
+  data: User;
+}
+
+const STORAGE_KEY = "token";
 
 interface AuthContextProps {
   user: User | null;
@@ -77,11 +84,20 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   }, []);
 
   const login = async (username: string, password: string) => {
-    // llama a tu API real
-    const res: AuthResponse = await apiLogin(username, password);
-    const expiresIn = res.expiresIn ?? 3600;
-    const expiresAt = Date.now() + expiresIn * 1000;
-    const store: StoredAuth = { user: res.user, token: res.token, expiresAt };
+    // llama a tu API real con la estructura correcta
+    const res = await apiLogin({ userName: username, password });
+
+    // La respuesta viene en res.data con el token JWT
+    const { token } = res.data;
+
+    // Decodificar el token para extraer exp y data
+    const decoded = jwtDecode<JwtPayload>(token);
+
+    // exp viene en segundos (Unix timestamp), convertir a milisegundos
+    const expiresAt = decoded.exp * 1000;
+    const user = decoded.data;
+
+    const store: StoredAuth = { user, token, expiresAt };
     setAuth(store);
     // localStorage se actualiza por useEffect
   };
