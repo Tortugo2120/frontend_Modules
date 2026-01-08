@@ -1,7 +1,7 @@
 
 import axios from 'axios';
 
-const API_BASE_URL = 'http://localhost:8080';
+const API_BASE_URL = 'http://localhost:8080/admin';
 
 interface UserModule {
   moduleId: string;
@@ -35,7 +35,7 @@ interface ApiResponse<T> {
 export const UsuarioServices = {
   getUserById: async (userId: string): Promise<ApiResponse<Usuario>> => {
     try {
-      const response = await axios.get<Usuario>(`${API_BASE_URL}/api/user/${userId}`);
+      const response = await axios.get<Usuario>(`${API_BASE_URL}/api/user/username7${userId}`);
       return {
         success: true,
         data: response.data,
