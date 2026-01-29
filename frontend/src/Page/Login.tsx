@@ -1,4 +1,14 @@
+"use client";
+
 import { useState } from 'react';
+import { useForm } from 'react-hook-form';
+import { zodResolver } from '@hookform/resolvers/zod';
+import { loginSchema } from '../validations/validation'; 
+import { z } from 'zod';
+import { useNavigate } from 'react-router-dom';
+import { useAuth } from '../context/AuthContext';
+
+type LoginFormData = z.infer<typeof loginSchema>;
 
 interface ToastMessage {
   message: string;
@@ -6,18 +16,25 @@ interface ToastMessage {
 }
 
 export default function Login() {
-  const [usuario, setUsuario] = useState('');
-  const [password, setPassword] = useState('');
+  const navigate = useNavigate();
+  const { login } = useAuth();
   const [showPassword, setShowPassword] = useState(false);
-  const [rememberMe, setRememberMe] = useState(false);
   const [toast, setToast] = useState<ToastMessage | null>(null);
+  const [isLoading, setIsLoading] = useState(false);
 
-  const handleUsuarioChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const value = e.target.value.replace(/[^0-9]/g, '');
-    if (value.length <= 8) {
-      setUsuario(value);
+  const {
+    register,
+    handleSubmit,
+    formState: { errors },
+    watch
+  } = useForm<LoginFormData>({
+    resolver: zodResolver(loginSchema),
+    defaultValues: {
+      usuario: '',
+      password: '',
+      rememberMe: false
     }
-  };
+  });
 
   const handleTogglePassword = () => {
     setShowPassword(!showPassword);
@@ -30,37 +47,29 @@ export default function Login() {
     }, 3000);
   };
 
-  const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
-    e.preventDefault();
-
-    // Validaciones
-    if (usuario.length !== 8) {
-      showToastMessage('El usuario debe tener 8 dígitos', 'error');
-      return;
-    }
-
-    if (password.length < 4) {
-      showToastMessage('La contraseña es muy corta', 'error');
-      return;
-    }
-
+  const onSubmit = (data: LoginFormData) => {
+    setIsLoading(true);
     showToastMessage('Iniciando sesión...', 'success');
-    console.log('Usuario:', usuario);
-    console.log('Password:', password);
-    console.log('Recordarme:', rememberMe);
 
-    // Simular redirección después de 2 segundos
     setTimeout(() => {
-      window.location.href = 'dashboard.html';
-      console.log('Redirigiendo al dashboard...');
-    }, 2000);
+      // Guardar datos de autenticación
+      login({ usuario: data.usuario, rememberMe: data.rememberMe });
+      setIsLoading(false);
+      navigate('/dashboard');
+    }, 1500);
+  };
+
+  const handleUsuarioInput = (e: React.FormEvent<HTMLInputElement>) => {
+    const input = e.currentTarget;
+    input.value = input.value.replace(/[^0-9]/g, '').slice(0, 8);
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-900 via-blue-900 to-slate-900 flex items-center justify-center p-4">
+    <div className="min-h-screen bg-linear-to-br from-slate-900 via-blue-900 to-slate-900 flex items-center justify-center p-4">
       <div className="w-full max-w-md">
         <div className="card bg-base-100 shadow-2xl">
           <div className="card-body">
+
             {/* Encabezado */}
             <div className="text-center mb-6">
               <div className="avatar placeholder mb-4 flex justify-center">
@@ -73,28 +82,35 @@ export default function Login() {
             </div>
 
             {/* Formulario */}
-            <form onSubmit={handleSubmit} className="space-y-4">
+            <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
               {/* DNI */}
               <div className="form-control">
-                <label className="label">
+                <label className="label mb-1.5">
                   <span className="label-text font-semibold">
-                    <i className="fa-solid fa-user"></i>Usuario
+                    <i className="fa-solid fa-user"></i> Usuario
                   </span>
                 </label>
                 <input
                   type="text"
                   placeholder="Ingresa tu usuario"
-                  className="input input-bordered w-full outline-none border-gray-300"
-                  value={usuario}
-                  onChange={handleUsuarioChange}
-                  required
+                  className={`input input-bordered w-full outline-none ${
+                    errors.usuario ? 'border-error' : 'border-gray-300'
+                  }`}
+                  {...register('usuario')}
+                  onInput={handleUsuarioInput}
                 />
-                
+                {errors.usuario && (
+                  <label className="label">
+                    <span className="label-text-alt text-error">
+                      {errors.usuario.message}
+                    </span>
+                  </label>
+                )}
               </div>
 
               {/* Contraseña */}
               <div className="form-control">
-                <label className="label">
+                <label className="label mb-1.5">
                   <span className="label-text font-semibold">
                     <i className="fas fa-lock mr-2"></i>Contraseña
                   </span>
@@ -103,10 +119,10 @@ export default function Login() {
                   <input
                     type={showPassword ? 'text' : 'password'}
                     placeholder="Ingresa tu contraseña"
-                    className="input input-bordered w-full pr-12 outline-none border-gray-300"
-                    value={password}
-                    onChange={(e) => setPassword(e.target.value)}
-                    required
+                    className={`input input-bordered w-full pr-12 outline-none ${
+                      errors.password ? 'border-error' : 'border-gray-300'
+                    }`}
+                    {...register('password')}
                   />
                   <button
                     type="button"
@@ -116,6 +132,13 @@ export default function Login() {
                     <i className={`fas ${showPassword ? 'fa-eye-slash' : 'fa-eye'}`}></i>
                   </button>
                 </div>
+                {errors.password && (
+                  <label className="label">
+                    <span className="label-text-alt text-error">
+                      {errors.password.message}
+                    </span>
+                  </label>
+                )}
               </div>
 
               {/* Recordarme */}
@@ -123,9 +146,8 @@ export default function Login() {
                 <label className="label cursor-pointer justify-start gap-3">
                   <input
                     type="checkbox"
-                    className="default-checkbox checkbox-primary checkbox-sm"
-                    checked={rememberMe}
-                    onChange={(e) => setRememberMe(e.target.checked)}
+                    className="default-checkbox checkbox-primary w-4 h-4"
+                    {...register('rememberMe')}
                   />
                   <span className="label-text">Recordarme</span>
                 </label>
@@ -133,9 +155,15 @@ export default function Login() {
 
               {/* Botón Enviar */}
               <div className="form-control mt-6">
-                <button type="submit" className="btn btn-primary btn-block">
-                  <i className="fas fa-sign-in-alt mr-2"></i>
-                  Iniciar Sesión
+                <button type="submit" className="btn btn-primary btn-block" disabled={isLoading}>
+                  {isLoading ? (
+                    <span className="loading loading-dots loading-xl"></span>
+                  ) : (
+                    <>
+                      <i className="fas fa-sign-in-alt mr-2"></i>
+                      Iniciar Sesión
+                    </>
+                  )}
                 </button>
               </div>
             </form>
