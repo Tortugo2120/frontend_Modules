@@ -7,23 +7,31 @@ import Solicitudes from "./Page/Solicitudes.tsx";
 import Pagos from "./Page/Pagos.tsx";
 import Documentos from "./Page/Documentos.tsx";
 import {Reportes} from "./Page/Reportes.tsx";
+import {AuthProvider} from "./context/AuthContext.tsx";
+import {ProtectedRoute} from "./components/ProtectedRoute.tsx";
 
 function App() {
   
   return (
-      <BrowserRouter>
-          <Routes>
-              <Route path="/" element={<Login/>} />
-              <Route path={"/dashboard"} element={<Dashboard></Dashboard>}>
-                  <Route index element={<Home/>}/>
-                  <Route path={"Home"} element={<Home/>}/>
-                  <Route path={"solicitudes"} element={<Solicitudes/>}/>
-                  <Route path={"pagos"} element={<Pagos/>}/>
-                  <Route path={"documentos"} element={<Documentos/>}/>
-                  <Route path={"reportes"} element={<Reportes/>}/>
-              </Route>
-          </Routes>
-      </BrowserRouter>
+      <AuthProvider>
+          <BrowserRouter>
+              <Routes>
+                  <Route path="/" element={<Login/>} />
+                  <Route path={"/dashboard"} element={
+                      <ProtectedRoute>
+                          <Dashboard />
+                      </ProtectedRoute>
+                  }>
+                      <Route index element={<Home/>}/>
+                      <Route path={"Home"} element={<Home/>}/>
+                      <Route path={"solicitudes"} element={<Solicitudes/>}/>
+                      <Route path={"pagos"} element={<Pagos/>}/>
+                      <Route path={"documentos"} element={<Documentos/>}/>
+                      <Route path={"reportes"} element={<Reportes/>}/>
+                  </Route>
+              </Routes>
+          </BrowserRouter>
+      </AuthProvider>
   )
 }
 
