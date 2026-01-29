@@ -3,8 +3,10 @@
 import { useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
-import { loginSchema } from '../Validations/validation'; 
+import { loginSchema } from '../validations/validation'; 
 import { z } from 'zod';
+import { useNavigate } from 'react-router-dom';
+import { useAuth } from '../context/AuthContext';
 
 type LoginFormData = z.infer<typeof loginSchema>;
 
@@ -14,8 +16,11 @@ interface ToastMessage {
 }
 
 export default function Login() {
+  const navigate = useNavigate();
+  const { login } = useAuth();
   const [showPassword, setShowPassword] = useState(false);
   const [toast, setToast] = useState<ToastMessage | null>(null);
+  const [isLoading, setIsLoading] = useState(false);
 
   const {
     register,
@@ -43,14 +48,17 @@ export default function Login() {
   };
 
   const onSubmit = (data: LoginFormData) => {
+    setIsLoading(true);
     showToastMessage('Iniciando sesión...', 'success');
-    
 
-    // Simular redirección después de 2 segundos
-
+    setTimeout(() => {
+      // Guardar datos de autenticación
+      login({ usuario: data.usuario, rememberMe: data.rememberMe });
+      setIsLoading(false);
+      navigate('/dashboard');
+    }, 1500);
   };
 
-  // Filtrar solo números en el input de usuario
   const handleUsuarioInput = (e: React.FormEvent<HTMLInputElement>) => {
     const input = e.currentTarget;
     input.value = input.value.replace(/[^0-9]/g, '').slice(0, 8);
@@ -147,9 +155,15 @@ export default function Login() {
 
               {/* Botón Enviar */}
               <div className="form-control mt-6">
-                <button type="submit" className="btn btn-primary btn-block">
-                  <i className="fas fa-sign-in-alt mr-2"></i>
-                  Iniciar Sesión
+                <button type="submit" className="btn btn-primary btn-block" disabled={isLoading}>
+                  {isLoading ? (
+                    <span className="loading loading-dots loading-xl"></span>
+                  ) : (
+                    <>
+                      <i className="fas fa-sign-in-alt mr-2"></i>
+                      Iniciar Sesión
+                    </>
+                  )}
                 </button>
               </div>
             </form>
