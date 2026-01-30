@@ -1,12 +1,12 @@
 "use client";
 
-import { useState } from 'react';
+import {useState} from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { loginSchema } from '../Validations/validation';
 import { z } from 'zod';
 import { useNavigate } from 'react-router-dom';
-import { useAuth } from '../context/AuthContext';
+import { Auth } from '../context/AuthContext';
 
 type LoginFormData = z.infer<typeof loginSchema>;
 
@@ -17,7 +17,7 @@ interface ToastMessage {
 
 export default function Login() {
   const navigate = useNavigate();
-  const { login } = useAuth();
+  const { login } = Auth();
   const [showPassword, setShowPassword] = useState(false);
   const [toast, setToast] = useState<ToastMessage | null>(null);
   const [isLoading, setIsLoading] = useState(false);
@@ -25,12 +25,11 @@ export default function Login() {
   const {
     register,
     handleSubmit,
-    formState: { errors },
-    watch
+    formState: { errors }
   } = useForm<LoginFormData>({
     resolver: zodResolver(loginSchema),
     defaultValues: {
-      usuario: '',
+      username: '',
       password: '',
       rememberMe: false
     }
@@ -51,12 +50,17 @@ export default function Login() {
     setIsLoading(true);
     showToastMessage('Iniciando sesión...', 'success');
 
-    setTimeout(() => {
-      // Guardar datos de autenticación
-      login({ usuario: data.usuario, rememberMe: data.rememberMe });
+    if (data.username === '12345678' && data.password === 'password') {
+      setTimeout(() => {
+        login({ message: 'Login successful', token: 'eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJpc3MiOiJodHRwOi8vbG9jYWxob3N0IiwiYXVkIjoiaHR0cDovL2xvY2FsaG9zdCIsImlhdCI6MTc2OTc5NDAzOSwiZXhwIjoxNzY5Nzk3NjM5LCJkYXRhIjp7InVzZXJuYW1lIjoiRGlja2VucyIsImlkIjoiMSIsInJvbGVfaWQiOiIxIn0sImp0aSI6IjVkMjY4NWM2ZjVlZmM0YTlmZjFjMWYxZWU1MDVmYzlmIn0.FD6eCuwHGAgQrT3mjDo3pekcNgbBNXDE2s8lb9x6XfI' });
+        setIsLoading(false);
+        navigate('/dashboard');
+      }, 1500);
+    }else{
+      showToastMessage('Contraseña o usuario incorrecto', 'error');
       setIsLoading(false);
-      navigate('/dashboard');
-    }, 1500);
+    }
+
   };
 
   const handleUsuarioInput = (e: React.FormEvent<HTMLInputElement>) => {
@@ -94,15 +98,15 @@ export default function Login() {
                   type="text"
                   placeholder="Ingresa tu usuario"
                   className={`input input-bordered w-full outline-none ${
-                    errors.usuario ? 'border-error' : 'border-gray-300'
+                    errors.username ? 'border-error' : 'border-gray-300'
                   }`}
-                  {...register('usuario')}
+                  {...register('username')}
                   onInput={handleUsuarioInput}
                 />
-                {errors.usuario && (
+                {errors.username && (
                   <label className="label">
                     <span className="label-text-alt text-error">
-                      {errors.usuario.message}
+                      {errors.username.message}
                     </span>
                   </label>
                 )}

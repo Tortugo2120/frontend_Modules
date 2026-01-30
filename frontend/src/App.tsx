@@ -13,8 +13,8 @@ import {ProtectedRoute} from "./components/ProtectedRoute.tsx";
 function App() {
   
   return (
-      <AuthProvider>
           <BrowserRouter>
+              <AuthProvider>
               <Routes>
                   <Route path="/" element={<Login/>} />
                   <Route path={"/dashboard"} element={
@@ -30,8 +30,8 @@ function App() {
                       <Route path={"reportes"} element={<Reportes/>}/>
                   </Route>
               </Routes>
+              </AuthProvider>
           </BrowserRouter>
-      </AuthProvider>
   )
 }
 

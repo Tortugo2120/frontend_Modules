@@ -1,50 +1,83 @@
-import { createContext, useContext, useState, ReactNode, useEffect } from 'react';
+import {createContext, type ReactNode, useContext, useState, useEffect, useCallback} from 'react';
+import type {LoginResponse, Usuario} from "../model/authModel.ts";
+import {jwtDecode} from "jwt-decode";
+import {useNavigate} from "react-router-dom";
 
 interface AuthContextType {
   isAuthenticated: boolean;
-  login: (userData: any) => void;
+  login: (userData: LoginResponse) => void;
   logout: () => void;
-  user: any;
+  user: Usuario | null;
+  isTokenExpired: () => boolean;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
 export const AuthProvider = ({ children }: { children: ReactNode })     => {
-  const [isAuthenticated, setIsAuthenticated] = useState<boolean>(false);
-  const [user, setUser] = useState<any>(null);
+  const navigate = useNavigate();
 
-  // Verificar si hay sesión guardada al cargar
-  useEffect(() => {
-    const savedUser = localStorage.getItem('user');
-    const savedAuth = localStorage.getItem('isAuthenticated');
-    if (savedAuth === 'true' && savedUser) {
-      setIsAuthenticated(true);
-      setUser(JSON.parse(savedUser));
+  const decodedToken = (token: string | null): Usuario | null => {
+    if (!token) return null;
+    try{
+      const decoded = jwtDecode<Usuario>(token);
+      const expirationTime = decoded.exp * 1000;
+
+      if (expirationTime < Date.now()) {
+        localStorage.removeItem('token');
+        console.log("Token expirado al decodificar. Exp:", new Date(expirationTime));
+        return null;
+      }
+      return decoded;
+    }catch (e){
+      console.log("Error decoding token:", e);
+      localStorage.removeItem('token');
+      return null;
     }
-  }, []);
+  }
 
-  const login = (userData: any) => {
-    setIsAuthenticated(true);
-    setUser(userData);
-    localStorage.setItem('isAuthenticated', 'true');
-    localStorage.setItem('user', JSON.stringify(userData));
-  };
+  const [user, setUser] = useState<Usuario | null>(()=>decodedToken(localStorage.getItem("token")));
+  const isAuthenticated = !!user;
 
-  const logout = () => {
-    setIsAuthenticated(false);
+  const isTokenExpired = useCallback((): boolean => {
+    if (!user || !user.exp) return false;
+    return user.exp * 1000 < Date.now();
+  }, [user]);
+
+  const logout = useCallback(() => {
     setUser(null);
-    localStorage.removeItem('isAuthenticated');
-    localStorage.removeItem('user');
+    localStorage.removeItem('token');
+    navigate('/');
+  }, [navigate]);
+
+  useEffect(() => {
+    const checkTokenExpiration = () => {
+      if (user && isTokenExpired()) {
+        console.log("Token expirado, cerrando sesión...");
+        logout();
+      }
+    };
+
+    const interval = setInterval(checkTokenExpiration, 30000);
+
+    checkTokenExpiration();
+
+    return () => clearInterval(interval);
+  }, [user, isTokenExpired, logout]);
+
+  const login = (data: LoginResponse) => {
+    localStorage.setItem("token", data.token);
+    const decoded = decodedToken(data.token);
+    setUser(decoded);
   };
 
   return (
-    <AuthContext.Provider value={{ isAuthenticated, login, logout, user }}>
+    <AuthContext.Provider value={{ isAuthenticated, login, logout, user, isTokenExpired }}>
       {children}
     </AuthContext.Provider>
   );
 };
 
-export const useAuth = () => {
+export const Auth = () => {
   const context = useContext(AuthContext);
   if (!context) {
     throw new Error('useAuth debe ser usado dentro de AuthProvider');

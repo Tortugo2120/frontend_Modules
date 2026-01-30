@@ -21,7 +21,10 @@ apiAxios.interceptors.response.use(
   (err) => {
     if (err.response?.status === 401) {
       localStorage.removeItem("token");
-      window.location.href = "/login";
+      // Redirigir al login
+      if (window.location.pathname !== '/') {
+        window.location.href = "/";
+      }
     }
     return Promise.reject(err);
   }

@@ -1,14 +1,15 @@
 import { Navigate } from 'react-router-dom';
-import { useAuth } from '../context/AuthContext';
+import { Auth } from '../context/AuthContext';
 
 interface ProtectedRouteProps {
   children: React.ReactNode;
 }
 
 export const ProtectedRoute = ({ children }: ProtectedRouteProps) => {
-  const { isAuthenticated } = useAuth();
+  const { isAuthenticated, isTokenExpired } = Auth();
 
-  if (!isAuthenticated) {
+  if (!isAuthenticated || isTokenExpired()) {
+    console.log("Token expirado o usuario no autenticado, redirigiendo al login...");
     return <Navigate to="/" replace />;
   }
 

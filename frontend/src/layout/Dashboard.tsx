@@ -1,12 +1,13 @@
 import { Nav } from "../components/Nav.tsx";
 import { Outlet } from "react-router-dom";
 import { useState } from "react";
+import {Auth} from "../context/AuthContext.tsx";
 
 export default function Dashboard() {
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const toggleSidebar = () => setSidebarOpen((v) => !v);
   const closeSidebar = () => setSidebarOpen(false);
-
+  const {user,logout} = Auth();
   return (
     <div className={"flex min-h-screen"}>
       {/* backdrop for mobile when sidebar is open */}
@@ -40,10 +41,12 @@ export default function Dashboard() {
               <i className="fas fa-user text-white text-sm"></i>
             </div>
             <div className="flex-1 min-w-0">
-              <p className="font-medium text-sm truncate">Admin Usuario</p>
+              <p className="font-medium text-sm truncate">{user?.data.username.toUpperCase()}</p>
               <p className="text-blue-200 text-xs font-normal">Administrador</p>
             </div>
-            <button className="text-blue-200 hover:text-white transition-colors p-2">
+            <button className="text-blue-200 hover:text-white transition-colors p-2"
+            onClick={logout}
+            >
               <i className="fas fa-sign-out-alt"></i>
             </button>
           </div>
