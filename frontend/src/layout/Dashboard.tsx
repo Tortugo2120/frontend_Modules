@@ -10,7 +10,7 @@ export default function Dashboard() {
   const [activeView, setActiveView] = useState("home");
   const toggleSidebar = () => setSidebarOpen((v) => !v);
   const closeSidebar = () => setSidebarOpen(false);
-  const {user} = Auth();
+  const {user,logout} = Auth();
   return (
     <div className={"flex min-h-screen"}>
       {/* backdrop for mobile when sidebar is open */}
@@ -46,7 +46,7 @@ export default function Dashboard() {
               <p className="font-medium text-sm truncate">{user?.data.username.toUpperCase()}</p>
               <p className="text-slate-50 text-xs font-normal">Administrador</p>
             </div>
-            <button className="text-slate-50 hover:text-slate-400 transition-colors p-2">
+            <button className="text-slate-50 hover:text-slate-400 transition-colors p-2" onClick={logout}>
               <i className="fas fa-sign-out-alt"></i>
             </button>
           </div>
