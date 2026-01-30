@@ -6,22 +6,13 @@ type NavProps = {
     setActiveView?: (view: string) => void;
 }
 
-export function Nav({ onLinkClick, setActiveView }: NavProps) {
+export function Nav({ onLinkClick }: NavProps) {
     const [openDropdown, setOpenDropdown] = useState(false);
 
     const handleDropdownToggle = () => {
         setOpenDropdown(!openDropdown);
     };
 
-    const handleDropdownLink = (view: string) => {
-        if (setActiveView) {
-            setActiveView(view);
-        }
-        setOpenDropdown(false);
-        if (onLinkClick) {
-            onLinkClick();
-        }
-    };
 
     return (
         <nav className={"flex-1 px-5 py-6 overflow-y-auto"} aria-label="Primary">
@@ -43,16 +34,16 @@ export function Nav({ onLinkClick, setActiveView }: NavProps) {
                     {openDropdown && (
                         <ul className="ml-4 mt-2 space-y-2">
                             <li>
-                                <button onClick={() => handleDropdownLink("new-request")} className="w-full text-left flex items-center gap-4 px-4 py-3 text-white hover:bg-slate hover:text-slate-300 transition-colors rounded">
+                                <Link to={"/dashboard/solicitud/new"} className="w-full text-left flex items-center gap-4 px-4 py-3 text-white hover:bg-slate hover:text-slate-300 transition-colors rounded">
                                     <i className="fas fa-plus w-5 text-center text-md"></i>
                                     <span className="font-normal text-sm">Crear solicitud</span>
-                                </button>
+                                </Link>
                             </li>
                             <li>
-                                <button onClick={() => handleDropdownLink("history-request")} className="w-full text-left flex items-center gap-4 px-4 py-3 text-white hover:bg-slate hover:text-slate-300 transition-colors rounded">
+                                <Link to={"/dashboard/solicitud/history"} className="w-full text-left flex items-center gap-4 px-4 py-3 text-white hover:bg-slate hover:text-slate-300 transition-colors rounded">
                                     <i className="fas fa-history w-5 text-center text-md"></i>
                                     <span className="font-normal text-sm">Ver historial</span>
-                                </button>
+                                </Link>
                             </li>
                         </ul>
                     )}
