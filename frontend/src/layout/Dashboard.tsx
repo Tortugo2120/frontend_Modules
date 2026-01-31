@@ -1,4 +1,4 @@
-import { Nav } from "../components/Nav.tsx";
+import { Nav } from "../components/Sidebar.tsx";
 import { Outlet } from "react-router-dom";
 import { useState } from "react";
 import logo from '../assets/logo-muni.jpg';
@@ -27,11 +27,17 @@ export default function Dashboard() {
             <img src={logo} alt="Logo" className="w-16 h-16 object-contain realtive rounded-full" />
 
             <div className="text-center">
-              <h1 className="text-base font-semibold tracking-wide">
-                MÓDULO REGISTRO CIVIL
-              </h1>
+              <div className="flex flex-col items-center">
+                <h1 className="text-base font-semibold tracking-wide">
+                  MÓDULO
+                </h1>
+                <p className="text-xs">de</p>
+                <h1 className="text-base font-semibold tracking-wide">
+                  REGISTRO CIVIL
+                </h1>
+              </div>
               <p className="text-white-200 text-md font-normal">
-                José Leonardo Ortiz
+                -José Leonardo Ortiz-
               </p>
             </div>
           </div>
