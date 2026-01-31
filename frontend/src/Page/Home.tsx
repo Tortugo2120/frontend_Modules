@@ -1,9 +1,9 @@
 "use client";
 import StatsCard from '../components/home/StatsCard';
-import RecentReq from '../components/home/Recentreq';
-import QuickActions from '../components/home/Quickactions';
-import RecentActivity from '../components/home/Recentactivity';
-import RevenueChart from '../components/home/Revenuechart';
+import RecentReq from '../components/home/RecentReq';
+import QuickActions from '../components/home/QuickActions';
+import RecentActivity from '../components/home/RecentActivity';
+import RevenueChart from '../components/home/RevenueChart';
 import type { Solicitud, Actividad, RecaudacionData } from '../Types/index';
 
 export default function Home() {
@@ -99,6 +99,7 @@ export default function Home() {
                         subtitle="desde ayer"
                         highlightText="+3"
                         bgColor="bg-blue-950"
+                        textColor="text-blue-600"
                     />
                     <StatsCard
                         title="Trámites Completados"
@@ -106,6 +107,7 @@ export default function Home() {
                         subtitle="este mes"
                         highlightText="+12%"
                         bgColor="bg-green-600"
+                        textColor="text-green-600"
                     />
                     <StatsCard
                         title="Pagos Registrados"
@@ -113,6 +115,7 @@ export default function Home() {
                         subtitle="S/ 1,250"
                         highlightText="Hoy:"
                         bgColor="bg-orange-400"
+                        textColor='text-orange-600'
                     />
                     <StatsCard
                         title="Documentos Pendientes"
@@ -120,6 +123,7 @@ export default function Home() {
                         subtitle="2"
                         highlightText="Urgentes:"
                         bgColor="bg-red-600"
+                        textColor='text-red-600'
                     />
                 </div>
 

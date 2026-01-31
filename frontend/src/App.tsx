@@ -11,6 +11,9 @@ import { AuthProvider } from "./context/AuthContext.tsx";
 import { ProtectedRoute } from "./components/ProtectedRoute.tsx";
 import VerDocumento from "./Page/documents/SeeDoc.tsx";
 import EmitirDocumentos from "./Page/documents/issueDoc.tsx";
+import Perfil from "./Page/user/perfil.tsx";
+import Inbox from "./Page/user/inbox.tsx";
+import ConfigUser from "./Page/user/configUser.tsx";
 
 function App() {
 
@@ -32,6 +35,9 @@ function App() {
                         <Route path={"documentos/ver"} element={<VerDocumento />} />
                         <Route path={"pagos"} element={<Pagos />} />
                         <Route path={"reportes"} element={<Reportes />} />
+                        <Route path={"user/perfil"} element={<Perfil />} />
+                        <Route path={"user/inbox"} element={<Inbox />} />
+                        <Route path={"user/config"} element={<ConfigUser />} />
                     </Route>
                 </Routes>
             </BrowserRouter>
