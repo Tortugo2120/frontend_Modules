@@ -1,3 +1,18 @@
 @import "tailwindcss";
 @import '@fortawesome/fontawesome-free/css/all.min.css';
 @plugin "daisyui";
+
+@font-face {
+  font-family: 'Trispace';
+  src: url('./assets/fonts/Trispace-VariableFont_wdth\,wght.ttf') format('truetype');
+  font-weight: 400;
+  font-style: normal;
+}
+
+.font-trispace {
+  font-family: 'Trispace', sans-serif;
+}
+
+* {
+  font-family: 'Trispace', sans-serif;  
+}

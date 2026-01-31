@@ -1,5 +1,6 @@
-
 "use client";
+import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Legend } from 'recharts';
+
 type Solicitud = {
     expediente: string;
     tipo: string;
@@ -15,8 +16,7 @@ type Actividad = {
     tiempo: string;
 }
 
-export default function Home (){
-
+export default function Home() {
 
     const solicitudes: Solicitud[] = [
         {
@@ -83,8 +83,19 @@ export default function Home (){
         }
     ];
 
+    // Datos para el gráfico de recaudación
+    const recaudacionData = [
+        { mes: 'Jul', monto: 5200 },
+        { mes: 'Ago', monto: 6800 },
+        { mes: 'Sep', monto: 5900 },
+        { mes: 'Oct', monto: 7200 },
+        { mes: 'Nov', monto: 8100 },
+        { mes: 'Dic', monto: 7500 },
+        { mes: 'Ene', monto: 8420 }
+    ];
+
     const getEstadoClasses = (estado: string) => {
-        switch(estado) {
+        switch (estado) {
             case 'Pendiente':
                 return 'bg-amber-100 text-amber-700';
             case 'Completado':
@@ -99,7 +110,7 @@ export default function Home (){
     };
 
     const getActividadIcon = (tipo: string) => {
-        switch(tipo) {
+        switch (tipo) {
             case 'pago':
                 return {
                     icon: 'fa-check',
@@ -133,12 +144,12 @@ export default function Home (){
         }
     };
 
-    return(
+    return (
         <>
-            <div className="bg-blue-50/50 p-4 sm:p-6 lg:p-10">
+            <div className="bg-blue-300/40 p-4 sm:p-6 lg:p-10">
                 <div className="mb-6 lg:mb-10">
-                    <h2 className="text-xl lg:text-2xl font-semibold text-gray-800">Panel de Control</h2>
-                    <p className="text-gray-500 mt-1.5 lg:mt-2 font-normal text-sm lg:text-base">Resumen general del sistema de Registro Civil</p>
+                    <h1 className="text-3xl font-trispace lg:text-4xl font-semibold text-info-content">Panel de Control</h1>
+                    <p className="text-gray-800 mt-1.5 lg:mt-2 font-normal text-sm lg:text-base">Resumen general del sistema de Registro Civil</p>
                 </div>
 
                 <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-4 lg:gap-6 mb-6 lg:mb-10">
@@ -191,7 +202,6 @@ export default function Home (){
                     </div>
                 </div>
 
-                {/* Nueva sección agregada */}
                 <div className="grid grid-cols-1 xl:grid-cols-12 gap-4 lg:gap-6">
                     {/* Tabla de Solicitudes Recientes */}
                     <div className="xl:col-span-8 bg-white shadow-sm">
@@ -280,6 +290,49 @@ export default function Home (){
                                 </div>
                             </div>
                         </div>
+                    </div>
+                </div>
+
+                {/* Gráfico de Recaudación - Nueva Sección */}
+                <div className="mt-4 lg:mt-6 bg-white shadow-sm">
+                    <div className="px-5 lg:px-6 py-4 lg:py-5 border-b border-gray-200">
+                        <h3 className="font-semibold text-gray-800">Recaudación Mensual</h3>
+                        <p className="text-gray-500 text-sm mt-1">Últimos 7 meses</p>
+                    </div>
+                    <div className="p-4 lg:p-6">
+                        <ResponsiveContainer width="100%" height={300}>
+                            <BarChart data={recaudacionData}>
+                                <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" />
+                                <XAxis
+                                    dataKey="mes"
+                                    tick={{ fill: '#6b7280', fontSize: 12 }}
+                                    axisLine={{ stroke: '#e5e7eb' }}
+                                />
+                                <YAxis
+                                    tick={{ fill: '#6b7280', fontSize: 12 }}
+                                    axisLine={{ stroke: '#e5e7eb' }}
+                                    tickFormatter={(value) => `S/ ${value}`}
+                                />
+                                <Tooltip
+                                    contentStyle={{
+                                        backgroundColor: '#fff',
+                                        border: '1px solid #e5e7eb',
+                                        borderRadius: '6px',
+                                        fontSize: '14px'
+                                    }}
+                                    formatter={(value) => [`S/ ${value}`, 'Recaudación']}
+                                />
+                                <Legend
+                                    wrapperStyle={{ fontSize: '14px', paddingTop: '20px' }}
+                                />
+                                <Bar
+                                    dataKey="monto"
+                                    fill="#fb923c"
+                                    name="Monto Recaudado"
+                                    radius={[6, 6, 0, 0]}
+                                />
+                            </BarChart>
+                        </ResponsiveContainer>
                     </div>
                 </div>
             </div>

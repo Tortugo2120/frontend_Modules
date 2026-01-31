@@ -1,19 +1,42 @@
-import { useMemo } from "react";
+import { useMemo, useState, useEffect } from "react";
+import { getPhrase } from "../services/PhraseService";
 
 interface NavBarProps {
-  toggleSidebar: () => void;
-  sidebarOpen: boolean;
+    toggleSidebar: () => void;
+    sidebarOpen: boolean;
 }
 
 const MONTH_NAMES = [
-  "Enero", "Febrero", "Marzo", "Abril", "Mayo", "Junio",
-  "Julio", "Agosto", "Septiembre", "Octubre", "Noviembre", "Diciembre"
+    "Enero", "Febrero", "Marzo", "Abril", "Mayo", "Junio",
+    "Julio", "Agosto", "Septiembre", "Octubre", "Noviembre", "Diciembre"
 ];
 
 const NavBar = ({ toggleSidebar, sidebarOpen }: NavBarProps) => {
+    const [phrase, setPhrase] = useState<string>("");
+    const [author, setAuthor] = useState<string>("");
+    const [loading, setLoading] = useState(true);
+
     const currentDate = useMemo(() => {
         const today = new Date();
         return `${today.getDate()} de ${MONTH_NAMES[today.getMonth()]}, ${today.getFullYear()}`;
+    }, []);
+
+    useEffect(() => {
+        const fetchPhrase = async () => {
+            try {
+                setLoading(true);
+                const data = await getPhrase();
+                setPhrase(data.phrase || "");
+                setAuthor(data.author || "");
+            } catch (error) {
+                console.error("Failed to fetch phrase:", error);
+                setPhrase("La perseverancia es el camino al éxito");
+                setAuthor("Desconocido");
+            } finally {
+                setLoading(false);
+            }
+        };
+        fetchPhrase();
     }, []);
     return (
         <>
@@ -29,14 +52,18 @@ const NavBar = ({ toggleSidebar, sidebarOpen }: NavBarProps) => {
                         <i className="fas fa-bars text-xl"></i>
                     </button>
 
-                    <div className="relative w-48 sm:w-64 md:w-80 lg:w-96">
-                        <i className="fas fa-search absolute left-4 top-1/2 -translate-y-1/2 text-gray-400 text-sm"></i>
-                        <input
-                            type="text"
-                            placeholder="Buscar expedientes, personas..."
-                            className="w-full pl-11 pr-4 py-2.5 border border-gray-300 bg-gray-50 text-sm font-normal
-                            focus:outline-none focus:border-primary focus:bg-white transition-colors rounded"
-                        />
+                    <div className="hidden sm:block relative w-64 md:w-80 lg:w-150">
+                        {loading ? (
+                            <div className="flex items-center gap-2">
+                                <i className="fas fa-quote-left text-blue-600 text-xs"></i>
+                                <p className="text-sm font-normal text-gray-600 italic">Cargando frase...</p>
+                            </div>
+                        ) : (
+                            <div className="flex flex-col gap-1">
+                                <p className="text-sm font-medium text-blue-900 italic">"{phrase}"</p>
+                                <p className="text-xs text-blue-700 text-right">- {author}</p>
+                            </div>
+                        )}
                     </div>
 
                     <div className="flex items-center gap-3 sm:gap-6 lg:gap-8">
