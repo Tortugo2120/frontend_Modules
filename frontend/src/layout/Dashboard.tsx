@@ -52,7 +52,7 @@ export default function Dashboard() {
               <p className="font-medium text-sm truncate">{user?.data.username.toUpperCase()}</p>
               <p className="text-slate-50 text-xs font-normal">Administrador</p>
             </div>
-            <button className="text-slate-50 hover:text-slate-400 transition-colors p-2" onClick={logout}>
+            <button className="text-slate-50 hover:text-slate-400 transition-colors p-2 cursor-pointer" onClick={logout}>
               <i className="fas fa-sign-out-alt"></i>
             </button>
           </div>

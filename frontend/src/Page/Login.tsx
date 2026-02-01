@@ -52,7 +52,7 @@ export default function Login() {
 
     if (data.username === '12345678' && data.password === 'password') {
       setTimeout(() => {
-        login({ message: 'Login successful', token: 'eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJpc3MiOiJodHRwOi8vbG9jYWxob3N0IiwiYXVkIjoiaHR0cDovL2xvY2FsaG9zdCIsImlhdCI6MTc2OTc5NDAzOSwiZXhwIjoxNzY5Nzk3NjM5LCJkYXRhIjp7InVzZXJuYW1lIjoiRGlja2VucyIsImlkIjoiMSIsInJvbGVfaWQiOiIxIn0sImp0aSI6IjVkMjY4NWM2ZjVlZmM0YTlmZjFjMWYxZWU1MDVmYzlmIn0.FD6eCuwHGAgQrT3mjDo3pekcNgbBNXDE2s8lb9x6XfI' });
+        login({ message: 'Login successful', token: 'eyJ0eXAiOiJKV1QiLCJhbGciOiJFUzI1NiIsImtpZCI6IjM1YjgyMjMyM2I0MjMyYjg1YzUwMDA2N2I0NjRkYmJlIn0.eyJpc3MiOiJodHRwOi8vbG9jYWxob3N0IiwiYXVkIjoiaHR0cDovL2xvY2FsaG9zdCIsImlhdCI6MTc2OTkxNzU0NSwiZXhwIjoxNzY5OTIxMTAwLCJkYXRhIjp7InVzZXJuYW1lIjoiRGlja2VucyIsImlkIjoiMSIsInJvbGVfaWQiOiIxIn0sImp0aSI6IjVkMjY4NWM2ZjVlZmM0YTlmZjFjMWYxZWU1MDVmYzlmIn0.n5sDO70hAnpT1gmVEGbpEpv4XFFb-jHislCJBXtdN0DLsAmvfzCUhzb01i854Uiry04ARPAbRSYh9Wo1zJrD_Ax' });
         setIsLoading(false);
         navigate('/dashboard');
       }, 1500);

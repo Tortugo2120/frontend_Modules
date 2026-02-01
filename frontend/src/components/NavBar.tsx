@@ -1,7 +1,7 @@
 import { useMemo, useState, useEffect, useRef } from "react";
 import { getPhrase } from "../services/PhraseService";
 import { useNavigate } from "react-router-dom";
-
+import {Auth} from "../context/AuthContext";
 interface NavBarProps {
     toggleSidebar: () => void;
     sidebarOpen: boolean;
@@ -20,7 +20,7 @@ const NavBar = ({ toggleSidebar, sidebarOpen }: NavBarProps) => {
     const [loading, setLoading] = useState(true);
     const [showUserMenu, setShowUserMenu] = useState(false);
     const menuRef = useRef<HTMLDivElement>(null);
-
+    const {logout} = Auth();
     const currentDate = useMemo(() => {
         const today = new Date();
         return `${today.getDate()} de ${MONTH_NAMES[today.getMonth()]}, ${today.getFullYear()}`;
@@ -63,8 +63,7 @@ const NavBar = ({ toggleSidebar, sidebarOpen }: NavBarProps) => {
 
     const handleLogout = () => {
         // Aquí implementa tu lógica de cierre de sesión
-        navigate('/');
-        console.log("Cerrando sesión...");
+        logout();
         setShowUserMenu(false);
     };
 
@@ -160,7 +159,7 @@ const NavBar = ({ toggleSidebar, sidebarOpen }: NavBarProps) => {
                                     {/* Cerrar sesión */}
                                     <button
                                         onClick={handleLogout}
-                                        className="w-full px-4 py-2 text-left text-sm text-red-600 hover:bg-red-50 flex items-center gap-3 transition-colors">
+                                        className="w-full px-4 py-2 text-left text-sm text-red-600 hover:bg-red-50 flex items-center gap-3 transition-colors cursor-pointer">
                                         <i className="fas fa-sign-out-alt text-red-600 w-4"></i>
                                         <span>Cerrar Sesión</span>
                                     </button>
