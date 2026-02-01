@@ -3,17 +3,17 @@ import { Outlet } from "react-router-dom";
 import { useState } from "react";
 import logo from '../assets/logo-muni.jpg';
 import NavBar from "../components/NavBar.tsx";
-import {Auth} from "../context/AuthContext.tsx";
+import { Auth } from "../context/AuthContext.tsx";
 
 export default function Dashboard() {
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [activeView, setActiveView] = useState("home");
   const toggleSidebar = () => setSidebarOpen((v) => !v);
   const closeSidebar = () => setSidebarOpen(false);
-  const {user,logout} = Auth();
+  const { user, logout } = Auth();
   return (
     <div className={"flex min-h-screen"}>
-      {/* backdrop for mobile when sidebar is open */}
+
       <div
         className={`${sidebarOpen ? "block" : "hidden"} lg:hidden fixed inset-0 bg-black/40 z-40`}
         onClick={closeSidebar}

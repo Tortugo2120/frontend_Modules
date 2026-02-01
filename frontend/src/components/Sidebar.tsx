@@ -80,7 +80,7 @@ export function Nav({ onLinkClick }: NavProps) {
                 </li>
                 <li>
                     <Link to={"/dashboard/pagos"} onClick={onLinkClick} className="flex items-center gap-4 px-4 py-3.5 text-white hover:bg-slate hover:text-slate-300 transition-colors">
-                        <i className="fas fa-money-bill-wave w-5 text-center text-md"></i>
+                        <i className="fas fa-wallet w-5 text-center text-md"></i>
                         <span className="font-normal text-md">Pagos</span>
                     </Link>
                 </li>

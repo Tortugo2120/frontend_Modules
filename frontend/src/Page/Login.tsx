@@ -1,12 +1,12 @@
 "use client";
 
-import {useState} from 'react';
+import { useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
-import { loginSchema } from '../Validations/validation';
+import { loginSchema } from '../validations/validation';
 import { z } from 'zod';
 import { useNavigate } from 'react-router-dom';
-import {Auth} from '../context/AuthContext';
+import { Auth } from '../context/AuthContext';
 
 type LoginFormData = z.infer<typeof loginSchema>;
 
@@ -52,11 +52,11 @@ export default function Login() {
 
     if (data.username === '12345678' && data.password === 'password') {
       setTimeout(() => {
-        login({ message: 'Login successful', token: 'eyJ0eXAiOiJKV1QiLCJhbGciOiJFUzI1NiIsImtpZCI6IjM1YjgyMjMyM2I0MjMyYjg1YzUwMDA2N2I0NjRkYmJlIn0.eyJpc3MiOiJodHRwOi8vbG9jYWxob3N0IiwiYXVkIjoiaHR0cDovL2xvY2FsaG9zdCIsImlhdCI6MTc2OTkxNzU0NSwiZXhwIjoxNzY5OTIxMTAwLCJkYXRhIjp7InVzZXJuYW1lIjoiRGlja2VucyIsImlkIjoiMSIsInJvbGVfaWQiOiIxIn0sImp0aSI6IjVkMjY4NWM2ZjVlZmM0YTlmZjFjMWYxZWU1MDVmYzlmIn0.n5sDO70hAnpT1gmVEGbpEpv4XFFb-jHislCJBXtdN0DLsAmvfzCUhzb01i854Uiry04ARPAbRSYh9Wo1zJrD_Ax' });
+        login({ message: 'Login successful', token: 'eyJhbGciOiJQUzI1NiIsImtpZCI6ImYzNDNhZDRjNTA1YjFiZjZlMzAzZTlkOTQ3Y2RmM2Q0IiwidHlwIjoiSldUIn0.eyJpc3MiOiJodHRwOi8vbG9jYWxob3N0IiwiYXVkIjoiaHR0cDovL2xvY2FsaG9zdCIsImlhdCI6MTc2OTk3NDEzMiwiZXhwIjoxNzcwMDc2ODAwLCJkYXRhIjp7InVzZXJuYW1lIjoiRGlja2VucyIsImlkIjoiMSIsInJvbGVfaWQiOiIxIn0sImp0aSI6IjVkMjY4NWM2ZjVlZmM0YTlmZjFjMWYxZWU1MDVmYzlmIn0.H8rMz5AzEdT-uC8Wa4xATYPs-PCj_XDP771azJa93ccvp-1dyMoh4-Ya-hxh80tpSnF8m4BTF4GVcznVuAAVQmr1ljmHlyo41R3wprlZWAcEhPBW6fihuPrDILYrJLI2vjUdU3k2Gwtim9TKMqGC0SEOvYvAacNsXCf5gT57sn3P0MvvU88iisxxlKm2J6QcrsrGGkJlW2clDJKA8JZ-UHkzQYuMCE-5PC2WUolfOCfouaFg1dZ-aZYH98b4AR4ZUUATBMKUn5eJPKLgzBCNZo1647BSJC_i4B9bA-ZVzEPIDCsGA16Wf8LVMkEyypcXwhm6UsFSoKUHvkszmOg4wdSLzuN3hJumwX1rdUn2TXEAf5VmqP3wh4GFuEJApDXkdzucE3w2ZjWyk0D1zezDS95QKbiISXnL9r_RuhdBf-ZU8-KkdDBO9vbLToej0IeMgyHOjhSKm3EdPjiHbP7Kt1wcwDcxPjmZ0vbg7U-apla2YAFHOxXdCQ6v2VmQkAiS' });
         setIsLoading(false);
         navigate('/dashboard');
       }, 1500);
-    }else{
+    } else {
       showToastMessage('Contraseña o usuario incorrecto', 'error');
       setIsLoading(false);
     }
@@ -97,9 +97,8 @@ export default function Login() {
                 <input
                   type="text"
                   placeholder="Ingresa tu usuario"
-                  className={`input input-bordered w-full outline-none ${
-                    errors.username ? 'border-error' : 'border-gray-300'
-                  }`}
+                  className={`input input-bordered w-full outline-none ${errors.username ? 'border-error' : 'border-gray-300'
+                    }`}
                   {...register('username')}
                   onInput={handleUsuarioInput}
                 />
@@ -123,9 +122,8 @@ export default function Login() {
                   <input
                     type={showPassword ? 'text' : 'password'}
                     placeholder="Ingresa tu contraseña"
-                    className={`input input-bordered w-full pr-12 outline-none ${
-                      errors.password ? 'border-error' : 'border-gray-300'
-                    }`}
+                    className={`input input-bordered w-full pr-12 outline-none ${errors.password ? 'border-error' : 'border-gray-300'
+                      }`}
                     {...register('password')}
                   />
                   <button

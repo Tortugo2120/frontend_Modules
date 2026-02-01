@@ -87,7 +87,7 @@ export default function NewRequest() {
     };
 
     return (
-        <div className="min-h-screen bg-blue-300/40 from-slate-50 via-blue-50 to-indigo-50 p-4 sm:p-6 lg:p-10">
+        <div className="min-h-screen bg-blue-300/40 from-slate-50 via-blue-50 to-indigo-50 p-4 sm:p-6 lg:p-8">
    
             <div className="mb-4">
                 <div className="flex items-center gap-3 mb-6">
