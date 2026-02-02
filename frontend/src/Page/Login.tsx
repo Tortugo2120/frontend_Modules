@@ -3,10 +3,11 @@
 import { useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
-import { loginSchema } from '../validations/validation';
+import { loginSchema } from '../Validations/validation';
 import { z } from 'zod';
 import { useNavigate } from 'react-router-dom';
 import { Auth } from '../context/AuthContext';
+import useLogin from "../hooks/useLogin.ts";
 
 type LoginFormData = z.infer<typeof loginSchema>;
 
@@ -20,8 +21,8 @@ export default function Login() {
   const { login } = Auth();
   const [showPassword, setShowPassword] = useState(false);
   const [toast, setToast] = useState<ToastMessage | null>(null);
-  const [isLoading, setIsLoading] = useState(false);
-
+  //const [isLoading, setIsLoading] = useState(false);
+  const {loading,error,loginUser} = useLogin();
   const {
     register,
     handleSubmit,
@@ -46,19 +47,23 @@ export default function Login() {
     }, 3000);
   };
 
-  const onSubmit = (data: LoginFormData) => {
-    setIsLoading(true);
+  const onSubmit = async (data: LoginFormData) => {
+    //setIsLoading(true);
     showToastMessage('Iniciando sesión...', 'success');
 
-    if (data.username === '12345678' && data.password === 'password') {
+    const loginResponse = await loginUser(data);
+    if (loginResponse?.code === 200) {
       setTimeout(() => {
-        login({ message: 'Login successful', token: 'eyJhbGciOiJQUzI1NiIsImtpZCI6ImYzNDNhZDRjNTA1YjFiZjZlMzAzZTlkOTQ3Y2RmM2Q0IiwidHlwIjoiSldUIn0.eyJpc3MiOiJodHRwOi8vbG9jYWxob3N0IiwiYXVkIjoiaHR0cDovL2xvY2FsaG9zdCIsImlhdCI6MTc2OTk3NDEzMiwiZXhwIjoxNzcwMDc2ODAwLCJkYXRhIjp7InVzZXJuYW1lIjoiRGlja2VucyIsImlkIjoiMSIsInJvbGVfaWQiOiIxIn0sImp0aSI6IjVkMjY4NWM2ZjVlZmM0YTlmZjFjMWYxZWU1MDVmYzlmIn0.H8rMz5AzEdT-uC8Wa4xATYPs-PCj_XDP771azJa93ccvp-1dyMoh4-Ya-hxh80tpSnF8m4BTF4GVcznVuAAVQmr1ljmHlyo41R3wprlZWAcEhPBW6fihuPrDILYrJLI2vjUdU3k2Gwtim9TKMqGC0SEOvYvAacNsXCf5gT57sn3P0MvvU88iisxxlKm2J6QcrsrGGkJlW2clDJKA8JZ-UHkzQYuMCE-5PC2WUolfOCfouaFg1dZ-aZYH98b4AR4ZUUATBMKUn5eJPKLgzBCNZo1647BSJC_i4B9bA-ZVzEPIDCsGA16Wf8LVMkEyypcXwhm6UsFSoKUHvkszmOg4wdSLzuN3hJumwX1rdUn2TXEAf5VmqP3wh4GFuEJApDXkdzucE3w2ZjWyk0D1zezDS95QKbiISXnL9r_RuhdBf-ZU8-KkdDBO9vbLToej0IeMgyHOjhSKm3EdPjiHbP7Kt1wcwDcxPjmZ0vbg7U-apla2YAFHOxXdCQ6v2VmQkAiS' });
-        setIsLoading(false);
+        login(loginResponse);
+        //setIsLoading(false);
         navigate('/dashboard');
       }, 1500);
-    } else {
+    }
+
+    if (loginResponse?.code === 401) {
       showToastMessage('Contraseña o usuario incorrecto', 'error');
-      setIsLoading(false);
+      console.error(error);
+      //setIsLoading(false);
     }
 
   };
@@ -155,10 +160,12 @@ export default function Login() {
                 </label>
               </div>
 
+              {error && <span className="text-red-600">{error}</span>}
+
               {/* Botón Enviar */}
               <div className="form-control mt-6">
-                <button type="submit" className="btn btn-primary btn-block" disabled={isLoading}>
-                  {isLoading ? (
+                <button type="submit" className="btn btn-primary btn-block" disabled={loading}>
+                  {loading ? (
                     <span className="loading loading-dots loading-xl"></span>
                   ) : (
                     <>

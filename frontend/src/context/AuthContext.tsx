@@ -64,9 +64,9 @@ export const AuthProvider = ({ children }: { children: ReactNode })     => {
     return () => clearInterval(interval);
   }, [user, isTokenExpired, logout]);
 
-  const login = (data: LoginResponse) => {
-    localStorage.setItem("token", data.token);
-    const decoded = decodedToken(data.token);
+  const login = (loginResponse: LoginResponse) => {
+    localStorage.setItem("token", loginResponse.data.token);
+    const decoded = decodedToken(loginResponse.data.token);
     setUser(decoded);
   };
 

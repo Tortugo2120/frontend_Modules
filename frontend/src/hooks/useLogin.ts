@@ -5,31 +5,35 @@ import { authLogin } from "../services/AuthService";
 interface UseLoginResult {
   loading: boolean;
   error: string | null;
-  login: (authData: LoginRequest) => Promise<LoginResponse | undefined>;
-  clearError: () => void;
+  loginUser: (authData: LoginRequest) => Promise<LoginResponse | undefined>;
 }
 
 export default function useLogin(): UseLoginResult {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  const login = async (authData: LoginRequest): Promise<LoginResponse | undefined> => {
+  const loginUser = async (authData: LoginRequest): Promise<LoginResponse | undefined> => {
     setLoading(true);
     setError(null);
     try {
-      const data = await authLogin(authData);
-      return data;
-    } catch (err: any) {
-      const errorMessage = err.message || "Error desconocido al iniciar sesión";
-      setError(errorMessage);
-      console.error("Login error:", err);
-      throw err;
+      const  response = await authLogin(authData);
+       return response;
+    } catch (e: any) {
+      console.log("error", e.response);
+      const errorResponse = e.response.data.error;
+
+      if (errorResponse === "404") {
+        setError("Usuario no encontrado");
+      }else if (errorResponse === "401") {
+        setError("Contraseña incorrecta");
+      }
+
+      console.log("Login error:", e.message.error);
+      throw e;
     } finally {
       setLoading(false);
     }
   };
 
-  const clearError = () => setError(null);
-
-  return { loading, error, login, clearError };
+  return { loading, error, loginUser };
 }
