@@ -49,7 +49,7 @@ export default function Dashboard() {
               <i className="fas fa-user text-slate-50 text-sm"></i>
             </div>
             <div className="flex-1 min-w-0">
-              <p className="font-medium text-sm truncate">{user?.data.username.toUpperCase()}</p>
+              <p className="font-medium text-sm truncate">{user?.sub.toUpperCase()}</p>
               <p className="text-slate-50 text-xs font-normal">Administrador</p>
             </div>
             <button className="text-slate-50 hover:text-slate-400 transition-colors p-2 cursor-pointer" onClick={logout}>

@@ -41,7 +41,7 @@ const UserMenu = () => {
         <div className="absolute right-0 mt-2 w-56 bg-white rounded-lg shadow-lg border border-gray-200 py-2 z-50">
             {/* Header*/}
             <div className="px-4 py-3 border-b border-gray-200">
-                <p className="text-sm font-semibold text-gray-800">{user?.data.username.toUpperCase()}</p>
+                <p className="text-sm font-semibold text-gray-800">{user?.sub.toUpperCase()}</p>
                 <p className="text-xs text-gray-500 mt-0.5">usuario@ejemplo.com</p>
             </div>
 

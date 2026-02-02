@@ -92,7 +92,7 @@ const NavBar = ({ toggleSidebar, sidebarOpen }: NavBarProps) => {
                             <button
                                 onClick={() => setShowUserMenu(!showUserMenu)}
                                 className="w-9 h-9 lg:w-10 lg:h-10 bg-indigo-950 flex items-center rounded-full justify-center hover:ring-2 hover:ring-indigo-400 transition-all cursor-pointer">
-                                <span className="text-white font-medium text-sm">{user?.data.username?.substring(0, 2).toUpperCase()}</span>
+                                <span className="text-white font-medium text-sm">{user?.sub.substring(0, 2).toUpperCase()}</span>
                             </button>
 
                             {/* Menú desplegable */}

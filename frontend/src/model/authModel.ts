@@ -10,11 +10,6 @@ export interface LoginResponse {
   message: string;
   data:{
     token: string;
-    user:{
-      username:string;
-      id:number;
-      role_id:number;
-    }
   }
 }
 
@@ -23,10 +18,8 @@ export interface Usuario{
   aud: string;
   iat: number;
   exp: number;
-  data: {
-    username: string;
-    id: string;
-    role_id: number;
-  }
+  sub: string;
   jti: string;
+  rol_id: number;
+  user_id: number;
 }
