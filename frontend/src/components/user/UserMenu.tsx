@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef } from "react";
 import { useNavigate } from "react-router-dom";
-import { Auth } from "../context/AuthContext";
+import { Auth } from "../../context/AuthContext";
 
 const UserMenu = () => {
     const navigate = useNavigate();

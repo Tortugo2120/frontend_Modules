@@ -85,7 +85,7 @@ export default function Home() {
 
     return (
         <>
-            <div className="bg-blue-300/40 p-4 sm:p-6 lg:p-8">
+            <div className="bg-blue-300/40 p-4 sm:p-6 lg:p-6">
                 <div className="mb-6 lg:mb-8">
                     <h1 className="text-3xl font-trispace lg:text-4xl font-semibold text-info-content">Panel de Control</h1>
                     <p className="text-gray-800 mt-1.5 lg:mt-2 font-normal text-sm lg:text-base">Resumen general del sistema de Registro Civil</p>

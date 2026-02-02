@@ -37,7 +37,7 @@ export default function Dashboard() {
                 </h1>
               </div>
               <p className="text-white-200 text-md font-normal">
-                -José Leonardo Ortiz-
+                - José Leonardo Ortiz -
               </p>
             </div>
           </div>
