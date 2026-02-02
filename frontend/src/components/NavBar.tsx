@@ -1,7 +1,7 @@
 import { useMemo, useState, useEffect, useRef } from "react";
 import { getPhrase } from "../services/PhraseService";
 import { Auth } from "../context/AuthContext";
-import UserMenu from "./UserMenu";
+import UserMenu from "./user/UserMenu";
 
 interface NavBarProps {
     toggleSidebar: () => void;
