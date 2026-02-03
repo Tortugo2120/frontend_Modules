@@ -1,11 +1,12 @@
 import { useState } from "react";
-import StepProgressBar from "../../components/requests/StepProgreseBar";
+import StepProgressBar from "../../components/requests/Stepprogresebar.tsx";
 import RequestTypeCard from "../../components/requests/Requesttypecard";
 import ApplicantForm from "../../components/requests/Applicantform";
 import EventForm from "../../components/requests/Eventform";
 import ConfirmationSummary from "../../components/requests/Confirmationsummary";
 import NavigationButtons from "../../components/requests/Navigationbuttons";
 import { type TipoSolicitud, REQUEST_TYPES } from "../../Types/requests/Constants";
+import useTipoSolici from "../../hooks/useTipoSolici.ts";
 
 export default function NewRequest() {
     const [tipoSolicitud, setTipoSolicitud] = useState<TipoSolicitud | ''>('');
@@ -29,7 +30,7 @@ export default function NewRequest() {
         documentosAdjuntos: '',
         observaciones: ''
     });
-
+    const  {tiposolicitud} = useTipoSolici();
     const [currentStep, setCurrentStep] = useState(1);
 
     const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
@@ -54,7 +55,6 @@ export default function NewRequest() {
     };
 
     const selectedRequestType = REQUEST_TYPES.find(t => t.id === tipoSolicitud);
-
     return (
         <div className="min-h-screen bg-blue-300/40 from-slate-50 via-blue-50 to-indigo-50 p-4 sm:p-6 lg:p-6">
             {/* Header */}
@@ -91,6 +91,13 @@ export default function NewRequest() {
                                             isSelected={tipoSolicitud === tipo.id}
                                             onSelect={setTipoSolicitud}
                                         />
+                                    ))}
+
+                                    {tiposolicitud.map((tipo) => (
+                                        <span key={tipo.id}>
+                                            <p>{tipo.nombre_solicitud}</p>
+                                            <p>{tipo.precio}</p>
+                                        </span>
                                     ))}
                                 </div>
                             </div>

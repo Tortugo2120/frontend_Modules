@@ -3,6 +3,7 @@ import axios from "axios";
 const apiAxios = axios.create({
   baseURL: "http://localhost:8080",
   timeout: 5000,
+  withCredentials: true,
   headers: {
     "Content-Type": "application/json",
   },
@@ -18,12 +19,21 @@ apiAxios.interceptors.request.use((config) => {
 
 apiAxios.interceptors.response.use(
   (res) => res,
-  (err) => {
-    if (err.response?.status === 401) {
-      localStorage.removeItem("token");
-      // Redirigir al login
-      if (window.location.pathname !== '/') {
-        window.location.href = "/";
+  async (err) => {
+    const originalRequest = err.config;
+    if (err.response?.status === 401 && !originalRequest._retry){
+        originalRequest._retry = true;
+
+      try {
+        const response = await apiAxios.post('/api/auth/refresh');
+        const newAccessToken = response.data.data.token;
+        localStorage.setItem('token', newAccessToken);
+        originalRequest.headers.Authorization = `Bearer ${newAccessToken}`;
+        return apiAxios(originalRequest);
+      }catch (refreshError) {
+        localStorage.clear();
+        window.location.href='/';
+        return Promise.reject(refreshError);
       }
     }
     return Promise.reject(err);
