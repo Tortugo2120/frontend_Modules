@@ -6,9 +6,9 @@ interface ProtectedRouteProps {
 }
 
 export const ProtectedRoute = ({ children }: ProtectedRouteProps) => {
-  const { isAuthenticated, isTokenExpired } = Auth();
+  const { isAuthenticated } = Auth();
 
-  if (!isAuthenticated || isTokenExpired()) {
+  if (!isAuthenticated) {
     console.log("Token expirado o usuario no autenticado, redirigiendo al login...");
     return <Navigate to="/" replace />;
   }

@@ -22,6 +22,7 @@ apiAxios.interceptors.response.use(
   async (err) => {
     const originalRequest = err.config;
     if (err.response?.status === 401 && !originalRequest._retry){
+      console.log(err.response);
         originalRequest._retry = true;
 
       try {
@@ -31,6 +32,7 @@ apiAxios.interceptors.response.use(
         originalRequest.headers.Authorization = `Bearer ${newAccessToken}`;
         return apiAxios(originalRequest);
       }catch (refreshError) {
+        console.log(refreshError);
         localStorage.clear();
         window.location.href='/';
         return Promise.reject(refreshError);
