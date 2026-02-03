@@ -1,5 +1,5 @@
 export interface Tiposolicitud{
     id:number;
-    nombre:string;
+    nombre_solicitud:string;
     precio:number;
 }
