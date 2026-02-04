@@ -1,15 +1,16 @@
 import { useState } from "react";
-import StepProgressBar from "../../components/requests/Stepprogresebar.tsx";
-import RequestTypeCard from "../../components/requests/Requesttypecard";
-import ApplicantForm from "../../components/requests/Applicantform";
-import EventForm from "../../components/requests/Eventform";
-import ConfirmationSummary from "../../components/requests/Confirmationsummary";
-import NavigationButtons from "../../components/requests/Navigationbuttons";
-import { type TipoSolicitud, REQUEST_TYPES } from "../../Types/requests/Constants";
+import StepProgressBar from "../../components/requests/new/Stepprogresebar";
+import RequestTypeCard from "../../components/requests/new/Requesttypecard";
+import ApplicantForm from "../../components/requests/new/Applicantform";
+import EventForm from "../../components/requests/new/Eventform";
+import ConfirmationSummary from "../../components/requests/new/Confirmationsummary";
+import NavigationButtons from "../../components/requests/new/Navigationbuttons";
 import useTipoSolici from "../../hooks/useTipoSolici.ts";
 
 export default function NewRequest() {
-    const [tipoSolicitud, setTipoSolicitud] = useState<TipoSolicitud | ''>('');
+    const [tipoSolicitud, setTipoSolicitud] = useState<number | null>(null);
+    const [searchTerm, setSearchTerm] = useState("");
+
     const [formData, setFormData] = useState({
         // Datos del solicitante
         nombreSolicitante: '',
@@ -30,7 +31,8 @@ export default function NewRequest() {
         documentosAdjuntos: '',
         observaciones: ''
     });
-    const  {tiposolicitud} = useTipoSolici();
+
+    const { tiposolicitud } = useTipoSolici();
     const [currentStep, setCurrentStep] = useState(1);
 
     const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
@@ -42,7 +44,7 @@ export default function NewRequest() {
 
     const handleSubmit = (e: React.FormEvent) => {
         e.preventDefault();
-        console.log('Solicitud enviada:', { tipoSolicitud, ...formData });
+        console.log('Solicitud enviada:', formData);
         // Aquí iría la lógica para enviar al backend
     };
 
@@ -54,7 +56,13 @@ export default function NewRequest() {
         if (currentStep > 1) setCurrentStep(currentStep - 1);
     };
 
-    const selectedRequestType = REQUEST_TYPES.find(t => t.id === tipoSolicitud);
+    const selectedRequestType = tiposolicitud.find(tipo => tipo.id === tipoSolicitud);
+
+    // Filtrar solicitudes según el término de búsqueda
+    const filteredSolicitudes = tiposolicitud.filter(tipo =>
+        tipo.nombre_solicitud.toLowerCase().includes(searchTerm.toLowerCase())
+    );
+
     return (
         <div className="min-h-screen bg-blue-300/40 from-slate-50 via-blue-50 to-indigo-50 p-4 sm:p-6 lg:p-6">
             {/* Header */}
@@ -80,26 +88,63 @@ export default function NewRequest() {
                         {/* Step 1: Tipo de Solicitud */}
                         {currentStep === 1 && (
                             <div className="p-6 lg:p-6 animate-fadeIn">
-                                <h2 className="text-2xl font-bold text-gray-900 mb-2">Seleccione el tipo de solicitud</h2>
-                                <p className="text-gray-600 mb-8">Elija el trámite que desea realizar</p>
+                                <div className="flex justify-between items-center flex-col sm:flex-row sm:items-end">
+                                    <div>
+                                        <h2 className="text-2xl font-bold text-gray-900 mb-2">Seleccione el tipo de solicitud</h2>
+                                        <p className="text-gray-600 mb-6">Elija el trámite que desea realizar</p>
+                                    </div>
 
-                                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4">
-                                    {REQUEST_TYPES.map((tipo) => (
-                                        <RequestTypeCard
-                                            key={tipo.id}
-                                            tipo={tipo}
-                                            isSelected={tipoSolicitud === tipo.id}
-                                            onSelect={setTipoSolicitud}
-                                        />
-                                    ))}
-
-                                    {tiposolicitud.map((tipo) => (
-                                        <span key={tipo.id}>
-                                            <p>{tipo.nombre_solicitud}</p>
-                                            <p>{tipo.precio}</p>
-                                        </span>
-                                    ))}
+                                    {/* Buscador */}
+                                    <div className="mb-6">
+                                        <div className="relative">
+                                            <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
+                                                <i className="fas fa-search text-gray-400"></i>
+                                            </div>
+                                            <input
+                                                type="text"
+                                                value={searchTerm}
+                                                onChange={(e) => setSearchTerm(e.target.value)}
+                                                placeholder="Buscar tipo de solicitud..."
+                                                className="w-full pl-11 pr-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-0 transition-all"
+                                            />
+                                            {searchTerm && (
+                                                <button
+                                                    type="button"
+                                                    onClick={() => setSearchTerm("")}
+                                                    className="absolute inset-y-0 right-0 pr-4 flex items-center text-gray-400 hover:text-gray-600"
+                                                >
+                                                    <i className="fas fa-times"></i>
+                                                </button>
+                                            )}
+                                        </div>
+                                        {searchTerm && (
+                                            <p className="mt-2 text-sm text-gray-600">
+                                                {filteredSolicitudes.length} resultado{filteredSolicitudes.length !== 1 ? 's' : ''} encontrado{filteredSolicitudes.length !== 1 ? 's' : ''}
+                                            </p>
+                                        )}
+                                    </div>
                                 </div>
+                                {/* Grid de solicitudes */}
+                                {filteredSolicitudes.length > 0 ? (
+                                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                                        {filteredSolicitudes.map((tipo) => (
+                                            <RequestTypeCard
+                                                key={tipo.id}
+                                                id={tipo.id}
+                                                nombre={tipo.nombre_solicitud}
+                                                precio={tipo.precio}
+                                                isSelected={tipoSolicitud === tipo.id}
+                                                onSelect={setTipoSolicitud}
+                                            />
+                                        ))}
+                                    </div>
+                                ) : (
+                                    <div className="text-center py-12">
+                                        <i className="fas fa-search text-gray-300 text-5xl mb-4"></i>
+                                        <p className="text-gray-500 text-lg">No se encontraron solicitudes</p>
+                                        <p className="text-gray-400 text-sm mt-2">Intenta con otros términos de búsqueda</p>
+                                    </div>
+                                )}
                             </div>
                         )}
 
@@ -143,7 +188,7 @@ export default function NewRequest() {
                             <div className="p-6 lg:p-6">
                                 <ConfirmationSummary
                                     tipoSolicitud={tipoSolicitud}
-                                    tipoNombre={selectedRequestType?.nombre}
+                                    tipoNombre={selectedRequestType?.nombre_solicitud}
                                     formData={formData}
                                 />
                             </div>

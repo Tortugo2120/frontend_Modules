@@ -1,7 +1,6 @@
-export type TipoSolicitud = 'matrimonio' | 'divorcio' | 'nacimiento' | 'defuncion' | 'copia';
 
 export interface RequestType {
-    id: TipoSolicitud;
+    id: number;
     nombre: string;
     icon: string;
     descripcion: string;
@@ -12,7 +11,7 @@ export interface RequestType {
 
 export const REQUEST_TYPES: RequestType[] = [
     {
-        id: 'matrimonio',
+        id: 1,
         nombre: 'Matrimonio Civil',
         icon: 'fa-ring',
         descripcion: 'Solicitud de acta de matrimonio civil',
@@ -21,7 +20,7 @@ export const REQUEST_TYPES: RequestType[] = [
         ringColor: 'ring-pink-600'
     },
     {
-        id: 'divorcio',
+        id: 2,
         nombre: 'Divorcio',
         icon: 'fa-heart-broken',
         descripcion: 'Trámite de divorcio civil',
@@ -30,7 +29,7 @@ export const REQUEST_TYPES: RequestType[] = [
         ringColor: 'ring-red-600'
     },
     {
-        id: 'nacimiento',
+        id: 3,
         nombre: 'Acta de Nacimiento',
         icon: 'fa-baby',
         descripcion: 'Registro o copia de acta de nacimiento',
@@ -39,7 +38,7 @@ export const REQUEST_TYPES: RequestType[] = [
         ringColor: 'ring-blue-600'
     },
     {
-        id: 'defuncion',
+        id: 4,
         nombre: 'Acta de Defunción',
         icon: 'fa-cross',
         descripcion: 'Registro o copia de acta de defunción',
@@ -48,7 +47,7 @@ export const REQUEST_TYPES: RequestType[] = [
         ringColor: 'ring-gray-700'
     },
     {
-        id: 'copia',
+        id: 5,
         nombre: 'Copia de Expediente',
         icon: 'fa-copy',
         descripcion: 'Solicitud de copia certificada',
