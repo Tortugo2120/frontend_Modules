@@ -1,7 +1,6 @@
-type TipoSolicitud = 'matrimonio' | 'divorcio' | 'nacimiento' | 'defuncion' | 'copia';
 
 interface ConfirmationSummaryProps {
-    tipoSolicitud: TipoSolicitud | '';
+    tipoSolicitud: number | null;
     tipoNombre: string | undefined;
     formData: {
         nombreSolicitante: string;
@@ -13,7 +12,7 @@ interface ConfirmationSummaryProps {
     };
 }
 
-export default function ConfirmationSummary({ tipoSolicitud, tipoNombre, formData }: ConfirmationSummaryProps) {
+export default function ConfirmationSummary({tipoNombre, formData }: ConfirmationSummaryProps) {
     return (
         <div className="animate-fadeIn">
             <div className="text-center mb-8">

@@ -32,6 +32,12 @@ export default function NewRequest() {
         observaciones: ''
     });
 
+    const handleSelectTipoSolicitud = (id: number) => {
+        setTipoSolicitud(prev =>
+            prev === id ? null : id
+        );
+    };
+
     const { tiposolicitud } = useTipoSolici();
     const [currentStep, setCurrentStep] = useState(1);
 
@@ -49,7 +55,7 @@ export default function NewRequest() {
     };
 
     const nextStep = () => {
-        if (currentStep < 3) setCurrentStep(currentStep + 1);
+        if (currentStep < 5) setCurrentStep(currentStep + 1);
     };
 
     const prevStep = () => {
@@ -65,7 +71,6 @@ export default function NewRequest() {
 
     return (
         <div className="min-h-screen bg-blue-300/40 from-slate-50 via-blue-50 to-indigo-50 p-4 sm:p-6 lg:p-6">
-            {/* Header */}
             <div className="mb-4">
                 <div className="flex items-center gap-3 mb-6">
                     <div className="w-12 h-12 bg-info-content rounded-xl flex items-center justify-center shadow-lg">
@@ -76,8 +81,6 @@ export default function NewRequest() {
                         <p className="text-gray-600 text-sm mt-1">Complete los datos para registrar una nueva solicitud</p>
                     </div>
                 </div>
-
-                {/* Progress Bar */}
                 <StepProgressBar currentStep={currentStep} />
             </div>
 
@@ -131,10 +134,10 @@ export default function NewRequest() {
                                             <RequestTypeCard
                                                 key={tipo.id}
                                                 id={tipo.id}
-                                                nombre={tipo.nombre_solicitud}
+                                                nombre={tipo.nombre_solicitud.toUpperCase()}
                                                 precio={tipo.precio}
                                                 isSelected={tipoSolicitud === tipo.id}
-                                                onSelect={setTipoSolicitud}
+                                                onSelect={handleSelectTipoSolicitud}
                                             />
                                         ))}
                                     </div>
@@ -193,8 +196,6 @@ export default function NewRequest() {
                                 />
                             </div>
                         )}
-
-                        {/* Navigation Buttons */}
                         <NavigationButtons
                             currentStep={currentStep}
                             totalSteps={3}

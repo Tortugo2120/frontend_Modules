@@ -148,17 +148,7 @@ export default function Login() {
                 )}
               </div>
 
-              {/* Recordarme */}
-              <div className="form-control">
-                <label className="label cursor-pointer justify-start gap-3">
-                  <input
-                    type="checkbox"
-                    className="default-checkbox checkbox-primary w-4 h-4"
-                    {...register('rememberMe')}
-                  />
-                  <span className="label-text">Recordarme</span>
-                </label>
-              </div>
+             
 
               {error && <span className="text-red-600">{error}</span>}
 
