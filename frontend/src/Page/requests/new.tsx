@@ -2,7 +2,7 @@ import { useState } from "react";
 import StepProgressBar from "../../components/requests/new/Stepprogresebar";
 import RequestTypeCard from "../../components/requests/new/Requesttypecard";
 import ApplicantForm from "../../components/requests/new/Applicantform";
-import EventForm from "../../components/requests/new/Eventform";
+
 import ConfirmationSummary from "../../components/requests/new/Confirmationsummary";
 import NavigationButtons from "../../components/requests/new/Navigationbuttons";
 import useTipoSolici from "../../hooks/useTipoSolici.ts";
@@ -13,11 +13,10 @@ export default function NewRequest() {
 
     const [formData, setFormData] = useState({
         // Datos del solicitante
-        nombreSolicitante: '',
+        nombresSolicitante: '',
+        apellidoPaternoSolicitante: '',
+        apellidoMaternoSolicitante: '',
         dniSolicitante: '',
-        telefonoSolicitante: '',
-        emailSolicitante: '',
-        direccionSolicitante: '',
 
         // Datos específicos según tipo
         nombreCompleto1: '',
@@ -154,21 +153,18 @@ export default function NewRequest() {
                         {/* Step 2: Formulario de Datos */}
                         {currentStep === 2 && (
                             <div className="p-6 lg:p-6 animate-fadeIn">
-                                <h2 className="text-2xl font-bold text-gray-900 mb-2">Datos de la solicitud</h2>
+                                <h2 className="text-2xl font-bold text-gray-900 mb-2">Datos del solicitante</h2>
                                 <p className="text-gray-600 mb-8">Complete la información requerida</p>
 
                                 <div className="space-y-8">
                                     {/* Datos del Solicitante */}
-                                    <ApplicantForm formData={formData} onChange={handleInputChange} />
-
-                                    {/* Datos del Evento */}
-                                    <EventForm
-                                        tipoSolicitud={tipoSolicitud}
+                                    <ApplicantForm
                                         formData={formData}
                                         onChange={handleInputChange}
+                                        tipoSolicitudNombre={selectedRequestType?.nombre_solicitud}
                                     />
 
-                                    {/* Observaciones */}
+                                    {/* Observaciones 
                                     <div>
                                         <label className="block text-sm font-medium text-gray-700 mb-2">
                                             Observaciones Adicionales
@@ -182,12 +178,29 @@ export default function NewRequest() {
                                             placeholder="Agregue cualquier información adicional relevante..."
                                         ></textarea>
                                     </div>
+                                    */}
                                 </div>
                             </div>
                         )}
 
                         {/* Step 3: Confirmación */}
                         {currentStep === 3 && (
+                            <div className="p-6 lg:p-6">
+                                <h1>
+                                    Paso 3
+                                </h1>
+                            </div>
+                        )}
+                        {/* Step 3: Confirmación */}
+                        {currentStep === 4 && (
+                            <div className="p-6 lg:p-6">
+                                <h1>
+                                    Paso 4
+                                </h1>
+                            </div>
+                        )}
+                        {/* Step 3: Confirmación */}
+                        {currentStep === 5 && (
                             <div className="p-6 lg:p-6">
                                 <ConfirmationSummary
                                     tipoSolicitud={tipoSolicitud}
@@ -196,9 +209,10 @@ export default function NewRequest() {
                                 />
                             </div>
                         )}
+
                         <NavigationButtons
                             currentStep={currentStep}
-                            totalSteps={3}
+                            totalSteps={5}
                             canProceed={currentStep === 1 ? !!tipoSolicitud : true}
                             onPrevious={prevStep}
                             onNext={nextStep}
