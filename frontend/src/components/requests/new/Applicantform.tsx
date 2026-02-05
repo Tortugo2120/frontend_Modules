@@ -455,7 +455,7 @@ export default function ApplicantForm({
             </div>
 
             {/* Formulario de datos */}
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6 gap-4 sm:gap-6">
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 sm:gap-6">
                 <div className='mb-0'>
                     <label className="block text-sm font-medium text-gray-700 mb-2">
                         DNI <span className="text-red-500">*</span>
