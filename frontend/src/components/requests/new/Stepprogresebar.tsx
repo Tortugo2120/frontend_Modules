@@ -5,8 +5,10 @@ interface StepProgressBarProps {
 export default function StepProgressBar({ currentStep }: StepProgressBarProps) {
     const steps = [
         { number: 1, label: 'Tipo', fullLabel: 'de Solicitud' },
-        { number: 2, label: 'Datos', fullLabel: 'del Trámite' },
-        { number: 3, label: 'Confirmación', fullLabel: '' }
+        { number: 2, label: 'Solicitantes', fullLabel: '' },
+        { number: 3, label: 'Detalles', fullLabel: 'del trámite' },
+        { number: 4, label: 'Resumen', fullLabel: 'del trámite' },
+        { number: 5, label: 'Confirmación', fullLabel: 'de Solicitud' }
     ];
 
     return (
