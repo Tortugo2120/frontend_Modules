@@ -11,7 +11,7 @@ interface Applicant {
     direccion?: string;
     correo?: string;
     telefono?: string;
-    ubigeo?: number;
+    ubigeo?: string | undefined;
     estado_civil?: string;
 }
 
@@ -74,32 +74,22 @@ export default function ApplicantForm({
     onSolicitantesChange,
     tipoSolicitudNombre
 }: ApplicantFormProps) {
-    // Hook para búsqueda de personas
     const {fetchPersonSearch } = usePersonSearch();
-
-    // Estado para búsqueda por DNI
     const [searchDni, setSearchDni] = useState('');
     const [isSearching, setIsSearching] = useState(false);
     const [searchError, setSearchError] = useState('');
     const [searchSuccess, setSearchSuccess] = useState(false);
-
-    // Estado: lista de solicitantes agregados
     const [solicitantesAgregados, setSolicitantesAgregados] = useState<SolicitanteAgregado[]>([]);
 
-    // Estado: formulario editable
     const [formApplicant, setFormApplicant] = useState<Applicant>(createEmptyApplicant());
-
-    // Estado: applicant obtenido por búsqueda
     const [selectedApplicant, setSelectedApplicant] = useState<Applicant | null>(null);
 
-    // Notificar al padre cuando cambie la lista de solicitantes
     useEffect(() => {
         if (onSolicitantesChange) {
             onSolicitantesChange(solicitantesAgregados);
         }
     }, [solicitantesAgregados, onSolicitantesChange]);
 
-    // Helper: crear evento sintético para onChange del padre
     const createChangeEvent = useCallback((name: string, value: string) => {
         return {
             target: { name, value },
@@ -107,7 +97,6 @@ export default function ApplicantForm({
         } as unknown as React.ChangeEvent<HTMLInputElement>;
     }, []);
 
-    // Sincronizar cambios del formApplicant hacia el padre
     const syncToParent = useCallback((app: Applicant) => {
         onChange(createChangeEvent('dniSolicitante', app.dni));
         onChange(createChangeEvent('nombresSolicitante', app.nombres));
@@ -122,7 +111,6 @@ export default function ApplicantForm({
         onChange(createChangeEvent('estadoCivilSolicitante', app.estado_civil || ''));
     }, [onChange, createChangeEvent]);
 
-    // Manejar cambios manuales en los inputs del formulario
     const handleFormChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
         const { name, value } = e.target;
 
@@ -160,7 +148,7 @@ export default function ApplicantForm({
                 case 'ubigeoSolicitante':
                     // Solo números, máximo 6 dígitos
                     { const cleanUbigeo = value.replace(/\D/g, '').slice(0, 6);
-                    updatedField = { ubigeo: cleanUbigeo ? Number(cleanUbigeo) : undefined };
+                    updatedField = { ubigeo: cleanUbigeo };
                     break; }
                 case 'estadoCivilSolicitante':
                     updatedField = { estado_civil: value };
@@ -184,7 +172,34 @@ export default function ApplicantForm({
         onChange(e);
     }, [onChange, selectedApplicant]);
 
-    // Buscar solicitante por DNI usando la API real
+    const handleSelectChange = useCallback((e: React.ChangeEvent<HTMLSelectElement>) => {
+        const { name, value } = e.target;
+
+        setFormApplicant(prev => {
+            let updatedField: Partial<Applicant> = {};
+
+            switch (name) {
+                case 'sexoSolicitante':
+                    updatedField = { sexo: (value === 'M' || value === 'F') ? value as 'M' | 'F' : undefined };
+                    break;
+                case 'estadoCivilSolicitante':
+                    updatedField = { estado_civil: value };
+                    break;
+            }
+
+            const next = { ...prev, ...updatedField };
+
+            if (selectedApplicant) {
+                setSelectedApplicant(null);
+            }
+
+            return next;
+        });
+
+        const syntheticEvent = createChangeEvent(name, value);
+        onChange(syntheticEvent);
+    }, [onChange, selectedApplicant, createChangeEvent]);
+
     const handleSearchApplicant = useCallback(async () => {
         setSearchError('');
         setSearchSuccess(false);
@@ -207,19 +222,23 @@ export default function ApplicantForm({
                 return;
             }
 
-            // Mapear la respuesta del API al formato del formulario
             const personData = response.data;
+
+            const validGender = personData.gender === 'M' || personData.gender === 'F'
+                ? personData.gender as 'M' | 'F'
+                : undefined;
+
             const foundApplicant: Applicant = {
                 dni: searchDni,
                 nombres: personData.name,
                 apellidoPaterno: personData.paternalSurname,
                 apellidoMaterno: personData.maternalSurname,
                 fecha_nacimiento: personData.birthdate,
-                sexo: undefined, // El API no devuelve este campo
+                sexo: validGender,
                 direccion: personData.address,
                 correo: personData.email,
                 telefono: personData.phone,
-                ubigeo: personData.ubigeoId ? Number(personData.ubigeoId) : undefined,
+                ubigeo: personData.ubigeoId,
                 estado_civil: personData.maritalStatus
             };
 
@@ -238,8 +257,6 @@ export default function ApplicantForm({
             setIsSearching(false);
         }
     }, [searchDni, fetchPersonSearch, syncToParent]);
-
-    // Limpiar búsqueda y formulario
     const handleClearSearch = useCallback(() => {
         setSearchDni('');
         setSearchError('');
@@ -250,7 +267,6 @@ export default function ApplicantForm({
         syncToParent(emptyApplicant);
     }, [syncToParent]);
 
-    // Manejar Enter en campo DNI
     const handleKeyDown = useCallback((e: React.KeyboardEvent<HTMLInputElement>) => {
         if (e.key === 'Enter') {
             e.preventDefault();
@@ -258,7 +274,6 @@ export default function ApplicantForm({
         }
     }, [handleSearchApplicant]);
 
-    // Manejar cambio en input de búsqueda DNI (solo números)
     const handleDniChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
         const value = e.target.value.replace(/\D/g, '').slice(0, 8);
         setSearchDni(value);
@@ -346,7 +361,7 @@ export default function ApplicantForm({
             direccion: direccion?.trim(),
             correo: correo?.trim(),
             telefono: telefono?.trim(),
-            ubigeo,
+            ubigeo: undefined,
             estado_civil: estado_civil?.trim()
         };
 
@@ -540,7 +555,7 @@ export default function ApplicantForm({
                     <select
                         name="sexoSolicitante"
                         value={formApplicant.sexo || ''}
-                        onChange={handleFormChange as any}
+                        onChange={handleSelectChange}
                         className="w-full px-3 sm:px-4 py-2 text-sm sm:text-base border border-gray-300 rounded-lg bg-white outline-0 transition-all focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                     >
                         <option value="">Seleccione</option>
@@ -609,7 +624,7 @@ export default function ApplicantForm({
                     <select
                         name="estadoCivilSolicitante"
                         value={formApplicant.estado_civil || ''}
-                        onChange={handleFormChange as any}
+                        onChange={handleSelectChange}
                         className="w-full px-3 sm:px-4 py-2 text-sm sm:text-base border border-gray-300 rounded-lg bg-white outline-0 transition-all focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                     >
                         <option value="">Seleccione</option>

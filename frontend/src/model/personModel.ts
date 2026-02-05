@@ -12,5 +12,6 @@ export interface PersonCreateResponse{
         phone:string;
         ubigeoId:string;
         maritalStatus:string
+        gender:string;
     }
 }
