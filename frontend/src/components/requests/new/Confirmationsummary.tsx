@@ -3,12 +3,25 @@ interface ConfirmationSummaryProps {
     tipoSolicitud: number | null;
     tipoNombre: string | undefined;
     formData: {
-        nombreSolicitante: string;
+        nombresSolicitante: string;
+        apellidoPaternoSolicitante: string;
+        apellidoMaternoSolicitante: string;
         dniSolicitante: string;
-        telefonoSolicitante: string;
-        emailSolicitante: string;
-        nombreCompleto1: string;
-        fechaEvento: string;
+        fechaNacimientoSolicitante?: string;
+        sexoSolicitante?: string;
+        direccionSolicitante?: string;
+        correoSolicitante?: string;
+        telefonoSolicitante?: string;
+        ubigeoSolicitante?: number;
+        estadoCivilSolicitante?: string;
+        nombreCompleto1?: string;
+        dniPersona1?: string;
+        nombreCompleto2?: string;
+        dniPersona2?: string;
+        fechaEvento?: string;
+        lugarEvento?: string;
+        documentosAdjuntos?: string;
+        observaciones?: string;
     };
 }
 
@@ -30,7 +43,9 @@ export default function ConfirmationSummary({tipoNombre, formData }: Confirmatio
                 </div>
                 <div className="flex justify-between items-start border-b border-blue-200 pb-3">
                     <span className="text-gray-600 font-medium">Solicitante:</span>
-                    <span className="font-semibold text-gray-900">{formData.nombreSolicitante}</span>
+                    <span className="font-semibold text-gray-900">
+                        {formData.nombresSolicitante} {formData.apellidoPaternoSolicitante} {formData.apellidoMaternoSolicitante}
+                    </span>
                 </div>
                 <div className="flex justify-between items-start border-b border-blue-200 pb-3">
                     <span className="text-gray-600 font-medium">DNI:</span>
@@ -40,10 +55,10 @@ export default function ConfirmationSummary({tipoNombre, formData }: Confirmatio
                     <span className="text-gray-600 font-medium">Teléfono:</span>
                     <span className="font-semibold text-gray-900">{formData.telefonoSolicitante}</span>
                 </div>
-                {formData.emailSolicitante && (
+                {formData.correoSolicitante && (
                     <div className="flex justify-between items-start border-b border-blue-200 pb-3">
                         <span className="text-gray-600 font-medium">Email:</span>
-                        <span className="font-semibold text-gray-900">{formData.emailSolicitante}</span>
+                        <span className="font-semibold text-gray-900">{formData.correoSolicitante}</span>
                     </div>
                 )}
                 {formData.nombreCompleto1 && (

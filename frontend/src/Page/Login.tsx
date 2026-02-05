@@ -32,7 +32,6 @@ export default function Login() {
     defaultValues: {
       username: '',
       password: '',
-      rememberMe: false
     }
   });
 

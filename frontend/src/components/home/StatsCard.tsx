@@ -1,8 +1,8 @@
 type StatsCardProps = {
     title: string;
-    value: string | number;
+    value: number | string;
     subtitle: string;
-    highlightText: string;
+    highlightText: number | string;
     bgColor: string;
     textColor?: string;
 }

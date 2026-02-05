@@ -1,4 +1,5 @@
 import { useState, useCallback, useEffect } from 'react';
+import { usePersonSearch } from '../../../hooks/usePersonSearch';
 
 interface Applicant {
     dni: string;
@@ -53,16 +54,6 @@ interface ApplicantFormProps {
     tipoSolicitudNombre?: string;
 }
 
-// Mock applicants (simulación DB) - FORMATO DE FECHA CORREGIDO
-const MOCK_APPLICANTS: Applicant[] = [
-    { dni: '12345678', nombres: 'Juan Carlos', apellidoPaterno: 'Pérez', apellidoMaterno: 'García', fecha_nacimiento: '1990-05-15', sexo: 'M', direccion: 'Av. Principal 123', correo: 'juan.perez@example.com', telefono: '987654321', ubigeo: 150101, estado_civil: 'Soltero' },
-    { dni: '87654321', nombres: 'María Elena', apellidoPaterno: 'López', apellidoMaterno: 'Rodríguez', fecha_nacimiento: '1985-03-22', sexo: 'F', direccion: 'Calle Secundaria 456', correo: 'maria.lopez@example.com', telefono: '987654322', ubigeo: 150102, estado_civil: 'Casada' },
-    { dni: '45678912', nombres: 'Pedro José', apellidoPaterno: 'Martínez', apellidoMaterno: 'Sánchez', fecha_nacimiento: '1992-11-08', sexo: 'M', direccion: 'Calle Terciaria 789', correo: 'pedro.martinez@example.com', telefono: '987654323', ubigeo: 150103, estado_civil: 'Divorciado' },
-    { dni: '98765432', nombres: 'Ana Sofía', apellidoPaterno: 'Fernández', apellidoMaterno: 'Torres', fecha_nacimiento: '1988-07-30', sexo: 'F', direccion: 'Av. Cuarta 321', correo: 'ana.fernandez@example.com', telefono: '987654324', ubigeo: 150104, estado_civil: 'Viuda' },
-    { dni: '73974061', nombres: 'Dickens Aldair', apellidoPaterno: 'Labán', apellidoMaterno: 'Vásquez', fecha_nacimiento: '2003-06-27', sexo: 'M', direccion: 'Av. Quinta 654', correo: 'dickens.laban@example.com', telefono: '987654325', ubigeo: 150105, estado_civil: 'Soltero' },
-    { dni: '11223344', nombres: 'Carlos Alberto', apellidoPaterno: 'Ramírez', apellidoMaterno: 'Castro', fecha_nacimiento: '1987-09-05', sexo: 'M', direccion: 'Av. Sexta 987', correo: 'carlos.ramirez@example.com', telefono: '987654326', ubigeo: 150106, estado_civil: 'Casado' }
-];
-
 // Función auxiliar para crear applicant vacío
 const createEmptyApplicant = (): Applicant => ({
     dni: '',
@@ -83,6 +74,9 @@ export default function ApplicantForm({
     onSolicitantesChange,
     tipoSolicitudNombre
 }: ApplicantFormProps) {
+    // Hook para búsqueda de personas
+    const {fetchPersonSearch } = usePersonSearch();
+
     // Estado para búsqueda por DNI
     const [searchDni, setSearchDni] = useState('');
     const [isSearching, setIsSearching] = useState(false);
@@ -149,9 +143,9 @@ export default function ApplicantForm({
                     updatedField = { fecha_nacimiento: value };
                     break;
                 case 'sexoSolicitante':
-                    const upperValue = value.toUpperCase();
+                    { const upperValue = value.toUpperCase();
                     updatedField = { sexo: (upperValue === 'M' || upperValue === 'F') ? upperValue as 'M' | 'F' : undefined };
-                    break;
+                    break; }
                 case 'direccionSolicitante':
                     updatedField = { direccion: value };
                     break;
@@ -160,14 +154,14 @@ export default function ApplicantForm({
                     break;
                 case 'telefonoSolicitante':
                     // Solo números, máximo 9 dígitos
-                    const cleanPhone = value.replace(/\D/g, '').slice(0, 9);
+                    { const cleanPhone = value.replace(/\D/g, '').slice(0, 9);
                     updatedField = { telefono: cleanPhone };
-                    break;
+                    break; }
                 case 'ubigeoSolicitante':
                     // Solo números, máximo 6 dígitos
-                    const cleanUbigeo = value.replace(/\D/g, '').slice(0, 6);
+                    { const cleanUbigeo = value.replace(/\D/g, '').slice(0, 6);
                     updatedField = { ubigeo: cleanUbigeo ? Number(cleanUbigeo) : undefined };
-                    break;
+                    break; }
                 case 'estadoCivilSolicitante':
                     updatedField = { estado_civil: value };
                     break;
@@ -190,7 +184,7 @@ export default function ApplicantForm({
         onChange(e);
     }, [onChange, selectedApplicant]);
 
-    // Buscar solicitante por DNI (simula llamada a API)
+    // Buscar solicitante por DNI usando la API real
     const handleSearchApplicant = useCallback(async () => {
         setSearchError('');
         setSearchSuccess(false);
@@ -203,11 +197,9 @@ export default function ApplicantForm({
 
         setIsSearching(true);
         try {
-            await new Promise((r) => setTimeout(r, 300));
+            const response = await fetchPersonSearch(searchDni);
 
-            const found = MOCK_APPLICANTS.find(a => a.dni === searchDni);
-
-            if (!found) {
+            if (!response || !response.status || !response.data) {
                 setSearchError('No se encontró ningún solicitante con ese DNI');
                 const emptyApplicant = createEmptyApplicant();
                 setFormApplicant(emptyApplicant);
@@ -215,19 +207,37 @@ export default function ApplicantForm({
                 return;
             }
 
-            setSelectedApplicant(found);
-            setFormApplicant({ ...found });
-            syncToParent(found);
+            // Mapear la respuesta del API al formato del formulario
+            const personData = response.data;
+            const foundApplicant: Applicant = {
+                dni: searchDni,
+                nombres: personData.name,
+                apellidoPaterno: personData.paternalSurname,
+                apellidoMaterno: personData.maternalSurname,
+                fecha_nacimiento: personData.birthdate,
+                sexo: undefined, // El API no devuelve este campo
+                direccion: personData.address,
+                correo: personData.email,
+                telefono: personData.phone,
+                ubigeo: personData.ubigeoId ? Number(personData.ubigeoId) : undefined,
+                estado_civil: personData.maritalStatus
+            };
 
+            setSelectedApplicant(foundApplicant);
+            setFormApplicant({ ...foundApplicant });
+            syncToParent(foundApplicant);
             setSearchSuccess(true);
             setTimeout(() => setSearchSuccess(false), 2500);
         } catch (err) {
             console.error('Error al buscar solicitante:', err);
             setSearchError('Error al buscar el solicitante. Intente nuevamente.');
+            const emptyApplicant = createEmptyApplicant();
+            setFormApplicant(emptyApplicant);
+            syncToParent(emptyApplicant);
         } finally {
             setIsSearching(false);
         }
-    }, [searchDni, syncToParent]);
+    }, [searchDni, fetchPersonSearch, syncToParent]);
 
     // Limpiar búsqueda y formulario
     const handleClearSearch = useCallback(() => {
@@ -389,8 +399,7 @@ export default function ApplicantForm({
                 </label>
                 <p id="dni-help" className="mt-2 text-xs text-gray-500 mb-3">
                     <i className="fas fa-info-circle mr-1"></i>
-                    <span className="hidden sm:inline">DNIs de prueba: 12345678, 87654321, 45678912, 98765432, 73974061, 11223344</span>
-                    <span className="sm:hidden">DNIs prueba: 12345678, 87654321, 45678912</span>
+                    <span>Ingrese el DNI de 8 dígitos para buscar la información del solicitante</span>
                 </p>
                 <div className="relative">
                     <div className="absolute inset-y-0 left-0 pl-3 sm:pl-4 flex items-center pointer-events-none">
