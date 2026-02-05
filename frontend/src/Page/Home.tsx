@@ -5,6 +5,8 @@ import QuickActions from '../components/home/QuickActions';
 import RecentActivity from '../components/home/RecentActivity';
 import RevenueChart from '../components/home/RevenueChart';
 import type { Solicitud, Actividad, RecaudacionData } from '../Types/index';
+import useAplicatCountPendig from "../hooks/useAplicatCountPendig.ts";
+import useAplicatCountComplet from "../hooks/useAplicCountComple.ts";
 
 export default function Home() {
 
@@ -83,6 +85,8 @@ export default function Home() {
         { mes: 'Ene', monto: 8420 }
     ];
 
+    const {aplicatCountPendig} = useAplicatCountPendig();
+    const {aplicatCountComplet} = useAplicatCountComplet();
     return (
         <>
             <div className="bg-blue-300/40 p-4 sm:p-6 lg:p-6">
@@ -95,17 +99,17 @@ export default function Home() {
                 <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-4 lg:gap-6 mb-6 lg:mb-10">
                     <StatsCard
                         title="Solicitudes Pendientes"
-                        value="24"
+                        value={aplicatCountPendig?.applications ?? '0'}
                         subtitle="desde ayer"
-                        highlightText="+3"
+                        highlightText={String(aplicatCountPendig?.delta ?? '0')}
                         bgColor="bg-blue-950"
                         textColor="text-blue-600"
                     />
                     <StatsCard
                         title="Trámites Completados"
-                        value="156"
+                        value={String(aplicatCountComplet?.delta ?? '0')}
                         subtitle="este mes"
-                        highlightText="+12%"
+                        highlightText={String(aplicatCountComplet?.delta ?? '0')}
                         bgColor="bg-green-600"
                         textColor="text-green-600"
                     />
