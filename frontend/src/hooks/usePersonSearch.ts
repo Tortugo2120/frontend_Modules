@@ -10,7 +10,9 @@ export function usePersonSearch(){
         setError(null);
 
         try {
-            return await searchPersonByDni(dni);
+             const response = await searchPersonByDni(dni);
+             console.log(response);
+            return response;
         } catch (error:any) {
             const errorResponse = error.response;
             console.log(errorResponse);

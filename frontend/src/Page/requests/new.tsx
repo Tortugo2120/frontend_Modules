@@ -17,6 +17,13 @@ export default function NewRequest() {
         apellidoPaternoSolicitante: '',
         apellidoMaternoSolicitante: '',
         dniSolicitante: '',
+        fechaNacimientoSolicitante: '',
+        sexoSolicitante: '',
+        direccionSolicitante: '',
+        correoSolicitante: '',
+        telefonoSolicitante: '',
+        ubigeoSolicitante: 0,
+        estadoCivilSolicitante: '',
 
         // Datos específicos según tipo
         nombreCompleto1: '',
@@ -40,7 +47,7 @@ export default function NewRequest() {
     const { tiposolicitud } = useTipoSolici();
     const [currentStep, setCurrentStep] = useState(1);
 
-    const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
+    const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>) => {
         setFormData({
             ...formData,
             [e.target.name]: e.target.value
