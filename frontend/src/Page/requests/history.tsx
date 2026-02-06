@@ -133,7 +133,7 @@ export default function History() {
         }
     ];
 
-    const [solicitudes, setSolicitudes] = useState<Solicitud[]>(solicitudesData);
+    const [solicitudes] = useState<Solicitud[]>(solicitudesData);
     const [filtros, setFiltros] = useState({
         busqueda: '',
         tipo: '',
@@ -199,12 +199,12 @@ export default function History() {
     };
 
     return (
-        <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-50 p-4 sm:p-6 lg:p-10">
+        <div className="min-h-screen bg-linear-to-br from-slate-50 via-blue-50 to-indigo-50 p-4 sm:p-6 lg:p-10">
             {/* Header */}
             <div className="max-w-7xl mx-auto mb-8">
                 <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-6">
                     <div className="flex items-center gap-3">
-                        <div className="w-12 h-12 bg-gradient-to-br from-indigo-600 to-purple-600 rounded-xl flex items-center justify-center shadow-lg">
+                        <div className="w-12 h-12 bg-linear-to-br from-indigo-600 to-purple-600 rounded-xl flex items-center justify-center shadow-lg">
                             <i className="fas fa-history text-white text-xl"></i>
                         </div>
                         <div>
@@ -322,7 +322,7 @@ export default function History() {
                     {/* Vista Desktop */}
                     <div className="hidden lg:block overflow-x-auto">
                         <table className="w-full">
-                            <thead className="bg-gradient-to-r from-indigo-600 to-purple-600 text-white">
+                            <thead className="bg-linear-to-r from-indigo-600 to-purple-600 text-white">
                                 <tr>
                                     <th className="px-6 py-4 text-left text-sm font-semibold">Expediente</th>
                                     <th className="px-6 py-4 text-left text-sm font-semibold">Tipo</th>
@@ -419,7 +419,7 @@ export default function History() {
                                 return (
                                     <div
                                         key={solicitud.id}
-                                        className="bg-gradient-to-br from-white to-gray-50 rounded-xl p-4 shadow-md border border-gray-200"
+                                        className="bg-linear-to-br from-white to-gray-50 rounded-xl p-4 shadow-md border border-gray-200"
                                     >
                                         <div className="flex items-start justify-between mb-3">
                                             <div className="flex items-center gap-2">
@@ -531,7 +531,7 @@ export default function History() {
             {vistaDetalle && (
                 <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
                     <div className="bg-white rounded-2xl max-w-2xl w-full max-h-[90vh] overflow-y-auto shadow-2xl animate-fadeIn">
-                        <div className="bg-gradient-to-r from-indigo-600 to-purple-600 px-6 py-5 flex items-center justify-between">
+                        <div className="bg-linear-to-r from-indigo-600 to-purple-600 px-6 py-5 flex items-center justify-between">
                             <h3 className="text-xl font-bold text-white">Detalle de Solicitud</h3>
                             <button
                                 onClick={() => setVistaDetalle(null)}
@@ -543,7 +543,7 @@ export default function History() {
 
                         <div className="p-6 space-y-6">
                             {/* Información principal */}
-                            <div className="bg-gradient-to-br from-indigo-50 to-purple-50 rounded-xl p-5">
+                            <div className="bg-linear-to-br from-indigo-50 to-purple-50 rounded-xl p-5">
                                 <div className="flex items-center justify-between mb-4">
                                     <div className="flex items-center gap-3">
                                         <i className={`fas ${getTipoIcon(vistaDetalle.tipo).icon} ${getTipoIcon(vistaDetalle.tipo).color} text-2xl`}></i>

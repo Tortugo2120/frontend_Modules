@@ -5,23 +5,25 @@ interface StepProgressBarProps {
 export default function StepProgressBar({ currentStep }: StepProgressBarProps) {
     const steps = [
         { number: 1, label: 'Tipo', fullLabel: 'de Solicitud', shortLabel: 'Tipo' },
-        { number: 2, label: 'Solicitantes', fullLabel: '', shortLabel: 'Solic.' },
-        { number: 3, label: 'Detalles', fullLabel: 'del trámite', shortLabel: 'Detalles' },
-        { number: 4, label: 'Resumen', fullLabel: 'del trámite', shortLabel: 'Resumen' },
-        { number: 5, label: 'Confirmación', fullLabel: 'de Solicitud', shortLabel: 'Confirm.' }
+        { number: 2, label: 'Solicitante', fullLabel: '', shortLabel: 'Solic.' },
+        { number: 3, label: 'Detalles', fullLabel: 'de los contrayentes', shortLabel: 'Detalles Contrayentes' },
+        { number: 4, label: 'Detalles', fullLabel: 'de los testigos', shortLabel: 'Detalles Testigos' },
+        { number: 5, label: 'Requisitos', fullLabel: 'del trámite', shortLabel: 'Requisitos' },
+        { number: 6, label: 'Resumen', fullLabel: 'del trámite', shortLabel: 'Resumen' },
+        { number: 7, label: 'Confirmación', fullLabel: 'de Solicitud', shortLabel: 'Confirm.' }
     ];
 
-    return (
+    return (    
         <>
             {/* Vista Desktop y Tablet */}
             <ol className="hidden sm:flex justify-between items-center w-full p-3 space-x-2 text-sm font-medium text-center text-gray-700 bg-white border border-gray-200 rounded-lg shadow-sm sm:p-4 sm:space-x-4">
                 {steps.map((step, index) => (
                     <li
                         key={step.number}
-                        className={`flex items-center ${currentStep >= step.number ? 'text-blue-600' : 'text-gray-500'}`}
+                        className={`flex flex-col items-center ${currentStep >= step.number ? 'text-blue-600' : 'text-gray-500'}`}
                     >
                         <span
-                            className={`flex items-center justify-center w-5 h-5 me-2 text-xs border rounded-full shrink-0 ${
+                            className={`flex items-center justify-center w-5 h-5 text-xs border rounded-full shrink-0 ${
                                 currentStep >= step.number ? 'border-blue-600' : 'border-gray-500'
                             }`}
                         >
