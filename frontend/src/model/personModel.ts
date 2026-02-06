@@ -3,7 +3,7 @@ export interface PersonCreateResponse{
     code:number;
     data:{
         name:string;
-        dni:string;
+        documentNumber:string;
         paternalSurname:string;
         maternalSurname:string;
         birthdate:string;

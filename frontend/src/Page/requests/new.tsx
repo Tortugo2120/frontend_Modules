@@ -8,10 +8,15 @@ import useTipoSolici from "../../hooks/useTipoSolici.ts";
 import Contrayente from "../../components/requests/new/Contrayente.tsx";
 import Testigos from "../../components/requests/new/Testigos.tsx";
 import Requisitos from "../../components/requests/new/Requisitos.tsx";
+import ResumenSolicitud from "../../components/requests/new/ResumenSolicitud.tsx";
 
 export default function NewRequest() {
     const [tipoSolicitud, setTipoSolicitud] = useState<number | null>(null);
     const [searchTerm, setSearchTerm] = useState("");
+    const [contrayentes, setContrayentes] = useState<any[]>([]);
+    const [requisitos, setRequisitos] = useState<any[]>([]);
+    const [archivos, setArchivos] = useState<any[]>([]);
+
 
     const [formData, setFormData] = useState({
         // Datos del solicitante
@@ -208,12 +213,19 @@ export default function NewRequest() {
                                 <Requisitos tipoSolicitudNombre={selectedRequestType?.nombre_solicitud} />
                             </div>
                         )}
-                        {/* Step 6: Confirmación */}
+                        {/* Step 6: Resumen */}
                         {currentStep === 6 && (
                             <div className="p-6 lg:p-6">
-                                <h1>
-                                    Paso 6
-                                </h1>
+                                {currentStep === 6 && (
+                                    <ResumenSolicitud
+                                        tipoSolicitudNombre={selectedRequestType?.nombre_solicitud}
+                                        contrayentes={contrayentes}
+                                        requisitos={requisitos}
+                                        archivos={archivos}
+                                    />
+                                )}
+
+
                             </div>
                         )}
                         {/* Step 6: Confirmación */}

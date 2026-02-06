@@ -1,13 +1,9 @@
-"use client";
-
-import { useState, useCallback, useMemo } from 'react';
+import { useState, useCallback, useEffect } from 'react';
 import { usePersonSearch } from '../../../hooks/usePersonSearch';
-import { zodResolver } from '@hookform/resolvers/zod';
-import { useForm } from 'react-hook-form';
-import { z } from 'zod';
-import { solicitanteSchema } from '../../../Validations/valitationForm';
-
-type ValidacitionForm = z.infer<typeof solicitanteSchema>;
+import {useForm} from "react-hook-form";
+import {zodResolver} from "@hookform/resolvers/zod";
+import {searchTypeDocument} from "../../../Validations/validationSearchTypeDocument.ts";
+import {z} from "zod";
 
 interface Applicant {
     dni: string;
@@ -19,7 +15,7 @@ interface Applicant {
     direccion?: string;
     correo?: string;
     telefono?: string;
-    ubigeo?: string;
+    ubigeo?: string | undefined;
     estado_civil?: string;
 }
 
@@ -52,6 +48,7 @@ interface ApplicantFormProps {
         ubigeoSolicitante?: number;
         estadoCivilSolicitante?: string;
     };
+
     onChange: (
         e: React.ChangeEvent<
             HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement
@@ -61,8 +58,8 @@ interface ApplicantFormProps {
     tipoSolicitudNombre?: string;
 }
 
-// Constantes
-const EMPTY_APPLICANT: Applicant = {
+// Función auxiliar para crear applicant vacío
+const createEmptyApplicant = (): Applicant => ({
     dni: '',
     nombres: '',
     apellidoPaterno: '',
@@ -72,189 +69,183 @@ const EMPTY_APPLICANT: Applicant = {
     direccion: '',
     correo: '',
     telefono: '',
-    ubigeo: '',
+    ubigeo: undefined,
     estado_civil: ''
-};
+});
 
-const DNI_LENGTH = 8;
-const PHONE_LENGTH = 9;
-const UBIGEO_LENGTH = 6;
-const SUCCESS_MESSAGE_DURATION = 2500;
-
-// Mapeo de campos para evitar switch statements
-const FIELD_MAPPING: Record<string, keyof Applicant> = {
-    nombresSolicitante: 'nombres',
-    apellidoPaternoSolicitante: 'apellidoPaterno',
-    apellidoMaternoSolicitante: 'apellidoMaterno',
-    fechaNacimientoSolicitante: 'fecha_nacimiento',
-    sexoSolicitante: 'sexo',
-    direccionSolicitante: 'direccion',
-    correoSolicitante: 'correo',
-    telefonoSolicitante: 'telefono',
-    ubigeoSolicitante: 'ubigeo',
-    estadoCivilSolicitante: 'estado_civil',
-    dniSolicitante: 'dni'
-};
-
+type inputSearch = z.infer<typeof searchTypeDocument>;
 export default function ApplicantForm({
     onChange,
+    onSolicitantesChange,
     tipoSolicitudNombre
 }: ApplicantFormProps) {
-    const { fetchPersonSearch } = usePersonSearch();
-
-    // Estados consolidados
-    const [searchDni, setSearchDni] = useState('');
-    const [formApplicant, setFormApplicant] = useState<Applicant>(EMPTY_APPLICANT);
-    const [searchState, setSearchState] = useState({
-        isSearching: false,
-        error: '',
-        success: false
+    const {register,watch,formState:{errors}} = useForm<inputSearch>({
+            resolver: zodResolver(searchTypeDocument),
+            defaultValues: {
+                documentType:'dni', documentNumber:''
+            }
     });
+
+    const tipoDocumentoSeleccionado = watch('documentType');
+    const numDni = watch('documentNumber');
+
+    const {fetchPersonSearch,loading } = usePersonSearch();
+    const [searchError, setSearchError] = useState('');
+    const [searchSuccess, setSearchSuccess] = useState(false);
+    const [solicitantesAgregados, setSolicitantesAgregados] = useState<SolicitanteAgregado[]>([]);
+
+    const [formApplicant, setFormApplicant] = useState<Applicant>(createEmptyApplicant());
     const [selectedApplicant, setSelectedApplicant] = useState<Applicant | null>(null);
 
-    const {
-        // Puedes descomentar y usar estos métodos si los necesitas
-        // register,
-        // formState: { errors },
-        // setValue
-    } = useForm<ValidacitionForm>({
-        resolver: zodResolver(solicitanteSchema),
-        mode: 'onChange',
-        defaultValues: {
-            dni: '',
-            nombres: '',
-            apellidoPaterno: '',
-            apellidoMaterno: '',
-            fecha_nacimiento: '',
-            direccion: '',
-            correo: '',
-            telefono: '',
-            ubigeo: '',
+    useEffect(() => {
+        if (onSolicitantesChange) {
+            onSolicitantesChange(solicitantesAgregados);
         }
-    });
+    }, [solicitantesAgregados, onSolicitantesChange]);
 
-    // Función helper para crear eventos sintéticos
     const createChangeEvent = useCallback((name: string, value: string) => {
         return {
             target: { name, value },
             currentTarget: { name, value }
-        } as React.ChangeEvent<HTMLInputElement>;
+        } as unknown as React.ChangeEvent<HTMLInputElement>;
     }, []);
 
-    // Sincronizar datos con el componente padre
     const syncToParent = useCallback((app: Applicant) => {
-        const syncFields = [
-            ['dniSolicitante', app.dni],
-            ['nombresSolicitante', app.nombres],
-            ['apellidoPaternoSolicitante', app.apellidoPaterno],
-            ['apellidoMaternoSolicitante', app.apellidoMaterno],
-            ['fechaNacimientoSolicitante', app.fecha_nacimiento || ''],
-            ['sexoSolicitante', app.sexo || ''],
-            ['direccionSolicitante', app.direccion || ''],
-            ['correoSolicitante', app.correo || ''],
-            ['telefonoSolicitante', app.telefono || ''],
-            ['ubigeoSolicitante', app.ubigeo || ''],
-            ['estadoCivilSolicitante', app.estado_civil || '']
-        ] as const;
-
-        syncFields.forEach(([name, value]) => {
-            onChange(createChangeEvent(name, String(value)));
-        });
+        onChange(createChangeEvent('dniSolicitante', app.dni));
+        onChange(createChangeEvent('nombresSolicitante', app.nombres));
+        onChange(createChangeEvent('apellidoPaternoSolicitante', app.apellidoPaterno));
+        onChange(createChangeEvent('apellidoMaternoSolicitante', app.apellidoMaterno));
+        onChange(createChangeEvent('fechaNacimientoSolicitante', app.fecha_nacimiento || ''));
+        onChange(createChangeEvent('sexoSolicitante', app.sexo || ''));
+        onChange(createChangeEvent('direccionSolicitante', app.direccion || ''));
+        onChange(createChangeEvent('correoSolicitante', app.correo || ''));
+        onChange(createChangeEvent('telefonoSolicitante', app.telefono || ''));
+        onChange(createChangeEvent('ubigeoSolicitante', app.ubigeo ? app.ubigeo.toString() : ''));
+        onChange(createChangeEvent('estadoCivilSolicitante', app.estado_civil || ''));
     }, [onChange, createChangeEvent]);
 
-    // Sanitizadores de input
-    const sanitizers = useMemo(() => ({
-        dni: (value: string) => value.replace(/\D/g, '').slice(0, DNI_LENGTH),
-        phone: (value: string) => value.replace(/\D/g, '').slice(0, PHONE_LENGTH),
-        ubigeo: (value: string) => value.replace(/\D/g, '').slice(0, UBIGEO_LENGTH),
-        gender: (value: string): 'M' | 'F' | undefined => {
-            const upper = value.toUpperCase();
-            return upper === 'M' || upper === 'F' ? upper as 'M' | 'F' : undefined;
-        }
-    }), []);
+    const handleFormChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
+        const { name, value } = e.target;
 
-    // Actualizar campo del formulario
-    const updateField = useCallback((name: string, value: string) => {
         setFormApplicant(prev => {
-            const fieldKey = FIELD_MAPPING[name];
-            if (!fieldKey) return prev;
+            let updatedField: Partial<Applicant> = {};
 
-            let sanitizedValue: any = value;
-
-            // Aplicar sanitización según el campo
             switch (name) {
-                case 'dniSolicitante':
-                    sanitizedValue = sanitizers.dni(value);
+                case 'nombresSolicitante':
+                    updatedField = { nombres: value };
                     break;
-                case 'telefonoSolicitante':
-                    sanitizedValue = sanitizers.phone(value);
+                case 'apellidoPaternoSolicitante':
+                    updatedField = { apellidoPaterno: value };
                     break;
-                case 'ubigeoSolicitante':
-                    sanitizedValue = sanitizers.ubigeo(value);
+                case 'apellidoMaternoSolicitante':
+                    updatedField = { apellidoMaterno: value };
+                    break;
+                case 'fechaNacimientoSolicitante':
+                    updatedField = { fecha_nacimiento: value };
                     break;
                 case 'sexoSolicitante':
-                    sanitizedValue = sanitizers.gender(value);
+                    { const upperValue = value.toUpperCase();
+                    updatedField = { sexo: (upperValue === 'M' || upperValue === 'F') ? upperValue as 'M' | 'F' : undefined };
+                    break; }
+                case 'direccionSolicitante':
+                    updatedField = { direccion: value };
+                    break;
+                case 'correoSolicitante':
+                    updatedField = { correo: value };
+                    break;
+                case 'telefonoSolicitante':
+                    // Solo números, máximo 9 dígitos
+                    { const cleanPhone = value.replace(/\D/g, '').slice(0, 9);
+                    updatedField = { telefono: cleanPhone };
+                    break; }
+                case 'ubigeoSolicitante':
+                    // Solo números, máximo 6 dígitos
+                    { const cleanUbigeo = value.replace(/\D/g, '').slice(0, 6);
+                    updatedField = { ubigeo: cleanUbigeo };
+                    break; }
+                case 'estadoCivilSolicitante':
+                    updatedField = { estado_civil: value };
+                    break;
+                case 'dniSolicitante':
+                    updatedField = { dni: value.replace(/\D/g, '').slice(0, 8) };
                     break;
             }
 
-            return { ...prev, [fieldKey]: sanitizedValue };
+            const next = { ...prev, ...updatedField };
+            
+            // Limpiar el estado de búsqueda exitosa si se modifica manualmente
+            if (selectedApplicant) {
+                setSelectedApplicant(null);
+            }
+            
+            return next;
         });
 
-        // Limpiar selección si se modifica manualmente
-        if (selectedApplicant) {
-            setSelectedApplicant(null);
-        }
-    }, [sanitizers, selectedApplicant]);
-
-    // Manejador genérico para inputs
-    const handleFormChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
-        const { name, value } = e.target;
-        updateField(name, value);
+        // Propagar al padre
         onChange(e);
-    }, [onChange, updateField]);
+    }, [onChange, selectedApplicant]);
 
-    // Manejador para selects
     const handleSelectChange = useCallback((e: React.ChangeEvent<HTMLSelectElement>) => {
         const { name, value } = e.target;
-        updateField(name, value);
-        onChange(createChangeEvent(name, value));
-    }, [onChange, updateField, createChangeEvent]);
 
-    // Búsqueda de solicitante
+        setFormApplicant(prev => {
+            let updatedField: Partial<Applicant> = {};
+
+            switch (name) {
+                case 'sexoSolicitante':
+                    updatedField = { sexo: (value === 'M' || value === 'F') ? value as 'M' | 'F' : undefined };
+                    break;
+                case 'estadoCivilSolicitante':
+                    updatedField = { estado_civil: value };
+                    break;
+            }
+
+            const next = { ...prev, ...updatedField };
+
+            if (selectedApplicant) {
+                setSelectedApplicant(null);
+            }
+
+            return next;
+        });
+
+        const syntheticEvent = createChangeEvent(name, value);
+        onChange(syntheticEvent);
+    }, [onChange, selectedApplicant, createChangeEvent]);
+
     const handleSearchApplicant = useCallback(async () => {
-        // Reset estados
-        setSearchState({ isSearching: false, error: '', success: false });
+        setSearchError('');
+        setSearchSuccess(false);
         setSelectedApplicant(null);
 
-        if (searchDni.length !== DNI_LENGTH) {
-            setSearchState(prev => ({
-                ...prev,
-                error: `El DNI debe tener ${DNI_LENGTH} dígitos`
-            }));
-            return;
-        }
-
-        setSearchState(prev => ({ ...prev, isSearching: true }));
-
         try {
-            const response = await fetchPersonSearch(searchDni);
+            // Mapear el tipo de documento de string a número
+            const documentTypeMapping: Record<string, number> = {
+                'dni': 1,
+                'pas': 2,
+                'ced': 3
+            };
 
-            if (!response?.status || !response?.data) {
-                setSearchState({
-                    isSearching: false,
-                    error: 'No se encontró ningún solicitante con ese DNI',
-                    success: false
-                });
-                setFormApplicant(EMPTY_APPLICANT);
-                syncToParent(EMPTY_APPLICANT);
+            const documentTypeNumber = documentTypeMapping[tipoDocumentoSeleccionado] || 1;
+
+            const response = await fetchPersonSearch(numDni, documentTypeNumber);
+
+            if (!response || !response.status || !response.data) {
+                setSearchError('No se encontró ningún solicitante con ese documento');
+                const emptyApplicant = createEmptyApplicant();
+                setFormApplicant(emptyApplicant);
+                syncToParent(emptyApplicant);
                 return;
             }
 
-            const { data: personData } = response;
-            const validGender = sanitizers.gender(personData.gender);
+            const personData = response.data;
+
+            const validGender = personData.gender === 'M' || personData.gender === 'F'
+                ? personData.gender as 'M' | 'F'
+                : undefined;
 
             const foundApplicant: Applicant = {
-                dni: searchDni,
+                dni: numDni,
                 nombres: personData.name,
                 apellidoPaterno: personData.paternalSurname,
                 apellidoMaterno: personData.maternalSurname,
@@ -268,37 +259,27 @@ export default function ApplicantForm({
             };
 
             setSelectedApplicant(foundApplicant);
-            setFormApplicant(foundApplicant);
+            setFormApplicant({ ...foundApplicant });
             syncToParent(foundApplicant);
-            setSearchState({ isSearching: false, error: '', success: true });
-
-            // Auto-ocultar mensaje de éxito
-            setTimeout(() => {
-                setSearchState(prev => ({ ...prev, success: false }));
-            }, SUCCESS_MESSAGE_DURATION);
-
+            setSearchSuccess(true);
+            setTimeout(() => setSearchSuccess(false), 2500);
         } catch (err) {
             console.error('Error al buscar solicitante:', err);
-            setSearchState({
-                isSearching: false,
-                error: 'Error al buscar el solicitante. Intente nuevamente.',
-                success: false
-            });
-            setFormApplicant(EMPTY_APPLICANT);
-            syncToParent(EMPTY_APPLICANT);
+            setSearchError('Error al buscar el solicitante. Intente nuevamente.');
+            const emptyApplicant = createEmptyApplicant();
+            setFormApplicant(emptyApplicant);
+            syncToParent(emptyApplicant);
         }
-    }, [searchDni, fetchPersonSearch, syncToParent, sanitizers]);
-
-    // Limpiar búsqueda
+    }, [numDni, tipoDocumentoSeleccionado, fetchPersonSearch, syncToParent]);
     const handleClearSearch = useCallback(() => {
-        setSearchDni('');
-        setSearchState({ isSearching: false, error: '', success: false });
+        setSearchError('');
+        setSearchSuccess(false);
         setSelectedApplicant(null);
-        setFormApplicant(EMPTY_APPLICANT);
-        syncToParent(EMPTY_APPLICANT);
+        const emptyApplicant = createEmptyApplicant();
+        setFormApplicant(emptyApplicant);
+        syncToParent(emptyApplicant);
     }, [syncToParent]);
 
-    // Manejar Enter en campo de búsqueda
     const handleKeyDown = useCallback((e: React.KeyboardEvent<HTMLInputElement>) => {
         if (e.key === 'Enter') {
             e.preventDefault();
@@ -306,33 +287,140 @@ export default function ApplicantForm({
         }
     }, [handleSearchApplicant]);
 
-    // Cambio en DNI de búsqueda
-    const handleDniChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
-        const value = sanitizers.dni(e.target.value);
-        setSearchDni(value);
-        setSearchState({ isSearching: false, error: '', success: false });
-    }, [sanitizers]);
+    const handleDocumentInput = useCallback((e: React.FormEvent<HTMLInputElement>) => {
+        const input = e.currentTarget;
+        const value = input.value;
 
-    // Clases de input basadas en estado
-    const searchInputClasses = useMemo(() => {
-        const baseClasses = "w-full pl-9 sm:pl-11 pr-20 sm:pr-24 py-2 sm:py-2.5 text-sm sm:text-base border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-0 transition-all";
+        if (tipoDocumentoSeleccionado === 'dni' || tipoDocumentoSeleccionado === 'ced') {
+            // Solo permitir números
+            const numericValue = value.replace(/\D/g, '');
+            if (value !== numericValue) {
+                input.value = numericValue;
+                // Forzar actualización del valor en react-hook-form
+                const event = new Event('input', { bubbles: true });
+                input.dispatchEvent(event);
+            }
+        }
+    }, [tipoDocumentoSeleccionado]);
 
-        if (searchState.success) return `${baseClasses} border-green-500 bg-green-50`;
-        if (searchState.error) return `${baseClasses} border-red-300 bg-red-50`;
-        return `${baseClasses} border-gray-300`;
-    }, [searchState.success, searchState.error]);
+    // Validar campos obligatorios
+    const isFormValid = useCallback(() => {
+        const { dni, nombres, apellidoPaterno, apellidoMaterno, fecha_nacimiento, sexo, direccion, correo, telefono, ubigeo, estado_civil } = formApplicant;
+        return !!(
+            dni && dni.length === 8 &&
+            nombres && nombres.trim() &&
+            apellidoPaterno && apellidoPaterno.trim() &&
+            apellidoMaterno && apellidoMaterno.trim() &&
+            fecha_nacimiento &&
+            sexo &&
+            direccion && direccion.trim() &&
+            correo && correo.trim() &&
+            telefono && telefono.trim() &&
+            ubigeo &&
+            estado_civil && estado_civil.trim()
+        );
+    }, [formApplicant]);
 
-    const inputClasses = "w-full px-3 sm:px-4 py-2 text-sm sm:text-base border border-gray-300 rounded-lg bg-white outline-0 transition-all focus:ring-2 focus:ring-blue-500 focus:border-transparent";
+    // Agregar solicitante
+    const handleAddSolicitante = useCallback(() => {
+        const { dni, nombres, apellidoPaterno, apellidoMaterno, fecha_nacimiento, sexo, direccion, correo, telefono, ubigeo, estado_civil } = formApplicant;
+        
+        // Validación completa
+        if (!dni || dni.length !== 8) {
+            setSearchError('El DNI debe tener 8 dígitos');
+            return;
+        }
+        if (!nombres?.trim() || !apellidoPaterno?.trim() || !apellidoMaterno?.trim()) {
+            setSearchError('Los nombres y apellidos son obligatorios');
+            return;
+        }
+        if (!fecha_nacimiento) {
+            setSearchError('La fecha de nacimiento es obligatoria');
+            return;
+        }
+        if (!sexo || (sexo !== 'M' && sexo !== 'F')) {
+            setSearchError('El sexo debe ser M o F');
+            return;
+        }
+        if (!direccion?.trim()) {
+            setSearchError('La dirección es obligatoria');
+            return;
+        }
+        if (!correo?.trim()) {
+            setSearchError('El correo electrónico es obligatorio');
+            return;
+        }
+        if (!telefono?.trim()) {
+            setSearchError('El teléfono es obligatorio');
+            return;
+        }
+        if (!ubigeo) {
+            setSearchError('El ubigeo es obligatorio');
+            return;
+        }
+        if (!estado_civil?.trim()) {
+            setSearchError('El estado civil es obligatorio');
+            return;
+        }
+
+        // Verificar duplicados
+        const isDuplicate = solicitantesAgregados.some(s => s.dni === dni);
+        if (isDuplicate) {
+            setSearchError('Este DNI ya ha sido agregado a la solicitud');
+            return;
+        }
+
+        const id = crypto?.randomUUID?.() || `${Date.now()}-${Math.random()}`;
+
+        const nuevoSolicitante: SolicitanteAgregado = {
+            id,
+            nombres: nombres.trim(),
+            apellidoPaterno: apellidoPaterno.trim(),
+            apellidoMaterno: apellidoMaterno.trim(),
+            fecha_nacimiento,
+            sexo,
+            dni,
+            direccion: direccion?.trim(),
+            correo: correo?.trim(),
+            telefono: telefono?.trim(),
+            ubigeo: undefined,
+            estado_civil: estado_civil?.trim()
+        };
+
+        setSolicitantesAgregados(prev => [...prev, nuevoSolicitante]);
+        handleClearSearch();
+
+        // Mensaje de éxito
+        setSearchSuccess(true);
+        setTimeout(() => setSearchSuccess(false), 1400);
+    }, [formApplicant, solicitantesAgregados, handleClearSearch]);
+
+    // Eliminar solicitante
+    const handleRemoveSolicitante = useCallback((id: string) => {
+        setSolicitantesAgregados(prev => prev.filter(s => s.id !== id));
+    }, []);
+
+    // Formatear fecha para mostrar (DD/MM/YYYY)
+    const formatDisplayDate = (dateString: string) => {
+        if (!dateString) return '';
+        
+        // Si ya está en formato YYYY-MM-DD
+        if (dateString.includes('-') && dateString.split('-')[0].length === 4) {
+            const [year, month, day] = dateString.split('-');
+            return `${day}/${month}/${year}`;
+        }
+        
+        return dateString;
+    };
 
     return (
         <div className="space-y-4 sm:space-y-6">
-            {/* Header */}
-            <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-3 sm:gap-2 border-b border-b-blue-300">
-                <div className="flex flex-col items-center gap-3">
-                    <h2 className="text-2xl font-bold text-gray-900">
-                        <i className="fas fa-user text-blue-600 mr-2"></i>Datos del solicitante</h2>
-                    <p className="text-gray-600 ">Complete la información requerida</p>
-                </div>
+
+            <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-3 sm:gap-2">
+                <h3 className="text-base sm:text-lg font-semibold text-gray-900 flex items-center gap-2">
+                    <i className="fas fa-user text-blue-600"></i>
+                    <span>Datos del Solicitante</span>
+                </h3>
                 {tipoSolicitudNombre && (
                     <span className="bg-blue-100 text-blue-800 text-xs sm:text-sm font-medium px-3 sm:px-4 py-1.5 sm:py-2 rounded-lg inline-flex items-center w-fit">
                         <i className="fas fa-file-alt mr-2"></i>
@@ -340,92 +428,90 @@ export default function ApplicantForm({
                     </span>
                 )}
             </div>
-           
+
             {/* Búsqueda por DNI */}
-            <div className='mb-2'>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Buscar por DNI
-                </label>
-                <p id="dni-help" className="mt-2 text-xs text-gray-500 mb-3">
-                    <i className="fas fa-info-circle mr-1"></i>
-                    <span>Ingrese el DNI de {DNI_LENGTH} dígitos para buscar la información del solicitante</span>
-                </p>
-                <div className="relative">
-                    <div className="absolute inset-y-0 left-0 pl-3 sm:pl-4 flex items-center pointer-events-none">
-                        <i className="fas fa-search text-gray-400 text-sm"></i>
-                    </div>
-                    <input
-                        type="text"
-                        value={searchDni}
-                        onChange={handleDniChange}
-                        onKeyDown={handleKeyDown}
-                        placeholder={`Ingrese DNI (${DNI_LENGTH} dígitos)`}
-                        className={searchInputClasses}
-                        maxLength={DNI_LENGTH}
-                        aria-label="Buscar solicitante por DNI"
-                        aria-describedby="dni-help"
-                    />
-                    {searchDni && (
+            <div className='mb-2 flex flex-col md:flex-row items-start gap-4'>
+                <div className={"flex-1 w-full"}>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                        Buscar por DNI
+                    </label>
+                    <p id="dni-help" className="mt-2 text-xs text-gray-500 mb-3 min-h-8">
+                        <i className="fas fa-info-circle mr-1"></i>
+                        <span>Ingrese el DNI de 8 dígitos para buscar la información del solicitante</span>
+                    </p>
+                    <div className="relative">
+                        <div className="absolute inset-y-0 left-0 pl-3 sm:pl-4 flex items-center pointer-events-none">
+                            <i className="fas fa-search text-gray-400 text-sm"></i>
+                        </div>
+                        <input
+                            type="text"
+                            onKeyDown={handleKeyDown}
+                            onInput={handleDocumentInput}
+                            className={`w-full pl-9 sm:pl-11 pr-20 sm:pr-24 py-2 sm:py-2.5 text-sm sm:text-base border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-0 transition-all ${searchSuccess
+                                ? 'border-green-500 bg-green-50'
+                                : searchError
+                                    ? 'border-red-300 bg-red-50'
+                                    : 'border-gray-300'
+                                }`}
+                            aria-label="Buscar solicitante por DNI"
+                            aria-describedby="dni-help"
+                            {...register('documentNumber')}
+                            placeholder={tipoDocumentoSeleccionado === 'dni' ? "8 dígitos" : tipoDocumentoSeleccionado === 'pas' ? "Pasaporte" : "Cédula"}
+                            maxLength={tipoDocumentoSeleccionado === 'dni' ? 8 : tipoDocumentoSeleccionado === 'ced' ? 10 : 20}
+                        />
+                        {numDni && numDni.length > 0 && (
+                            <button
+                                type="button"
+                                onClick={handleClearSearch}
+                                className="absolute inset-y-0 right-12 sm:right-16 pr-2 flex items-center text-gray-400 hover:text-gray-600 transition-colors"
+                                title="Limpiar"
+                                aria-label="Limpiar búsqueda"
+                            >
+                                <i className="fas fa-times text-sm"></i>
+                            </button>
+                        )}
                         <button
                             type="button"
-                            onClick={handleClearSearch}
-                            className="absolute inset-y-0 right-12 sm:right-16 pr-2 flex items-center text-gray-400 hover:text-gray-600 transition-colors"
-                            title="Limpiar"
-                            aria-label="Limpiar búsqueda"
+                            onClick={handleSearchApplicant}
+                            disabled={!!errors.documentNumber || !numDni || numDni.length === 0}
+                            className="cursor-pointer absolute inset-y-0 right-0 pr-3 sm:pr-4 flex items-center text-blue-600 hover:text-blue-700 disabled:text-gray-400 disabled:cursor-not-allowed transition-colors"
+                            title="Buscar"
+                            aria-label="Buscar solicitante"
                         >
-                            <i className="fas fa-times text-sm"></i>
+                            {loading ? (
+                                <i className="fas fa-spinner fa-spin text-sm"></i>
+                            ) : (
+                                <i className="fas fa-arrow-right text-sm"></i>
+                            )}
                         </button>
-                    )}
-                    <button
-                        type="button"
-                        onClick={handleSearchApplicant}
-                        disabled={searchState.isSearching || searchDni.length !== DNI_LENGTH}
-                        className="absolute inset-y-0 right-0 pr-3 sm:pr-4 flex items-center text-blue-600 hover:text-blue-700 disabled:text-gray-400 disabled:cursor-not-allowed transition-colors"
-                        title="Buscar"
-                        aria-label="Buscar solicitante"
-                    >
-                        {searchState.isSearching ? (
-                            <i className="fas fa-spinner fa-spin text-sm"></i>
-                        ) : (
-                            <i className="fas fa-arrow-right text-sm"></i>
+                    </div>
+                    <div className='h-4 sm:h-5 p-1'>
+                        {errors.documentNumber && (
+                            <p className="text-red-500 text-xs mt-1">{errors.documentNumber.message}</p>
                         )}
-                    </button>
+                    </div>
                 </div>
-                <div className='h-4 sm:h-5 p-1'>
-                    {searchState.error && (
-                        <p className="text-xs sm:text-sm text-red-600 flex items-center gap-1">
-                            <i className="fas fa-exclamation-circle"></i>
-                            <span className="truncate">{searchState.error}</span>
-                        </p>
-                    )}
-                    {searchState.success && !searchState.error && (
-                        <p className="text-xs sm:text-sm text-green-600 flex items-center gap-1">
-                            <i className="fas fa-check-circle"></i>
-                            Solicitante encontrado correctamente
-                        </p>
-                    )}
+                <div className={"flex-1 w-full"}>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                        Seleccione el tipo de documento
+                    </label>
+                    <p id="dni-help" className="mt-2 text-xs text-gray-500 mb-3 min-h-8">
+                        <i className="fas fa-info-circle mr-1"></i>
+                        <span>Seleccione el tipo de documento por el que desea buscar</span>
+                    </p>
+                    <select defaultValue={"dni"}
+                            className={"select outline-0 w-full py-2 sm:py-2.5 text-sm sm:text-base focus:ring-2 focus:ring-blue-500 transition-all bg-white px-3"}
+                            {...register('documentType')}
+                    >
+                        <option value="dni">DNI</option>
+                        <option value="pas">PASAPORTE</option>
+                        <option value="ced">CEDULA</option>
+                    </select>
                 </div>
             </div>
 
             {/* Formulario de datos */}
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
-                {/* Tipo de Documento */}
-                <div className='mb-0'>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">
-                        Tipo de Doc.<span className="text-red-500">*</span>
-                    </label>
-                    <select
-                        name="tipoDocSolicitante"
-                        onChange={handleSelectChange}
-                        className={inputClasses}
-                    >
-                        <option value="">Seleccione</option>
-                        <option value="DNI">DNI</option>
-                        <option value="C. de Extranjeria">Carnet de extranjería</option>
-                    </select>
-                </div>
-
-                {/* DNI */}
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 sm:gap-6">
                 <div className='mb-0'>
                     <label className="block text-sm font-medium text-gray-700 mb-2">
                         DNI <span className="text-red-500">*</span>
@@ -435,13 +521,11 @@ export default function ApplicantForm({
                         name="dniSolicitante"
                         value={formApplicant.dni}
                         onChange={handleFormChange}
-                        className={inputClasses}
+                        className="w-full px-3 sm:px-4 py-2 text-sm sm:text-base border border-gray-300 rounded-lg bg-white outline-0 transition-all focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                         placeholder="DNI"
-                        maxLength={DNI_LENGTH}
+                        maxLength={8}
                     />
                 </div>
-
-                {/* Nombres */}
                 <div className='mb-0 sm:col-span-2 lg:col-span-1'>
                     <label className="block text-sm font-medium text-gray-700 mb-2">
                         Nombres <span className="text-red-500">*</span>
@@ -451,12 +535,11 @@ export default function ApplicantForm({
                         name="nombresSolicitante"
                         value={formApplicant.nombres}
                         onChange={handleFormChange}
-                        className={inputClasses}
+                        className="w-full px-3 sm:px-4 py-2 text-sm sm:text-base border border-gray-300 rounded-lg bg-white outline-0 transition-all focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                         placeholder="Nombres"
                     />
                 </div>
 
-                {/* Apellido Paterno */}
                 <div className='mb-0 sm:col-span-2 lg:col-span-1'>
                     <label className="block text-sm font-medium text-gray-700 mb-2">
                         Apellido Paterno <span className="text-red-500">*</span>
@@ -466,12 +549,11 @@ export default function ApplicantForm({
                         name="apellidoPaternoSolicitante"
                         value={formApplicant.apellidoPaterno}
                         onChange={handleFormChange}
-                        className={inputClasses}
+                        className="w-full px-3 sm:px-4 py-2 text-sm sm:text-base border border-gray-300 rounded-lg bg-white outline-0 transition-all focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                         placeholder="Apellido paterno"
                     />
                 </div>
 
-                {/* Apellido Materno */}
                 <div className='mb-0 sm:col-span-2 lg:col-span-1'>
                     <label className="block text-sm font-medium text-gray-700 mb-2">
                         Apellido Materno <span className="text-red-500">*</span>
@@ -481,12 +563,10 @@ export default function ApplicantForm({
                         name="apellidoMaternoSolicitante"
                         value={formApplicant.apellidoMaterno}
                         onChange={handleFormChange}
-                        className={inputClasses}
+                        className="w-full px-3 sm:px-4 py-2 text-sm sm:text-base border border-gray-300 rounded-lg bg-white outline-0 transition-all focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                         placeholder="Apellido materno"
                     />
                 </div>
-
-                {/* Fecha de Nacimiento */}
                 <div className='mb-0'>
                     <label className="block text-sm font-medium text-gray-700 mb-2">
                         Fecha Nacimiento <span className="text-red-500">*</span>
@@ -496,26 +576,10 @@ export default function ApplicantForm({
                         name="fechaNacimientoSolicitante"
                         value={formApplicant.fecha_nacimiento || ''}
                         onChange={handleFormChange}
-                        className={inputClasses}
+                        className="w-full px-3 sm:px-4 py-2 text-sm sm:text-base border border-gray-300 rounded-lg bg-white outline-0 transition-all focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                        placeholder="YYYY-MM-DD"
                     />
                 </div>
-
-                {/* Dirección */}
-                <div className='mb-0 sm:col-span-2 lg:col-span-3'>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">
-                        Dirección <span className="text-red-500">*</span>
-                    </label>
-                    <input
-                        type="text"
-                        name="direccionSolicitante"
-                        value={formApplicant.direccion || ''}
-                        onChange={handleFormChange}
-                        className={inputClasses}
-                        placeholder="Dirección"
-                    />
-                </div>
-
-                {/* Sexo */}
                 <div className='mb-0'>
                     <label className="block text-sm font-medium text-gray-700 mb-2">
                         Sexo <span className="text-red-500">*</span>
@@ -524,15 +588,26 @@ export default function ApplicantForm({
                         name="sexoSolicitante"
                         value={formApplicant.sexo || ''}
                         onChange={handleSelectChange}
-                        className={inputClasses}
+                        className="w-full px-3 sm:px-4 py-2 text-sm sm:text-base border border-gray-300 rounded-lg bg-white outline-0 transition-all focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                     >
                         <option value="">Seleccione</option>
                         <option value="M">Masculino</option>
                         <option value="F">Femenino</option>
                     </select>
                 </div>
-
-                {/* Correo */}
+                <div className='mb-0 sm:col-span-2 lg:col-span-2'>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                        Dirección <span className="text-red-500">*</span>
+                    </label>
+                    <input
+                        type="text"
+                        name="direccionSolicitante"
+                        value={formApplicant.direccion || ''}
+                        onChange={handleFormChange}
+                        className="w-full px-3 sm:px-4 py-2 text-sm sm:text-base border border-gray-300 rounded-lg bg-white outline-0 transition-all focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                        placeholder="Dirección"
+                    />
+                </div>
                 <div className='mb-0 sm:col-span-2 lg:col-span-1'>
                     <label className="block text-sm font-medium text-gray-700 mb-2">
                         Correo Electrónico <span className="text-red-500">*</span>
@@ -542,12 +617,10 @@ export default function ApplicantForm({
                         name="correoSolicitante"
                         value={formApplicant.correo || ''}
                         onChange={handleFormChange}
-                        className={inputClasses}
+                        className="w-full px-3 sm:px-4 py-2 text-sm sm:text-base border border-gray-300 rounded-lg bg-white outline-0 transition-all focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                         placeholder="correo@ejemplo.com"
                     />
                 </div>
-
-                {/* Teléfono */}
                 <div className='mb-0 sm:col-span-2 lg:col-span-1'>
                     <label className="block text-sm font-medium text-gray-700 mb-2">
                         Teléfono <span className="text-red-500">*</span>
@@ -557,13 +630,11 @@ export default function ApplicantForm({
                         name="telefonoSolicitante"
                         value={formApplicant.telefono || ''}
                         onChange={handleFormChange}
-                        className={inputClasses}
+                        className="w-full px-3 sm:px-4 py-2 text-sm sm:text-base border border-gray-300 rounded-lg bg-white outline-0 transition-all focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                         placeholder="987654321"
-                        maxLength={PHONE_LENGTH}
+                        maxLength={9}
                     />
                 </div>
-
-                {/* Ubigeo */}
                 <div className='mb-0 sm:col-span-2 lg:col-span-1'>
                     <label className="block text-sm font-medium text-gray-700 mb-2">
                         Ubigeo <span className="text-red-500">*</span>
@@ -573,13 +644,11 @@ export default function ApplicantForm({
                         name="ubigeoSolicitante"
                         value={formApplicant.ubigeo || ''}
                         onChange={handleFormChange}
-                        className={inputClasses}
+                        className="w-full px-3 sm:px-4 py-2 text-sm sm:text-base border border-gray-300 rounded-lg bg-white outline-0 transition-all focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                         placeholder="150101"
-                        maxLength={UBIGEO_LENGTH}
+                        maxLength={6}
                     />
                 </div>
-
-                {/* Estado Civil */}
                 <div className='mb-0 sm:col-span-2 lg:col-span-1'>
                     <label className="block text-sm font-medium text-gray-700 mb-2">
                         Estado Civil <span className="text-red-500">*</span>
@@ -588,16 +657,171 @@ export default function ApplicantForm({
                         name="estadoCivilSolicitante"
                         value={formApplicant.estado_civil || ''}
                         onChange={handleSelectChange}
-                        className={inputClasses}
+                        className="w-full px-3 sm:px-4 py-2 text-sm sm:text-base border border-gray-300 rounded-lg bg-white outline-0 transition-all focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                     >
                         <option value="">Seleccione</option>
-                        <option value="Soltero">Soltero(a)</option>
-                        <option value="Casado">Casado(a)</option>
-                        <option value="Divorciado">Divorciado(a)</option>
-                        <option value="Viudo">Viudo(a)</option>
+                        <option value="Single">Soltero(a)</option>
+                        <option value="Married">Casado(a)</option>
+                        <option value="Divorced">Divorciado(a)</option>
+                        <option value="Widower">Viudo(a)</option>
                     </select>
                 </div>
             </div>
+
+            {/* Botones de acción */}
+            <div className="flex flex-col sm:flex-row gap-2 sm:gap-3 sm:justify-end">
+                <button
+                    type="button"
+                    onClick={handleClearSearch}
+                    disabled={!formApplicant.nombres && !formApplicant.dni && !selectedApplicant}
+                    className="w-full sm:w-auto px-4 sm:px-6 py-2 sm:py-2.5 text-sm sm:text-base border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed transition-colors flex items-center justify-center gap-2"
+                >
+                    <i className="fas fa-eraser"></i>
+                    <span>Limpiar Formulario</span>
+                </button>
+                <button
+                    type="button"
+                    onClick={handleAddSolicitante}
+                    disabled={!isFormValid()}
+                    className="w-full sm:w-auto px-4 sm:px-6 py-2 sm:py-2.5 text-sm sm:text-base bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:bg-gray-400 disabled:cursor-not-allowed transition-colors flex items-center justify-center gap-2"
+                >
+                    <i className="fas fa-plus-circle"></i>
+                    <span>Agregar Solicitante</span>
+                </button>
+            </div>
+
+            {/* Lista de Solicitantes Agregados */}
+            {solicitantesAgregados.length > 0 ? (
+                <div className="mt-6 sm:mt-8">
+                    <h4 className="text-sm sm:text-base font-semibold text-gray-900 mb-3 sm:mb-4 flex items-center gap-2">
+                        <i className="fas fa-users text-blue-600"></i>
+                        <span>Solicitantes Agregados ({solicitantesAgregados.length})</span>
+                    </h4>
+
+                    {/* Vista Desktop */}
+                    <div className="hidden md:block bg-white border border-gray-200 rounded-lg overflow-hidden shadow-sm">
+                        <div className="overflow-x-auto">
+                            <table className="min-w-full divide-y divide-gray-200">
+                                <thead className="bg-gray-50">
+                                    <tr>
+                                        <th className="px-4 lg:px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                            DNI
+                                        </th>
+                                        <th className="px-4 lg:px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                            Nombres Completos
+                                        </th>
+                                        <th className="px-4 lg:px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                            Fecha Nac.
+                                        </th>
+                                        <th className="px-4 lg:px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                            Sexo
+                                        </th>
+                                        <th className="px-4 lg:px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                            Teléfono
+                                        </th>
+                                        <th className="px-4 lg:px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                            Acciones
+                                        </th>
+                                    </tr>
+                                </thead>
+                                <tbody className="bg-white divide-y divide-gray-200">
+                                    {solicitantesAgregados.map((solicitante) => (
+                                        <tr
+                                            key={solicitante.id}
+                                            className="hover:bg-gray-50 transition-colors"
+                                        >
+                                            <td className="px-4 lg:px-6 py-3 lg:py-4 whitespace-nowrap text-sm font-medium text-gray-900">
+                                                {solicitante.dni}
+                                            </td>
+                                            <td className="px-4 lg:px-6 py-3 lg:py-4 text-sm text-gray-700">
+                                                {solicitante.nombres} {solicitante.apellidoPaterno} {solicitante.apellidoMaterno}
+                                            </td>
+                                            <td className="px-4 lg:px-6 py-3 lg:py-4 whitespace-nowrap text-sm text-gray-700">
+                                                {formatDisplayDate(solicitante.fecha_nacimiento)}
+                                            </td>
+                                            <td className="px-4 lg:px-6 py-3 lg:py-4 whitespace-nowrap text-sm text-gray-700">
+                                                {solicitante.sexo === 'M' ? 'Masculino' : 'Femenino'}
+                                            </td>
+                                            <td className="px-4 lg:px-6 py-3 lg:py-4 whitespace-nowrap text-sm text-gray-700">
+                                                {solicitante.telefono}
+                                            </td>
+                                            <td className="px-4 lg:px-6 py-3 lg:py-4 whitespace-nowrap text-center text-sm font-medium">
+                                                <button
+                                                    type="button"
+                                                    onClick={() => handleRemoveSolicitante(solicitante.id)}
+                                                    className="text-red-600 hover:text-red-800 transition-colors p-2 hover:bg-red-50 rounded-lg"
+                                                    title="Eliminar solicitante"
+                                                    aria-label={`Eliminar a ${solicitante.nombres} ${solicitante.apellidoPaterno}`}
+                                                >
+                                                    <i className="fas fa-trash-alt"></i>
+                                                </button>
+                                            </td>
+                                        </tr>
+                                    ))}
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+
+                    {/* Vista Mobile */}
+                    <div className="md:hidden space-y-3">
+                        {solicitantesAgregados.map((solicitante) => (
+                            <div
+                                key={solicitante.id}
+                                className="bg-white border border-gray-200 rounded-lg p-4 shadow-sm"
+                            >
+                                <div className="flex justify-between items-start mb-3">
+                                    <div className="flex-1">
+                                        <h5 className="font-semibold text-gray-900 text-sm mb-1">
+                                            {solicitante.nombres} {solicitante.apellidoPaterno} {solicitante.apellidoMaterno}
+                                        </h5>
+                                        <p className="text-xs text-gray-600">
+                                            DNI: {solicitante.dni}
+                                        </p>
+                                    </div>
+                                    <button
+                                        type="button"
+                                        onClick={() => handleRemoveSolicitante(solicitante.id)}
+                                        className="text-red-600 hover:text-red-800 transition-colors p-2 hover:bg-red-50 rounded-lg ml-2"
+                                        title="Eliminar solicitante"
+                                        aria-label={`Eliminar a ${solicitante.nombres} ${solicitante.apellidoPaterno}`}
+                                    >
+                                        <i className="fas fa-trash-alt text-sm"></i>
+                                    </button>
+                                </div>
+                                <div className="grid grid-cols-2 gap-2 text-xs">
+                                    <div>
+                                        <span className="text-gray-500">Fecha Nac.:</span>
+                                        <p className="text-gray-900 font-medium">{formatDisplayDate(solicitante.fecha_nacimiento)}</p>
+                                    </div>
+                                    <div>
+                                        <span className="text-gray-500">Sexo:</span>
+                                        <p className="text-gray-900 font-medium">{solicitante.sexo === 'M' ? 'Masculino' : 'Femenino'}</p>
+                                    </div>
+                                    <div>
+                                        <span className="text-gray-500">Teléfono:</span>
+                                        <p className="text-gray-900 font-medium">{solicitante.telefono}</p>
+                                    </div>
+                                    <div>
+                                        <span className="text-gray-500">Estado Civil:</span>
+                                        <p className="text-gray-900 font-medium">{solicitante.estado_civil}</p>
+                                    </div>
+                                </div>
+                            </div>
+                        ))}
+                    </div>
+                </div>
+            ) : (
+                <div className="mt-6 sm:mt-8 bg-gray-50 border border-gray-200 rounded-lg p-6 sm:p-8 text-center">
+                    <i className="fas fa-users text-gray-400 text-3xl sm:text-4xl mb-2 sm:mb-3"></i>
+                    <p className="text-gray-600 text-xs sm:text-sm font-medium mb-1">
+                        No hay solicitantes agregados aún
+                    </p>
+                    <p className="text-gray-500 text-xs">
+                        Busque por DNI o complete el formulario manualmente
+                    </p>
+                </div>
+            )}
         </div>
     );
 }
