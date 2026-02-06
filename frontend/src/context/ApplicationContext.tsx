@@ -4,6 +4,7 @@ import React, {createContext, type ReactNode, useCallback, useContext, useEffect
 interface ApplicationContextType {
     formDataAplication: CreateApplicationPayload;
     addParticipant: (participant: Participant) => void;
+    deleteParticipant: (dni: string) => void;
     updateApplicationData: (data: Partial<CreateApplicationPayload['application']>) => void;
     resetForm: () => void;
 }
@@ -48,8 +49,15 @@ export const ApplicationProvider: React.FC<{ children: React.ReactNode }> = ({ c
         });
     }, []);
 
+    const deleteParticipant = useCallback((dni: string) => {
+        setFormDataAplication(prev => ({
+            ...prev,
+            participants: prev.participants.filter(p => p.dni !== dni)
+        }));
+    }, []);
+
     return (
-        <ApplicationContext.Provider value={{ formDataAplication, addParticipant, updateApplicationData, resetForm }}>
+        <ApplicationContext.Provider value={{ formDataAplication, addParticipant, updateApplicationData, resetForm,deleteParticipant }}>
             {children}
         </ApplicationContext.Provider>
     );

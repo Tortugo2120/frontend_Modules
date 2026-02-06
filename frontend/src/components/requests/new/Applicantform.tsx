@@ -1,8 +1,8 @@
-import { useState, useCallback, useEffect } from 'react';
-import { useForm } from 'react-hook-form';
-import { zodResolver } from '@hookform/resolvers/zod';
-import { usePersonSearch } from '../../../hooks/usePersonSearch';
-import { solicitanteSchema, type SolicitanteFormData } from '../../../Validations/valitationForm';
+import {useCallback, useEffect, useState} from 'react';
+import {useForm} from 'react-hook-form';
+import {zodResolver} from '@hookform/resolvers/zod';
+import {usePersonSearch} from '../../../hooks/usePersonSearch';
+import {type SolicitanteFormData, solicitanteSchema} from '../../../Validations/valitationForm';
 import {ApplicationHandler} from "../../../context/ApplicationContext.tsx";
 import type {Participant} from "../../../model/aplicationModel.ts";
 
@@ -57,7 +57,7 @@ export default function ApplicantForm({
             return [];
         }
     });
-    const {addParticipant} = ApplicationHandler();
+    const {addParticipant,deleteParticipant} = ApplicationHandler();
         // useForm con Zod para el formulario de datos del solicitante
     const {
         register,
@@ -244,8 +244,10 @@ export default function ApplicantForm({
 
     // Eliminar solicitante
     const handleRemoveSolicitante = useCallback((id: string) => {
+        deleteParticipant(id);
+
         setSolicitantesAgregados(prev => prev.filter(s => s.dni !== id));
-    }, []);
+    }, [deleteParticipant]);
 
     // Formatear fecha para mostrar (DD/MM/YYYY)
     const formatDisplayDate = (dateString: string) => {
@@ -569,6 +571,7 @@ export default function ApplicantForm({
                     type="button"
                     onClick={handleAddSolicitante}
                     className="w-full sm:w-auto px-4 sm:px-6 py-2 sm:py-2.5 text-sm sm:text-base bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:bg-gray-400 disabled:cursor-not-allowed transition-colors flex items-center justify-center gap-2"
+                    disabled={solicitantesAgregados.length >= 1}
                 >
                     <i className="fas fa-plus-circle"></i>
                     <span>Agregar Solicitante</span>

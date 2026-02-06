@@ -18,7 +18,7 @@ export default function NewRequest() {
     const [contrayentes, setContrayentes] = useState<any[]>([]);
     const [requisitos, setRequisitos] = useState<any[]>([]);
     const [archivos, setArchivos] = useState<any[]>([]);
-    const {updateApplicationData,addParticipant,formDataAplication} = ApplicationHandler();
+    const {updateApplicationData,formDataAplication} = ApplicationHandler();
     const {user} = Auth();
     const [formData, setFormData] = useState({
         // Datos del solicitante
