@@ -1,5 +1,13 @@
+"use client";
+
 import { useState, useCallback, useEffect } from 'react';
 import { usePersonSearch } from '../../../hooks/usePersonSearch';
+import { zodResolver } from '@hookform/resolvers/zod';
+import { useForm } from 'react-hook-form';
+import { z } from 'zod';
+import { solicitanteSchema } from '../../../Validations/valitationForm';
+
+type ValidacitionForm = z.infer<typeof solicitanteSchema>;
 
 interface Applicant {
     dni: string;
@@ -11,7 +19,7 @@ interface Applicant {
     direccion?: string;
     correo?: string;
     telefono?: string;
-    ubigeo?: number;
+    ubigeo?: string | undefined;
     estado_civil?: string;
 }
 
@@ -74,32 +82,40 @@ export default function ApplicantForm({
     onSolicitantesChange,
     tipoSolicitudNombre
 }: ApplicantFormProps) {
-    // Hook para búsqueda de personas
-    const {fetchPersonSearch } = usePersonSearch();
-
-    // Estado para búsqueda por DNI
+    const { fetchPersonSearch } = usePersonSearch();
     const [searchDni, setSearchDni] = useState('');
     const [isSearching, setIsSearching] = useState(false);
     const [searchError, setSearchError] = useState('');
     const [searchSuccess, setSearchSuccess] = useState(false);
-
-    // Estado: lista de solicitantes agregados
     const [solicitantesAgregados, setSolicitantesAgregados] = useState<SolicitanteAgregado[]>([]);
 
-    // Estado: formulario editable
     const [formApplicant, setFormApplicant] = useState<Applicant>(createEmptyApplicant());
-
-    // Estado: applicant obtenido por búsqueda
     const [selectedApplicant, setSelectedApplicant] = useState<Applicant | null>(null);
 
-    // Notificar al padre cuando cambie la lista de solicitantes
+    const {
+
+    } = useForm<ValidacitionForm>({
+        resolver: zodResolver(solicitanteSchema),
+        mode: 'onChange', // Validación en tiempo real
+        defaultValues: {
+            dni: '',
+            nombres: '',
+            apellidoPaterno: '',
+            apellidoMaterno: '',
+            fecha_nacimiento: '',
+            direccion: '',
+            correo: '',
+            telefono: '',
+            ubigeo: '',
+        }
+    });
+
     useEffect(() => {
         if (onSolicitantesChange) {
             onSolicitantesChange(solicitantesAgregados);
         }
     }, [solicitantesAgregados, onSolicitantesChange]);
 
-    // Helper: crear evento sintético para onChange del padre
     const createChangeEvent = useCallback((name: string, value: string) => {
         return {
             target: { name, value },
@@ -107,7 +123,6 @@ export default function ApplicantForm({
         } as unknown as React.ChangeEvent<HTMLInputElement>;
     }, []);
 
-    // Sincronizar cambios del formApplicant hacia el padre
     const syncToParent = useCallback((app: Applicant) => {
         onChange(createChangeEvent('dniSolicitante', app.dni));
         onChange(createChangeEvent('nombresSolicitante', app.nombres));
@@ -122,7 +137,6 @@ export default function ApplicantForm({
         onChange(createChangeEvent('estadoCivilSolicitante', app.estado_civil || ''));
     }, [onChange, createChangeEvent]);
 
-    // Manejar cambios manuales en los inputs del formulario
     const handleFormChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
         const { name, value } = e.target;
 
@@ -143,9 +157,11 @@ export default function ApplicantForm({
                     updatedField = { fecha_nacimiento: value };
                     break;
                 case 'sexoSolicitante':
-                    { const upperValue = value.toUpperCase();
-                    updatedField = { sexo: (upperValue === 'M' || upperValue === 'F') ? upperValue as 'M' | 'F' : undefined };
-                    break; }
+                    {
+                        const upperValue = value.toUpperCase();
+                        updatedField = { sexo: (upperValue === 'M' || upperValue === 'F') ? upperValue as 'M' | 'F' : undefined };
+                        break;
+                    }
                 case 'direccionSolicitante':
                     updatedField = { direccion: value };
                     break;
@@ -154,14 +170,18 @@ export default function ApplicantForm({
                     break;
                 case 'telefonoSolicitante':
                     // Solo números, máximo 9 dígitos
-                    { const cleanPhone = value.replace(/\D/g, '').slice(0, 9);
-                    updatedField = { telefono: cleanPhone };
-                    break; }
+                    {
+                        const cleanPhone = value.replace(/\D/g, '').slice(0, 9);
+                        updatedField = { telefono: cleanPhone };
+                        break;
+                    }
                 case 'ubigeoSolicitante':
                     // Solo números, máximo 6 dígitos
-                    { const cleanUbigeo = value.replace(/\D/g, '').slice(0, 6);
-                    updatedField = { ubigeo: cleanUbigeo ? Number(cleanUbigeo) : undefined };
-                    break; }
+                    {
+                        const cleanUbigeo = value.replace(/\D/g, '').slice(0, 6);
+                        updatedField = { ubigeo: cleanUbigeo };
+                        break;
+                    }
                 case 'estadoCivilSolicitante':
                     updatedField = { estado_civil: value };
                     break;
@@ -171,12 +191,12 @@ export default function ApplicantForm({
             }
 
             const next = { ...prev, ...updatedField };
-            
+
             // Limpiar el estado de búsqueda exitosa si se modifica manualmente
             if (selectedApplicant) {
                 setSelectedApplicant(null);
             }
-            
+
             return next;
         });
 
@@ -184,7 +204,34 @@ export default function ApplicantForm({
         onChange(e);
     }, [onChange, selectedApplicant]);
 
-    // Buscar solicitante por DNI usando la API real
+    const handleSelectChange = useCallback((e: React.ChangeEvent<HTMLSelectElement>) => {
+        const { name, value } = e.target;
+
+        setFormApplicant(prev => {
+            let updatedField: Partial<Applicant> = {};
+
+            switch (name) {
+                case 'sexoSolicitante':
+                    updatedField = { sexo: (value === 'M' || value === 'F') ? value as 'M' | 'F' : undefined };
+                    break;
+                case 'estadoCivilSolicitante':
+                    updatedField = { estado_civil: value };
+                    break;
+            }
+
+            const next = { ...prev, ...updatedField };
+
+            if (selectedApplicant) {
+                setSelectedApplicant(null);
+            }
+
+            return next;
+        });
+
+        const syntheticEvent = createChangeEvent(name, value);
+        onChange(syntheticEvent);
+    }, [onChange, selectedApplicant, createChangeEvent]);
+
     const handleSearchApplicant = useCallback(async () => {
         setSearchError('');
         setSearchSuccess(false);
@@ -207,19 +254,23 @@ export default function ApplicantForm({
                 return;
             }
 
-            // Mapear la respuesta del API al formato del formulario
             const personData = response.data;
+
+            const validGender = personData.gender === 'M' || personData.gender === 'F'
+                ? personData.gender as 'M' | 'F'
+                : undefined;
+
             const foundApplicant: Applicant = {
                 dni: searchDni,
                 nombres: personData.name,
                 apellidoPaterno: personData.paternalSurname,
                 apellidoMaterno: personData.maternalSurname,
                 fecha_nacimiento: personData.birthdate,
-                sexo: undefined, // El API no devuelve este campo
+                sexo: validGender,
                 direccion: personData.address,
                 correo: personData.email,
                 telefono: personData.phone,
-                ubigeo: personData.ubigeoId ? Number(personData.ubigeoId) : undefined,
+                ubigeo: personData.ubigeoId,
                 estado_civil: personData.maritalStatus
             };
 
@@ -238,8 +289,6 @@ export default function ApplicantForm({
             setIsSearching(false);
         }
     }, [searchDni, fetchPersonSearch, syncToParent]);
-
-    // Limpiar búsqueda y formulario
     const handleClearSearch = useCallback(() => {
         setSearchDni('');
         setSearchError('');
@@ -250,7 +299,6 @@ export default function ApplicantForm({
         syncToParent(emptyApplicant);
     }, [syncToParent]);
 
-    // Manejar Enter en campo DNI
     const handleKeyDown = useCallback((e: React.KeyboardEvent<HTMLInputElement>) => {
         if (e.key === 'Enter') {
             e.preventDefault();
@@ -258,7 +306,6 @@ export default function ApplicantForm({
         }
     }, [handleSearchApplicant]);
 
-    // Manejar cambio en input de búsqueda DNI (solo números)
     const handleDniChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
         const value = e.target.value.replace(/\D/g, '').slice(0, 8);
         setSearchDni(value);
@@ -287,7 +334,7 @@ export default function ApplicantForm({
     // Agregar solicitante
     const handleAddSolicitante = useCallback(() => {
         const { dni, nombres, apellidoPaterno, apellidoMaterno, fecha_nacimiento, sexo, direccion, correo, telefono, ubigeo, estado_civil } = formApplicant;
-        
+
         // Validación completa
         if (!dni || dni.length !== 8) {
             setSearchError('El DNI debe tener 8 dígitos');
@@ -346,7 +393,7 @@ export default function ApplicantForm({
             direccion: direccion?.trim(),
             correo: correo?.trim(),
             telefono: telefono?.trim(),
-            ubigeo,
+            ubigeo: undefined,
             estado_civil: estado_civil?.trim()
         };
 
@@ -366,13 +413,13 @@ export default function ApplicantForm({
     // Formatear fecha para mostrar (DD/MM/YYYY)
     const formatDisplayDate = (dateString: string) => {
         if (!dateString) return '';
-        
+
         // Si ya está en formato YYYY-MM-DD
         if (dateString.includes('-') && dateString.split('-')[0].length === 4) {
             const [year, month, day] = dateString.split('-');
             return `${day}/${month}/${year}`;
         }
-        
+
         return dateString;
     };
 
@@ -464,7 +511,22 @@ export default function ApplicantForm({
             </div>
 
             {/* Formulario de datos */}
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 sm:gap-6">
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-3 gap-4 sm:gap-6">
+                <div className='mb-0'>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                        Tipo de Doc.<span className="text-red-500">*</span>
+                    </label>
+                    <select
+                        name="tipoDocSolicitante"
+                        value={formApplicant.tipoDoc || ''}
+                        onChange={handleSelectChange}
+                        className="w-full px-3 sm:px-4 py-2 text-sm sm:text-base border border-gray-300 rounded-lg bg-white outline-0 transition-all focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                    >
+                        <option value="">Seleccione</option>
+                        <option value="DNI">Dni</option>
+                        <option value="C. de Extranjeria">Carnet de extranjería</option>
+                    </select>
+                </div>
                 <div className='mb-0'>
                     <label className="block text-sm font-medium text-gray-700 mb-2">
                         DNI <span className="text-red-500">*</span>
@@ -533,22 +595,7 @@ export default function ApplicantForm({
                         placeholder="YYYY-MM-DD"
                     />
                 </div>
-                <div className='mb-0'>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">
-                        Sexo <span className="text-red-500">*</span>
-                    </label>
-                    <select
-                        name="sexoSolicitante"
-                        value={formApplicant.sexo || ''}
-                        onChange={handleFormChange as any}
-                        className="w-full px-3 sm:px-4 py-2 text-sm sm:text-base border border-gray-300 rounded-lg bg-white outline-0 transition-all focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                    >
-                        <option value="">Seleccione</option>
-                        <option value="M">Masculino</option>
-                        <option value="F">Femenino</option>
-                    </select>
-                </div>
-                <div className='mb-0 sm:col-span-2 lg:col-span-1'>
+                <div className='mb-0 sm:col-span-2 lg:col-span-3'>
                     <label className="block text-sm font-medium text-gray-700 mb-2">
                         Dirección <span className="text-red-500">*</span>
                     </label>
@@ -560,6 +607,21 @@ export default function ApplicantForm({
                         className="w-full px-3 sm:px-4 py-2 text-sm sm:text-base border border-gray-300 rounded-lg bg-white outline-0 transition-all focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                         placeholder="Dirección"
                     />
+                </div>
+                <div className='mb-0'>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                        Sexo <span className="text-red-500">*</span>
+                    </label>
+                    <select
+                        name="sexoSolicitante"
+                        value={formApplicant.sexo || ''}
+                        onChange={handleSelectChange}
+                        className="w-full px-3 sm:px-4 py-2 text-sm sm:text-base border border-gray-300 rounded-lg bg-white outline-0 transition-all focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                    >
+                        <option value="">Seleccione</option>
+                        <option value="M">Masculino</option>
+                        <option value="F">Femenino</option>
+                    </select>
                 </div>
                 <div className='mb-0 sm:col-span-2 lg:col-span-1'>
                     <label className="block text-sm font-medium text-gray-700 mb-2">
@@ -609,7 +671,7 @@ export default function ApplicantForm({
                     <select
                         name="estadoCivilSolicitante"
                         value={formApplicant.estado_civil || ''}
-                        onChange={handleFormChange as any}
+                        onChange={handleSelectChange}
                         className="w-full px-3 sm:px-4 py-2 text-sm sm:text-base border border-gray-300 rounded-lg bg-white outline-0 transition-all focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                     >
                         <option value="">Seleccione</option>

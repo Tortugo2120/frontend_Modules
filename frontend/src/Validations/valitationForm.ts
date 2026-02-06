@@ -14,11 +14,9 @@ const calcularEdad = (fechaNacimiento: string): number => {
     return edad;
 };
 
-
 // Validación personalizada para solo letras y espacios (permite tildes y ñ)
 const soloLetrasRegex = /^[a-zA-ZáéíóúÁÉÍÓÚñÑ\s]+$/;
 
-// Esquema de validación para el formulario de solicitante
 export const solicitanteSchema = z.object({
     dni: z
         .string()
@@ -80,7 +78,6 @@ export const solicitanteSchema = z.object({
             message: 'La fecha de nacimiento no puede ser futura',
         }),
 
-    
     direccion: z
         .string()
         .min(1, 'La dirección es obligatoria')
@@ -111,6 +108,6 @@ export const solicitanteSchema = z.object({
 
 });
 
-// Tipo inferido del esquema
-export type SolicitanteFormData = z.infer<typeof solicitanteSchema>;
+
+
 
