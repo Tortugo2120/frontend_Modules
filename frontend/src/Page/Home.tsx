@@ -7,6 +7,7 @@ import RevenueChart from '../components/home/RevenueChart';
 import type { Solicitud, Actividad, RecaudacionData } from '../Types/index';
 import useAplicatCountPendig from "../hooks/useAplicatCountPendig.ts";
 import useAplicatCountComplet from "../hooks/useAplicCountComple.ts";
+import {usePagosResumen} from "../hooks/usePagosResumen.ts";
 
 export default function Home() {
 
@@ -87,6 +88,7 @@ export default function Home() {
 
     const {aplicatCountPendig} = useAplicatCountPendig();
     const {aplicatCountComplet} = useAplicatCountComplet();
+    const {data} = usePagosResumen();
     return (
         <>
             <div className="bg-blue-300/40 p-4 sm:p-6 lg:p-6">
@@ -114,9 +116,9 @@ export default function Home() {
                         textColor="text-green-600"
                     />
                     <StatsCard
-                        title="Pagos Registrados"
-                        value="S/ 8,420"
-                        subtitle="S/ 1,250"
+                        title={data?.message}
+                        value={data?.data.total}
+                        subtitle={data?.data.total_hoy}
                         highlightText="Hoy:"
                         bgColor="bg-orange-400"
                         textColor='text-orange-600'

@@ -1,8 +1,9 @@
 import { useState, useEffect } from 'react';
 import { resumenPagos } from '../services/PaymentService';
+import type {PaymentResumen} from "../model/paymentModel.ts";
 
 export const usePagosResumen = () => {
-    const [data, setData] = useState<any>(null);
+    const [data, setData] = useState<PaymentResumen>();
     const [loading, setLoading] = useState<boolean>(true);
     const [error, setError] = useState<string | null>(null);
 
