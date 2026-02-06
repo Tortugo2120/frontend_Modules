@@ -3,7 +3,7 @@
 import { useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
-import { loginSchema } from '../Validations/validation';
+import { loginSchema } from '../Validations/validationLogin.ts';
 import { z } from 'zod';
 import { useNavigate } from 'react-router-dom';
 import { Auth } from '../context/AuthContext';
@@ -32,7 +32,6 @@ export default function Login() {
     defaultValues: {
       username: '',
       password: '',
-      rememberMe: false
     }
   });
 

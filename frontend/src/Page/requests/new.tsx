@@ -2,14 +2,21 @@ import { useState } from "react";
 import StepProgressBar from "../../components/requests/new/Stepprogresebar";
 import RequestTypeCard from "../../components/requests/new/Requesttypecard";
 import ApplicantForm from "../../components/requests/new/Applicantform";
-
 import ConfirmationSummary from "../../components/requests/new/Confirmationsummary";
 import NavigationButtons from "../../components/requests/new/Navigationbuttons";
 import useTipoSolici from "../../hooks/useTipoSolici.ts";
+import Contrayente from "../../components/requests/new/Contrayente.tsx";
+import Testigos from "../../components/requests/new/Testigos.tsx";
+import Requisitos from "../../components/requests/new/Requisitos.tsx";
+import ResumenSolicitud from "../../components/requests/new/ResumenSolicitud.tsx";
 
 export default function NewRequest() {
     const [tipoSolicitud, setTipoSolicitud] = useState<number | null>(null);
     const [searchTerm, setSearchTerm] = useState("");
+    const [contrayentes, setContrayentes] = useState<any[]>([]);
+    const [requisitos, setRequisitos] = useState<any[]>([]);
+    const [archivos, setArchivos] = useState<any[]>([]);
+
 
     const [formData, setFormData] = useState({
         // Datos del solicitante
@@ -61,7 +68,7 @@ export default function NewRequest() {
     };
 
     const nextStep = () => {
-        if (currentStep < 5) setCurrentStep(currentStep + 1);
+        if (currentStep < 7) setCurrentStep(currentStep + 1);
     };
 
     const prevStep = () => {
@@ -160,8 +167,6 @@ export default function NewRequest() {
                         {/* Step 2: Formulario de Datos */}
                         {currentStep === 2 && (
                             <div className="p-6 lg:p-6 animate-fadeIn">
-                                <h2 className="text-2xl font-bold text-gray-900 mb-2">Datos del solicitante</h2>
-                                <p className="text-gray-600 mb-8">Complete la información requerida</p>
 
                                 <div className="space-y-8">
                                     {/* Datos del Solicitante */}
@@ -193,21 +198,38 @@ export default function NewRequest() {
                         {/* Step 3: Confirmación */}
                         {currentStep === 3 && (
                             <div className="p-6 lg:p-6">
-                                <h1>
-                                    Paso 3
-                                </h1>
+                                <Contrayente tipoSolicitudNombre={selectedRequestType?.nombre_solicitud} />
                             </div>
                         )}
-                        {/* Step 3: Confirmación */}
+                        {/* Step 4: Confirmación */}
                         {currentStep === 4 && (
                             <div className="p-6 lg:p-6">
-                                <h1>
-                                    Paso 4
-                                </h1>
+                                <Testigos tipoSolicitudNombre={selectedRequestType?.nombre_solicitud} />
                             </div>
                         )}
-                        {/* Step 3: Confirmación */}
+                        {/* Step 5: Confirmación */}
                         {currentStep === 5 && (
+                            <div className="p-6 lg:p-6">
+                                <Requisitos tipoSolicitudNombre={selectedRequestType?.nombre_solicitud} />
+                            </div>
+                        )}
+                        {/* Step 6: Resumen */}
+                        {currentStep === 6 && (
+                            <div className="p-6 lg:p-6">
+                                {currentStep === 6 && (
+                                    <ResumenSolicitud
+                                        tipoSolicitudNombre={selectedRequestType?.nombre_solicitud}
+                                        contrayentes={contrayentes}
+                                        requisitos={requisitos}
+                                        archivos={archivos}
+                                    />
+                                )}
+
+
+                            </div>
+                        )}
+                        {/* Step 6: Confirmación */}
+                        {currentStep === 7 && (
                             <div className="p-6 lg:p-6">
                                 <ConfirmationSummary
                                     tipoSolicitud={tipoSolicitud}
@@ -219,7 +241,7 @@ export default function NewRequest() {
 
                         <NavigationButtons
                             currentStep={currentStep}
-                            totalSteps={5}
+                            totalSteps={7}
                             canProceed={currentStep === 1 ? !!tipoSolicitud : true}
                             onPrevious={prevStep}
                             onNext={nextStep}
