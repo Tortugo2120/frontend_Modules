@@ -1,5 +1,9 @@
 import { useState, useCallback, useEffect } from 'react';
 import { usePersonSearch } from '../../../hooks/usePersonSearch';
+import {useForm} from "react-hook-form";
+import {zodResolver} from "@hookform/resolvers/zod";
+import {searchTypeDocument} from "../../../Validations/validationSearchTypeDocument.ts";
+import {z} from "zod";
 
 interface Applicant {
     dni: string;
@@ -69,14 +73,23 @@ const createEmptyApplicant = (): Applicant => ({
     estado_civil: ''
 });
 
+type inputSearch = z.infer<typeof searchTypeDocument>;
 export default function ApplicantForm({
     onChange,
     onSolicitantesChange,
     tipoSolicitudNombre
 }: ApplicantFormProps) {
-    const {fetchPersonSearch } = usePersonSearch();
-    const [searchDni, setSearchDni] = useState('');
-    const [isSearching, setIsSearching] = useState(false);
+    const {register,watch,formState:{errors}} = useForm<inputSearch>({
+            resolver: zodResolver(searchTypeDocument),
+            defaultValues: {
+                documentType:'dni', documentNumber:''
+            }
+    });
+
+    const tipoDocumentoSeleccionado = watch('documentType');
+    const numDni = watch('documentNumber');
+
+    const {fetchPersonSearch,loading } = usePersonSearch();
     const [searchError, setSearchError] = useState('');
     const [searchSuccess, setSearchSuccess] = useState(false);
     const [solicitantesAgregados, setSolicitantesAgregados] = useState<SolicitanteAgregado[]>([]);
@@ -205,17 +218,20 @@ export default function ApplicantForm({
         setSearchSuccess(false);
         setSelectedApplicant(null);
 
-        if (searchDni.length !== 8) {
-            setSearchError('El DNI debe tener 8 dígitos');
-            return;
-        }
-
-        setIsSearching(true);
         try {
-            const response = await fetchPersonSearch(searchDni);
+            // Mapear el tipo de documento de string a número
+            const documentTypeMapping: Record<string, number> = {
+                'dni': 1,
+                'pas': 2,
+                'ced': 3
+            };
+
+            const documentTypeNumber = documentTypeMapping[tipoDocumentoSeleccionado] || 1;
+
+            const response = await fetchPersonSearch(numDni, documentTypeNumber);
 
             if (!response || !response.status || !response.data) {
-                setSearchError('No se encontró ningún solicitante con ese DNI');
+                setSearchError('No se encontró ningún solicitante con ese documento');
                 const emptyApplicant = createEmptyApplicant();
                 setFormApplicant(emptyApplicant);
                 syncToParent(emptyApplicant);
@@ -229,7 +245,7 @@ export default function ApplicantForm({
                 : undefined;
 
             const foundApplicant: Applicant = {
-                dni: searchDni,
+                dni: numDni,
                 nombres: personData.name,
                 apellidoPaterno: personData.paternalSurname,
                 apellidoMaterno: personData.maternalSurname,
@@ -253,12 +269,9 @@ export default function ApplicantForm({
             const emptyApplicant = createEmptyApplicant();
             setFormApplicant(emptyApplicant);
             syncToParent(emptyApplicant);
-        } finally {
-            setIsSearching(false);
         }
-    }, [searchDni, fetchPersonSearch, syncToParent]);
+    }, [numDni, tipoDocumentoSeleccionado, fetchPersonSearch, syncToParent]);
     const handleClearSearch = useCallback(() => {
-        setSearchDni('');
         setSearchError('');
         setSearchSuccess(false);
         setSelectedApplicant(null);
@@ -274,12 +287,21 @@ export default function ApplicantForm({
         }
     }, [handleSearchApplicant]);
 
-    const handleDniChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
-        const value = e.target.value.replace(/\D/g, '').slice(0, 8);
-        setSearchDni(value);
-        setSearchError('');
-        setSearchSuccess(false);
-    }, []);
+    const handleDocumentInput = useCallback((e: React.FormEvent<HTMLInputElement>) => {
+        const input = e.currentTarget;
+        const value = input.value;
+
+        if (tipoDocumentoSeleccionado === 'dni' || tipoDocumentoSeleccionado === 'ced') {
+            // Solo permitir números
+            const numericValue = value.replace(/\D/g, '');
+            if (value !== numericValue) {
+                input.value = numericValue;
+                // Forzar actualización del valor en react-hook-form
+                const event = new Event('input', { bubbles: true });
+                input.dispatchEvent(event);
+            }
+        }
+    }, [tipoDocumentoSeleccionado]);
 
     // Validar campos obligatorios
     const isFormValid = useCallback(() => {
@@ -408,73 +430,83 @@ export default function ApplicantForm({
             </div>
 
             {/* Búsqueda por DNI */}
-            <div className='mb-2'>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Buscar por DNI
-                </label>
-                <p id="dni-help" className="mt-2 text-xs text-gray-500 mb-3">
-                    <i className="fas fa-info-circle mr-1"></i>
-                    <span>Ingrese el DNI de 8 dígitos para buscar la información del solicitante</span>
-                </p>
-                <div className="relative">
-                    <div className="absolute inset-y-0 left-0 pl-3 sm:pl-4 flex items-center pointer-events-none">
-                        <i className="fas fa-search text-gray-400 text-sm"></i>
-                    </div>
-                    <input
-                        type="text"
-                        value={searchDni}
-                        onChange={handleDniChange}
-                        onKeyDown={handleKeyDown}
-                        placeholder="Ingrese DNI (8 dígitos)"
-                        className={`w-full pl-9 sm:pl-11 pr-20 sm:pr-24 py-2 sm:py-2.5 text-sm sm:text-base border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-0 transition-all ${searchSuccess
-                            ? 'border-green-500 bg-green-50'
-                            : searchError
-                                ? 'border-red-300 bg-red-50'
-                                : 'border-gray-300'
-                            }`}
-                        maxLength={8}
-                        aria-label="Buscar solicitante por DNI"
-                        aria-describedby="dni-help"
-                    />
-                    {searchDni && (
+            <div className='mb-2 flex flex-col md:flex-row items-start gap-4'>
+                <div className={"flex-1 w-full"}>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                        Buscar por DNI
+                    </label>
+                    <p id="dni-help" className="mt-2 text-xs text-gray-500 mb-3 min-h-8">
+                        <i className="fas fa-info-circle mr-1"></i>
+                        <span>Ingrese el DNI de 8 dígitos para buscar la información del solicitante</span>
+                    </p>
+                    <div className="relative">
+                        <div className="absolute inset-y-0 left-0 pl-3 sm:pl-4 flex items-center pointer-events-none">
+                            <i className="fas fa-search text-gray-400 text-sm"></i>
+                        </div>
+                        <input
+                            type="text"
+                            onKeyDown={handleKeyDown}
+                            onInput={handleDocumentInput}
+                            className={`w-full pl-9 sm:pl-11 pr-20 sm:pr-24 py-2 sm:py-2.5 text-sm sm:text-base border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-0 transition-all ${searchSuccess
+                                ? 'border-green-500 bg-green-50'
+                                : searchError
+                                    ? 'border-red-300 bg-red-50'
+                                    : 'border-gray-300'
+                                }`}
+                            aria-label="Buscar solicitante por DNI"
+                            aria-describedby="dni-help"
+                            {...register('documentNumber')}
+                            placeholder={tipoDocumentoSeleccionado === 'dni' ? "8 dígitos" : tipoDocumentoSeleccionado === 'pas' ? "Pasaporte" : "Cédula"}
+                            maxLength={tipoDocumentoSeleccionado === 'dni' ? 8 : tipoDocumentoSeleccionado === 'ced' ? 10 : 20}
+                        />
+                        {numDni && numDni.length > 0 && (
+                            <button
+                                type="button"
+                                onClick={handleClearSearch}
+                                className="absolute inset-y-0 right-12 sm:right-16 pr-2 flex items-center text-gray-400 hover:text-gray-600 transition-colors"
+                                title="Limpiar"
+                                aria-label="Limpiar búsqueda"
+                            >
+                                <i className="fas fa-times text-sm"></i>
+                            </button>
+                        )}
                         <button
                             type="button"
-                            onClick={handleClearSearch}
-                            className="absolute inset-y-0 right-12 sm:right-16 pr-2 flex items-center text-gray-400 hover:text-gray-600 transition-colors"
-                            title="Limpiar"
-                            aria-label="Limpiar búsqueda"
+                            onClick={handleSearchApplicant}
+                            disabled={!!errors.documentNumber || !numDni || numDni.length === 0}
+                            className="cursor-pointer absolute inset-y-0 right-0 pr-3 sm:pr-4 flex items-center text-blue-600 hover:text-blue-700 disabled:text-gray-400 disabled:cursor-not-allowed transition-colors"
+                            title="Buscar"
+                            aria-label="Buscar solicitante"
                         >
-                            <i className="fas fa-times text-sm"></i>
+                            {loading ? (
+                                <i className="fas fa-spinner fa-spin text-sm"></i>
+                            ) : (
+                                <i className="fas fa-arrow-right text-sm"></i>
+                            )}
                         </button>
-                    )}
-                    <button
-                        type="button"
-                        onClick={handleSearchApplicant}
-                        disabled={isSearching || searchDni.length !== 8}
-                        className="absolute inset-y-0 right-0 pr-3 sm:pr-4 flex items-center text-blue-600 hover:text-blue-700 disabled:text-gray-400 disabled:cursor-not-allowed transition-colors"
-                        title="Buscar"
-                        aria-label="Buscar solicitante"
-                    >
-                        {isSearching ? (
-                            <i className="fas fa-spinner fa-spin text-sm"></i>
-                        ) : (
-                            <i className="fas fa-arrow-right text-sm"></i>
+                    </div>
+                    <div className='h-4 sm:h-5 p-1'>
+                        {errors.documentNumber && (
+                            <p className="text-red-500 text-xs mt-1">{errors.documentNumber.message}</p>
                         )}
-                    </button>
+                    </div>
                 </div>
-                <div className='h-4 sm:h-5 p-1'>
-                    {searchError && (
-                        <p className="text-xs sm:text-sm text-red-600 flex items-center gap-1">
-                            <i className="fas fa-exclamation-circle"></i>
-                            <span className="truncate">{searchError}</span>
-                        </p>
-                    )}
-                    {searchSuccess && !searchError && (
-                        <p className="text-xs sm:text-sm text-green-600 flex items-center gap-1">
-                            <i className="fas fa-check-circle"></i>
-                            Solicitante encontrado correctamente
-                        </p>
-                    )}
+                <div className={"flex-1 w-full"}>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                        Seleccione el tipo de documento
+                    </label>
+                    <p id="dni-help" className="mt-2 text-xs text-gray-500 mb-3 min-h-8">
+                        <i className="fas fa-info-circle mr-1"></i>
+                        <span>Seleccione el tipo de documento por el que desea buscar</span>
+                    </p>
+                    <select defaultValue={"dni"}
+                            className={"select outline-0 w-full py-2 sm:py-2.5 text-sm sm:text-base focus:ring-2 focus:ring-blue-500 transition-all bg-white px-3"}
+                            {...register('documentType')}
+                    >
+                        <option value="dni">DNI</option>
+                        <option value="pas">PASAPORTE</option>
+                        <option value="ced">CEDULA</option>
+                    </select>
                 </div>
             </div>
 
@@ -628,10 +660,10 @@ export default function ApplicantForm({
                         className="w-full px-3 sm:px-4 py-2 text-sm sm:text-base border border-gray-300 rounded-lg bg-white outline-0 transition-all focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                     >
                         <option value="">Seleccione</option>
-                        <option value="Soltero">Soltero(a)</option>
-                        <option value="Casado">Casado(a)</option>
-                        <option value="Divorciado">Divorciado(a)</option>
-                        <option value="Viudo">Viudo(a)</option>
+                        <option value="Single">Soltero(a)</option>
+                        <option value="Married">Casado(a)</option>
+                        <option value="Divorced">Divorciado(a)</option>
+                        <option value="Widower">Viudo(a)</option>
                     </select>
                 </div>
             </div>
