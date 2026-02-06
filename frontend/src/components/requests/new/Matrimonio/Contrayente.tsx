@@ -1,11 +1,11 @@
 import { useState, useCallback, useEffect } from 'react';
-import { usePersonSearch } from '../../../hooks/usePersonSearch';
+import { usePersonSearch } from '../../../../hooks/usePersonSearch';
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { searchTypeDocument } from "../../../Validations/validationSearchTypeDocument.ts";
+import { searchTypeDocument } from "../../../../Validations/validationSearchTypeDocument.ts";
 import { z } from "zod";
 
-interface Testigo {
+interface Contrayente {
     tipoDocumento: string;
     dni: string;
     nombres: string;
@@ -20,17 +20,17 @@ interface Testigo {
     estado_civil?: string;
 }
 
-interface TestigoAgregado extends Testigo {
+interface ContrayenteAgregado extends Contrayente {
     id: string;
 }
 
 interface Solicitud {
     tipoSolicitudNombre?: string;
-    onTestigosChange?: (Testigos: TestigoAgregado[]) => void;
+    onContrayentesChange?: (contrayentes: ContrayenteAgregado[]) => void;
 }
 
-// Función auxiliar para crear Testigo vacío
-const createEmptyTestigo = (): Testigo => ({
+// Función auxiliar para crear contrayente vacío
+const createEmptyContrayente = (): Contrayente => ({
     tipoDocumento: 'DNI',
     dni: '',
     nombres: '',
@@ -47,10 +47,10 @@ const createEmptyTestigo = (): Testigo => ({
 
 type inputSearch = z.infer<typeof searchTypeDocument>;
 
-const Testigo = (props: Solicitud) => {
-    const { tipoSolicitudNombre, onTestigosChange } = props;
+const Contrayente = (props: Solicitud) => {
+    const { tipoSolicitudNombre, onContrayentesChange } = props;
 
-    // Estados para Testigo 1
+    // Estados para Contrayente 1
     const {
         register: register1,
         watch: watch1,
@@ -63,7 +63,7 @@ const Testigo = (props: Solicitud) => {
         }
     });
 
-    // Estados para Testigo 2
+    // Estados para Contrayente 2
     const {
         register: register2,
         watch: watch2,
@@ -88,25 +88,25 @@ const Testigo = (props: Solicitud) => {
     const [searchError2, setSearchError2] = useState('');
     const [searchSuccess2, setSearchSuccess2] = useState(false);
 
-    const [Testigo1, setTestigo1] = useState<Testigo>(createEmptyTestigo());
-    const [Testigo2, setTestigo2] = useState<Testigo>(createEmptyTestigo());
+    const [contrayente1, setContrayente1] = useState<Contrayente>(createEmptyContrayente());
+    const [contrayente2, setContrayente2] = useState<Contrayente>(createEmptyContrayente());
 
-    const [TestigosAgregados, setTestigosAgregados] = useState<TestigoAgregado[]>([]);
+    const [contrayentesAgregados, setContrayentesAgregados] = useState<ContrayenteAgregado[]>([]);
 
     useEffect(() => {
-        if (onTestigosChange) {
-            onTestigosChange(TestigosAgregados);
+        if (onContrayentesChange) {
+            onContrayentesChange(contrayentesAgregados);
         }
-    }, [TestigosAgregados, onTestigosChange]);
+    }, [contrayentesAgregados, onContrayentesChange]);
 
     // Función para buscar persona
-    const handleSearchTestigo = useCallback(async (TestigoNum: 1 | 2) => {
-        const isTestigo1 = TestigoNum === 1;
-        const tipoDoc = isTestigo1 ? tipoDoc1 : tipoDoc2;
-        const numDoc = isTestigo1 ? numDoc1 : numDoc2;
-        const setError = isTestigo1 ? setSearchError1 : setSearchError2;
-        const setSuccess = isTestigo1 ? setSearchSuccess1 : setSearchSuccess2;
-        const setTestigo = isTestigo1 ? setTestigo1 : setTestigo2;
+    const handleSearchContrayente = useCallback(async (contrayenteNum: 1 | 2) => {
+        const isContrayente1 = contrayenteNum === 1;
+        const tipoDoc = isContrayente1 ? tipoDoc1 : tipoDoc2;
+        const numDoc = isContrayente1 ? numDoc1 : numDoc2;
+        const setError = isContrayente1 ? setSearchError1 : setSearchError2;
+        const setSuccess = isContrayente1 ? setSearchSuccess1 : setSearchSuccess2;
+        const setContrayente = isContrayente1 ? setContrayente1 : setContrayente2;
 
         setError('');
         setSuccess(false);
@@ -123,7 +123,7 @@ const Testigo = (props: Solicitud) => {
 
             if (!response || !response.status || !response.data) {
                 setError('No se encontró ninguna persona con ese documento');
-                setTestigo(createEmptyTestigo());
+                setContrayente(createEmptyContrayente());
                 return;
             }
 
@@ -132,7 +132,7 @@ const Testigo = (props: Solicitud) => {
                 ? personData.gender as 'M' | 'F'
                 : undefined;
 
-            const foundTestigo: Testigo = {
+            const foundContrayente: Contrayente = {
                 tipoDocumento: tipoDoc.toUpperCase(),
                 dni: numDoc,
                 nombres: personData.name,
@@ -147,88 +147,88 @@ const Testigo = (props: Solicitud) => {
                 estado_civil: personData.maritalStatus
             };
 
-            setTestigo(foundTestigo);
+            setContrayente(foundContrayente);
             setSuccess(true);
             setTimeout(() => setSuccess(false), 2500);
         } catch (err) {
-            console.error('Error al buscar Testigo:', err);
+            console.error('Error al buscar contrayente:', err);
             setError('Error al buscar la persona. Intente nuevamente.');
-            setTestigo(createEmptyTestigo());
+            setContrayente(createEmptyContrayente());
         }
     }, [numDoc1, tipoDoc1, numDoc2, tipoDoc2, fetchPersonSearch]);
 
     // Función para limpiar búsqueda
-    const handleClearSearch = useCallback((TestigoNum: 1 | 2) => {
-        const isTestigo1 = TestigoNum === 1;
-        const setError = isTestigo1 ? setSearchError1 : setSearchError2;
-        const setSuccess = isTestigo1 ? setSearchSuccess1 : setSearchSuccess2;
-        const setTestigo = isTestigo1 ? setTestigo1 : setTestigo2;
+    const handleClearSearch = useCallback((contrayenteNum: 1 | 2) => {
+        const isContrayente1 = contrayenteNum === 1;
+        const setError = isContrayente1 ? setSearchError1 : setSearchError2;
+        const setSuccess = isContrayente1 ? setSearchSuccess1 : setSearchSuccess2;
+        const setContrayente = isContrayente1 ? setContrayente1 : setContrayente2;
 
         setError('');
         setSuccess(false);
-        setTestigo(createEmptyTestigo());
+        setContrayente(createEmptyContrayente());
     }, []);
 
     // Función para manejar cambios en los inputs
     const handleInputChange = useCallback((
         e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>,
-        TestigoNum: 1 | 2
+        contrayenteNum: 1 | 2
     ) => {
         const { name, value } = e.target;
-        const setTestigo = TestigoNum === 1 ? setTestigo1 : setTestigo2;
+        const setContrayente = contrayenteNum === 1 ? setContrayente1 : setContrayente2;
 
-        setTestigo(prev => {
-            const updatedTestigo = { ...prev };
+        setContrayente(prev => {
+            const updatedContrayente = { ...prev };
 
             switch (name) {
                 case 'tipoDocSolicitante':
-                    updatedTestigo.tipoDocumento = value;
+                    updatedContrayente.tipoDocumento = value;
                     break;
                 case 'dniSolicitante':
-                    updatedTestigo.dni = value.replace(/\D/g, '').slice(0, 8);
+                    updatedContrayente.dni = value.replace(/\D/g, '').slice(0, 8);
                     break;
                 case 'nombresSolicitante':
-                    updatedTestigo.nombres = value;
+                    updatedContrayente.nombres = value;
                     break;
                 case 'apellidoPaternoSolicitante':
-                    updatedTestigo.apellidoPaterno = value;
+                    updatedContrayente.apellidoPaterno = value;
                     break;
                 case 'apellidoMaternoSolicitante':
-                    updatedTestigo.apellidoMaterno = value;
+                    updatedContrayente.apellidoMaterno = value;
                     break;
                 case 'fechaNacimientoSolicitante':
-                    updatedTestigo.fecha_nacimiento = value;
+                    updatedContrayente.fecha_nacimiento = value;
                     break;
                 case 'sexoSolicitante':
-                    updatedTestigo.sexo = (value === 'M' || value === 'F') ? value as 'M' | 'F' : undefined;
+                    updatedContrayente.sexo = (value === 'M' || value === 'F') ? value as 'M' | 'F' : undefined;
                     break;
                 case 'direccionSolicitante':
-                    updatedTestigo.direccion = value;
+                    updatedContrayente.direccion = value;
                     break;
                 case 'correoSolicitante':
-                    updatedTestigo.correo = value;
+                    updatedContrayente.correo = value;
                     break;
                 case 'telefonoSolicitante':
-                    updatedTestigo.telefono = value.replace(/\D/g, '').slice(0, 9);
+                    updatedContrayente.telefono = value.replace(/\D/g, '').slice(0, 9);
                     break;
                 case 'ubigeoSolicitante':
-                    updatedTestigo.ubigeo = value.replace(/\D/g, '').slice(0, 6);
+                    updatedContrayente.ubigeo = value.replace(/\D/g, '').slice(0, 6);
                     break;
                 case 'estadoCivilSolicitante':
-                    updatedTestigo.estado_civil = value;
+                    updatedContrayente.estado_civil = value;
                     break;
             }
 
-            return updatedTestigo;
+            return updatedContrayente;
         });
     }, []);
 
-    const handleKeyDown = useCallback((e: React.KeyboardEvent<HTMLInputElement>, TestigoNum: 1 | 2) => {
+    const handleKeyDown = useCallback((e: React.KeyboardEvent<HTMLInputElement>, contrayenteNum: 1 | 2) => {
         if (e.key === 'Enter') {
             e.preventDefault();
-            handleSearchTestigo(TestigoNum);
+            handleSearchContrayente(contrayenteNum);
         }
-    }, [handleSearchTestigo]);
+    }, [handleSearchContrayente]);
 
     const handleDocumentInput = useCallback((e: React.FormEvent<HTMLInputElement>, tipoDoc: string) => {
         const input = e.currentTarget;
@@ -244,53 +244,53 @@ const Testigo = (props: Solicitud) => {
         }
     }, []);
 
-    // Validar si el Testigo está completo
-    const isTestigoValid = useCallback((Testigo: Testigo) => {
+    // Validar si el contrayente está completo
+    const isContrayenteValid = useCallback((contrayente: Contrayente) => {
         return !!(
-            Testigo.dni && Testigo.dni.length === 8 &&
-            Testigo.nombres && Testigo.nombres.trim() &&
-            Testigo.apellidoPaterno && Testigo.apellidoPaterno.trim() &&
-            Testigo.apellidoMaterno && Testigo.apellidoMaterno.trim() &&
-            Testigo.fecha_nacimiento &&
-            Testigo.sexo &&
-            Testigo.direccion && Testigo.direccion.trim() &&
-            Testigo.correo && Testigo.correo.trim() &&
-            Testigo.telefono && Testigo.telefono.trim() &&
-            Testigo.ubigeo &&
-            Testigo.estado_civil && Testigo.estado_civil.trim()
+            contrayente.dni && contrayente.dni.length === 8 &&
+            contrayente.nombres && contrayente.nombres.trim() &&
+            contrayente.apellidoPaterno && contrayente.apellidoPaterno.trim() &&
+            contrayente.apellidoMaterno && contrayente.apellidoMaterno.trim() &&
+            contrayente.fecha_nacimiento &&
+            contrayente.sexo &&
+            contrayente.direccion && contrayente.direccion.trim() &&
+            contrayente.correo && contrayente.correo.trim() &&
+            contrayente.telefono && contrayente.telefono.trim() &&
+            contrayente.ubigeo &&
+            contrayente.estado_civil && contrayente.estado_civil.trim()
         );
     }, []);
 
-    // Agregar ambos Testigos
-    const handleAgregarTestigos = useCallback(() => {
-        // Validar Testigo 1
-        if (!isTestigoValid(Testigo1)) {
-            setSearchError1('Por favor complete todos los campos obligatorios del Testigo 1');
+    // Agregar ambos contrayentes
+    const handleAgregarContrayentes = useCallback(() => {
+        // Validar contrayente 1
+        if (!isContrayenteValid(contrayente1)) {
+            setSearchError1('Por favor complete todos los campos obligatorios del Contrayente 1');
             return;
         }
 
-        // Validar Testigo 2
-        if (!isTestigoValid(Testigo2)) {
-            setSearchError2('Por favor complete todos los campos obligatorios del Testigo 2');
+        // Validar contrayente 2
+        if (!isContrayenteValid(contrayente2)) {
+            setSearchError2('Por favor complete todos los campos obligatorios del Contrayente 2');
             return;
         }
 
         // Verificar que no sean el mismo DNI
-        if (Testigo1.dni === Testigo2.dni) {
-            setSearchError1('Los Testigos no pueden tener el mismo DNI');
-            setSearchError2('Los Testigos no pueden tener el mismo DNI');
+        if (contrayente1.dni === contrayente2.dni) {
+            setSearchError1('Los contrayentes no pueden tener el mismo DNI');
+            setSearchError2('Los contrayentes no pueden tener el mismo DNI');
             return;
         }
 
         const id1 = crypto?.randomUUID?.() || `${Date.now()}-1`;
         const id2 = crypto?.randomUUID?.() || `${Date.now()}-2`;
 
-        const nuevosTestigos: TestigoAgregado[] = [
-            { id: id1, ...Testigo1 },
-            { id: id2, ...Testigo2 }
+        const nuevosContrayentes: ContrayenteAgregado[] = [
+            { id: id1, ...contrayente1 },
+            { id: id2, ...contrayente2 }
         ];
 
-        setTestigosAgregados(nuevosTestigos);
+        setContrayentesAgregados(nuevosContrayentes);
         
         setSearchSuccess1(true);
         setSearchSuccess2(true);
@@ -298,17 +298,17 @@ const Testigo = (props: Solicitud) => {
             setSearchSuccess1(false);
             setSearchSuccess2(false);
         }, 1400);
-    }, [Testigo1, Testigo2, isTestigoValid]);
+    }, [contrayente1, contrayente2, isContrayenteValid]);
 
     // Limpiar todo
     const handleLimpiarTodo = useCallback(() => {
-        setTestigo1(createEmptyTestigo());
-        setTestigo2(createEmptyTestigo());
+        setContrayente1(createEmptyContrayente());
+        setContrayente2(createEmptyContrayente());
         setSearchError1('');
         setSearchError2('');
         setSearchSuccess1(false);
         setSearchSuccess2(false);
-        setTestigosAgregados([]);
+        setContrayentesAgregados([]);
     }, []);
 
     // Formatear fecha para mostrar
@@ -321,10 +321,10 @@ const Testigo = (props: Solicitud) => {
         return dateString;
     };
 
-    // Renderizar formulario de Testigo
-    const renderTestigoForm = (
-        Testigo: Testigo,
-        TestigoNum: 1 | 2,
+    // Renderizar formulario de contrayente
+    const renderContrayenteForm = (
+        contrayente: Contrayente,
+        contrayenteNum: 1 | 2,
         register: any,
         errors: any,
         watch: any,
@@ -352,7 +352,7 @@ const Testigo = (props: Solicitud) => {
                             </div>
                             <input
                                 type="text"
-                                onKeyDown={(e) => handleKeyDown(e, TestigoNum)}
+                                onKeyDown={(e) => handleKeyDown(e, contrayenteNum)}
                                 onInput={(e) => handleDocumentInput(e, tipoDoc)}
                                 className={`w-full pl-9 sm:pl-11 pr-20 sm:pr-24 py-2 sm:py-2.5 text-sm sm:text-base border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-0 transition-all ${
                                     searchSuccess
@@ -368,7 +368,7 @@ const Testigo = (props: Solicitud) => {
                             {numDoc && numDoc.length > 0 && (
                                 <button
                                     type="button"
-                                    onClick={() => handleClearSearch(TestigoNum)}
+                                    onClick={() => handleClearSearch(contrayenteNum)}
                                     className="absolute inset-y-0 right-12 sm:right-16 pr-2 flex items-center text-gray-400 hover:text-gray-600 transition-colors"
                                     title="Limpiar"
                                 >
@@ -377,7 +377,7 @@ const Testigo = (props: Solicitud) => {
                             )}
                             <button
                                 type="button"
-                                onClick={() => handleSearchTestigo(TestigoNum)}
+                                onClick={() => handleSearchContrayente(contrayenteNum)}
                                 disabled={!!errors.documentNumber || !numDoc || numDoc.length === 0}
                                 className="cursor-pointer absolute inset-y-0 right-0 pr-3 sm:pr-4 flex items-center text-blue-600 hover:text-blue-700 disabled:text-gray-400 disabled:cursor-not-allowed transition-colors"
                                 title="Buscar"
@@ -427,8 +427,8 @@ const Testigo = (props: Solicitud) => {
                         </label>
                         <select
                             name="tipoDocSolicitante"
-                            value={Testigo.tipoDocumento}
-                            onChange={(e) => handleInputChange(e, TestigoNum)}
+                            value={contrayente.tipoDocumento}
+                            onChange={(e) => handleInputChange(e, contrayenteNum)}
                             className="w-full px-3 sm:px-4 py-2 text-sm sm:text-base border border-gray-300 rounded-lg bg-white outline-0 transition-all focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                         >
                             <option value="">Seleccione</option>
@@ -445,8 +445,8 @@ const Testigo = (props: Solicitud) => {
                         <input
                             type="text"
                             name="dniSolicitante"
-                            value={Testigo.dni}
-                            onChange={(e) => handleInputChange(e, TestigoNum)}
+                            value={contrayente.dni}
+                            onChange={(e) => handleInputChange(e, contrayenteNum)}
                             className="w-full px-3 sm:px-4 py-2 text-sm sm:text-base border border-gray-300 rounded-lg bg-white outline-0 transition-all focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                             placeholder="DNI"
                             maxLength={8}
@@ -461,8 +461,8 @@ const Testigo = (props: Solicitud) => {
                         <input
                             type="text"
                             name="nombresSolicitante"
-                            value={Testigo.nombres}
-                            onChange={(e) => handleInputChange(e, TestigoNum)}
+                            value={contrayente.nombres}
+                            onChange={(e) => handleInputChange(e, contrayenteNum)}
                             className="w-full px-3 sm:px-4 py-2 text-sm sm:text-base border border-gray-300 rounded-lg bg-white outline-0 transition-all focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                             placeholder="Nombres"
                         />
@@ -476,8 +476,8 @@ const Testigo = (props: Solicitud) => {
                         <input
                             type="text"
                             name="apellidoPaternoSolicitante"
-                            value={Testigo.apellidoPaterno}
-                            onChange={(e) => handleInputChange(e, TestigoNum)}
+                            value={contrayente.apellidoPaterno}
+                            onChange={(e) => handleInputChange(e, contrayenteNum)}
                             className="w-full px-3 sm:px-4 py-2 text-sm sm:text-base border border-gray-300 rounded-lg bg-white outline-0 transition-all focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                             placeholder="Apellido paterno"
                         />
@@ -491,8 +491,8 @@ const Testigo = (props: Solicitud) => {
                         <input
                             type="text"
                             name="apellidoMaternoSolicitante"
-                            value={Testigo.apellidoMaterno}
-                            onChange={(e) => handleInputChange(e, TestigoNum)}
+                            value={contrayente.apellidoMaterno}
+                            onChange={(e) => handleInputChange(e, contrayenteNum)}
                             className="w-full px-3 sm:px-4 py-2 text-sm sm:text-base border border-gray-300 rounded-lg bg-white outline-0 transition-all focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                             placeholder="Apellido materno"
                         />
@@ -506,8 +506,8 @@ const Testigo = (props: Solicitud) => {
                         <input
                             type="date"
                             name="fechaNacimientoSolicitante"
-                            value={Testigo.fecha_nacimiento || ''}
-                            onChange={(e) => handleInputChange(e, TestigoNum)}
+                            value={contrayente.fecha_nacimiento || ''}
+                            onChange={(e) => handleInputChange(e, contrayenteNum)}
                             className="w-full px-3 sm:px-4 py-2 text-sm sm:text-base border border-gray-300 rounded-lg bg-white outline-0 transition-all focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                         />
                     </div>
@@ -520,8 +520,8 @@ const Testigo = (props: Solicitud) => {
                         <input
                             type="text"
                             name="direccionSolicitante"
-                            value={Testigo.direccion || ''}
-                            onChange={(e) => handleInputChange(e, TestigoNum)}
+                            value={contrayente.direccion || ''}
+                            onChange={(e) => handleInputChange(e, contrayenteNum)}
                             className="w-full px-3 sm:px-4 py-2 text-sm sm:text-base border border-gray-300 rounded-lg bg-white outline-0 transition-all focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                             placeholder="Dirección"
                         />
@@ -534,8 +534,8 @@ const Testigo = (props: Solicitud) => {
                         </label>
                         <select
                             name="sexoSolicitante"
-                            value={Testigo.sexo || ''}
-                            onChange={(e) => handleInputChange(e, TestigoNum)}
+                            value={contrayente.sexo || ''}
+                            onChange={(e) => handleInputChange(e, contrayenteNum)}
                             className="w-full px-3 sm:px-4 py-2 text-sm sm:text-base border border-gray-300 rounded-lg bg-white outline-0 transition-all focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                         >
                             <option value="">Seleccione</option>
@@ -552,8 +552,8 @@ const Testigo = (props: Solicitud) => {
                         <input
                             type="email"
                             name="correoSolicitante"
-                            value={Testigo.correo || ''}
-                            onChange={(e) => handleInputChange(e, TestigoNum)}
+                            value={contrayente.correo || ''}
+                            onChange={(e) => handleInputChange(e, contrayenteNum)}
                             className="w-full px-3 sm:px-4 py-2 text-sm sm:text-base border border-gray-300 rounded-lg bg-white outline-0 transition-all focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                             placeholder="correo@ejemplo.com"
                         />
@@ -567,8 +567,8 @@ const Testigo = (props: Solicitud) => {
                         <input
                             type="text"
                             name="telefonoSolicitante"
-                            value={Testigo.telefono || ''}
-                            onChange={(e) => handleInputChange(e, TestigoNum)}
+                            value={contrayente.telefono || ''}
+                            onChange={(e) => handleInputChange(e, contrayenteNum)}
                             className="w-full px-3 sm:px-4 py-2 text-sm sm:text-base border border-gray-300 rounded-lg bg-white outline-0 transition-all focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                             placeholder="987654321"
                             maxLength={9}
@@ -583,8 +583,8 @@ const Testigo = (props: Solicitud) => {
                         <input
                             type="text"
                             name="ubigeoSolicitante"
-                            value={Testigo.ubigeo || ''}
-                            onChange={(e) => handleInputChange(e, TestigoNum)}
+                            value={contrayente.ubigeo || ''}
+                            onChange={(e) => handleInputChange(e, contrayenteNum)}
                             className="w-full px-3 sm:px-4 py-2 text-sm sm:text-base border border-gray-300 rounded-lg bg-white outline-0 transition-all focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                             placeholder="150101"
                             maxLength={6}
@@ -598,8 +598,8 @@ const Testigo = (props: Solicitud) => {
                         </label>
                         <select
                             name="estadoCivilSolicitante"
-                            value={Testigo.estado_civil || ''}
-                            onChange={(e) => handleInputChange(e, TestigoNum)}
+                            value={contrayente.estado_civil || ''}
+                            onChange={(e) => handleInputChange(e, contrayenteNum)}
                             className="w-full px-3 sm:px-4 py-2 text-sm sm:text-base border border-gray-300 rounded-lg bg-white outline-0 transition-all focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                         >
                             <option value="">Seleccione</option>
@@ -620,7 +620,7 @@ const Testigo = (props: Solicitud) => {
             <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-3 sm:gap-2 pb-3 border-b border-b-blue-300">
                 <h3 className="text-base sm:text-lg font-semibold text-gray-900 flex items-center gap-2">
                     <i className="fas fa-user text-blue-600"></i>
-                    <span>Datos de los Testigos</span>
+                    <span>Datos de los Contrayentes</span>
                 </h3>
                 {tipoSolicitudNombre && (
                     <span className="bg-blue-100 text-blue-800 text-xs sm:text-sm font-medium px-3 sm:px-4 py-1.5 sm:py-2 rounded-lg inline-flex items-center w-fit">
@@ -630,14 +630,14 @@ const Testigo = (props: Solicitud) => {
                 )}
             </div>
 
-            {/* Testigo 1 */}
+            {/* Contrayente 1 */}
             <div className="bg-blue-50 p-4 rounded-lg border border-blue-200">
                 <h4 className="text-lg font-bold text-gray-800 mb-4 flex items-center gap-2">
                     <i className="fas fa-user-circle text-blue-600"></i>
-                    Testigo 1
+                    Contrayente 1
                 </h4>
-                {renderTestigoForm(
-                    Testigo1,
+                {renderContrayenteForm(
+                    contrayente1,
                     1,
                     register1,
                     errors1,
@@ -649,14 +649,14 @@ const Testigo = (props: Solicitud) => {
 
             <div className="border-solid border-b border-b-blue-300"></div>
 
-            {/* Testigo 2 */}
+            {/* Contrayente 2 */}
             <div className="bg-pink-50 p-4 rounded-lg border border-pink-200">
                 <h4 className="text-lg font-bold text-gray-800 mb-4 flex items-center gap-2">
                     <i className="fas fa-user-circle text-pink-600"></i>
-                    Testigo 2
+                    Contrayente 2
                 </h4>
-                {renderTestigoForm(
-                    Testigo2,
+                {renderContrayenteForm(
+                    contrayente2,
                     2,
                     register2,
                     errors2,
@@ -678,40 +678,40 @@ const Testigo = (props: Solicitud) => {
                 </button>
                 <button
                     type="button"
-                    onClick={handleAgregarTestigos}
-                    disabled={!isTestigoValid(Testigo1) || !isTestigoValid(Testigo2)}
+                    onClick={handleAgregarContrayentes}
+                    disabled={!isContrayenteValid(contrayente1) || !isContrayenteValid(contrayente2)}
                     className="w-full sm:w-auto px-4 sm:px-6 py-2 sm:py-2.5 text-sm sm:text-base bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:bg-gray-400 disabled:cursor-not-allowed transition-colors flex items-center justify-center gap-2"
                 >
                     <i className="fas fa-heart"></i>
-                    <span>Confirmar Testigos</span>
+                    <span>Confirmar Contrayentes</span>
                 </button>
             </div>
 
-            {/* Lista de Testigos Agregados */}
-            {TestigosAgregados.length > 0 && (
+            {/* Lista de Contrayentes Agregados */}
+            {contrayentesAgregados.length > 0 && (
                 <div className="mt-6 sm:mt-8 bg-green-50 border border-green-200 rounded-lg p-6">
                     <h4 className="text-sm sm:text-base font-semibold text-gray-900 mb-4 flex items-center gap-2">
                         <i className="fas fa-check-circle text-green-600"></i>
-                        <span>Testigos Confirmados</span>
+                        <span>Contrayentes Confirmados</span>
                     </h4>
 
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                        {TestigosAgregados.map((Testigo, index) => (
+                        {contrayentesAgregados.map((contrayente, index) => (
                             <div
-                                key={Testigo.id}
+                                key={contrayente.id}
                                 className="bg-white border border-gray-200 rounded-lg p-4 shadow-sm"
                             >
                                 <h5 className="font-semibold text-gray-900 text-base mb-3 flex items-center gap-2">
                                     <i className={`fas fa-user-circle ${index === 0 ? 'text-blue-600' : 'text-pink-600'}`}></i>
-                                    Testigo {index + 1}
+                                    Contrayente {index + 1}
                                 </h5>
                                 <div className="space-y-2 text-sm">
-                                    <p><span className="text-gray-600">Nombre:</span> <span className="font-medium">{Testigo.nombres} {Testigo.apellidoPaterno} {Testigo.apellidoMaterno}</span></p>
-                                    <p><span className="text-gray-600">DNI:</span> <span className="font-medium">{Testigo.dni}</span></p>
-                                    <p><span className="text-gray-600">Fecha Nac.:</span> <span className="font-medium">{formatDisplayDate(Testigo.fecha_nacimiento || '')}</span></p>
-                                    <p><span className="text-gray-600">Sexo:</span> <span className="font-medium">{Testigo.sexo === 'M' ? 'Masculino' : 'Femenino'}</span></p>
-                                    <p><span className="text-gray-600">Teléfono:</span> <span className="font-medium">{Testigo.telefono}</span></p>
-                                    <p><span className="text-gray-600">Email:</span> <span className="font-medium">{Testigo.correo}</span></p>
+                                    <p><span className="text-gray-600">Nombre:</span> <span className="font-medium">{contrayente.nombres} {contrayente.apellidoPaterno} {contrayente.apellidoMaterno}</span></p>
+                                    <p><span className="text-gray-600">DNI:</span> <span className="font-medium">{contrayente.dni}</span></p>
+                                    <p><span className="text-gray-600">Fecha Nac.:</span> <span className="font-medium">{formatDisplayDate(contrayente.fecha_nacimiento || '')}</span></p>
+                                    <p><span className="text-gray-600">Sexo:</span> <span className="font-medium">{contrayente.sexo === 'M' ? 'Masculino' : 'Femenino'}</span></p>
+                                    <p><span className="text-gray-600">Teléfono:</span> <span className="font-medium">{contrayente.telefono}</span></p>
+                                    <p><span className="text-gray-600">Email:</span> <span className="font-medium">{contrayente.correo}</span></p>
                                 </div>
                             </div>
                         ))}
@@ -722,4 +722,4 @@ const Testigo = (props: Solicitud) => {
     );
 };
 
-export default Testigo;
+export default Contrayente;

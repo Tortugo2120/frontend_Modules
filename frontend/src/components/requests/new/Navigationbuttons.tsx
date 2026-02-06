@@ -38,7 +38,7 @@ export default function NavigationButtons({
                     disabled={!canProceed}
                     className={`flex items-center gap-2 px-6 py-3 rounded-lg font-medium transition-all cursor-pointer ${!canProceed
                             ? 'bg-gray-300 text-gray-500 cursor-not-allowed'
-                            : 'bg-linear-to-r from-blue-600 to-indigo-600 text-white hover:shadow-lg hover:scale-105'
+                            : 'bg-blue-600 text-white hover:shadow-lg hover:scale-105'
                         }`}
                 >
                     Siguiente

@@ -25,74 +25,46 @@ interface RequisitosMatrimonioProps {
 const REQUISITOS_INICIALES: Requisito[] = [
     {
         id: '1',
-        titulo: 'Partida de Nacimiento',
+        titulo: 'Partidas de Nacimiento de los Contrayentes.',
         descripcion: 'Original y copia certificada de la partida de nacimiento de ambos contrayentes (vigencia de 3 meses)',
         obligatorio: true,
         completado: false
     },
     {
         id: '2',
-        titulo: 'DNI Vigente',
+        titulo: 'Copias ampliadas al 150% y fedateadas de los contrayentes.',
         descripcion: 'Documento Nacional de Identidad vigente de ambos contrayentes (original y copia)',
         obligatorio: true,
         completado: false
     },
     {
         id: '3',
-        titulo: 'Declaración Jurada de Estado Civil',
-        descripcion: 'Declaración jurada de no tener impedimento matrimonial',
+        titulo: 'Copias ampliadas al 150% y fedateadas de los Testigos.',
+        descripcion: 'Estos deben declarar que conocen a los contrayentes como máximo 3 años',
         obligatorio: true,
         completado: false
     },
     {
         id: '4',
-        titulo: 'Certificado Médico Prenupcial',
-        descripcion: 'Certificado médico de salud física y mental (vigencia de 30 días)',
+        titulo: 'Certificado de Soltería',
+        descripcion: 'Expedida por la municipalidad donde nació o RENIEC',
         obligatorio: true,
         completado: false
     },
     {
         id: '5',
-        titulo: 'Certificado de Soltería',
-        descripcion: 'Certificado que acredite el estado civil de soltero/a (si aplica)',
-        obligatorio: false,
+        titulo: 'Análisis Clínico',
+        descripcion: 'Certificando el Grupo sanguineo y prueba de VIH',
+        obligatorio: true,
         completado: false
     },
     {
         id: '6',
-        titulo: 'Acta de Defunción',
-        descripcion: 'En caso de ser viudo/a, presentar acta de defunción del cónyuge fallecido',
-        obligatorio: false,
-        completado: false
-    },
-    {
-        id: '7',
-        titulo: 'Sentencia de Divorcio',
-        descripcion: 'En caso de ser divorciado/a, presentar sentencia de divorcio debidamente inscrita',
-        obligatorio: false,
-        completado: false
-    },
-    {
-        id: '8',
-        titulo: 'Testigos',
-        descripcion: 'Datos completos de dos testigos mayores de edad (DNI de cada uno)',
+        titulo: 'Publicación de edicto Matrimonial',
+        descripcion: 'La publicación debe realizarse 15 días antes de la fecha.',
         obligatorio: true,
         completado: false
     },
-    {
-        id: '9',
-        titulo: 'Pago de Derecho de Trámite',
-        descripcion: 'Comprobante de pago por derecho de trámite de matrimonio civil',
-        obligatorio: true,
-        completado: false
-    },
-    {
-        id: '10',
-        titulo: 'Fotografías',
-        descripcion: '4 fotografías tamaño pasaporte a color de ambos contrayentes',
-        obligatorio: false,
-        completado: false
-    }
 ];
 
 const RequisitosMatrimonio = ({
@@ -472,6 +444,7 @@ const RequisitosMatrimonio = ({
                 <div className="text-xs sm:text-sm text-gray-700">
                     <p className="font-semibold mb-1">Importante:</p>
                     <ul className="list-disc list-inside space-y-1 text-gray-600">
+                        <li>LA PROGRAMACIÓN DE MATRIMINIO SE REALIZA CON UN MES DE ANTICIPACIÓN.</li>
                         <li>Los requisitos marcados como <strong>Obligatorios</strong> deben ser completados para proceder.</li>
                         <li>Los documentos adjuntos son opcionales pero recomendados para agilizar el proceso.</li>
                         <li>Asegúrese de que todos los documentos estén vigentes y sean legibles.</li>

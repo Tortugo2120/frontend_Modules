@@ -158,8 +158,8 @@ const ResumenSolicitud = ({
                         <div className="text-xl sm:text-2xl font-bold">{estadisticas.totalArchivos}</div>
                     </div>
                     <div className="bg-white/10 backdrop-blur-sm rounded-lg p-3 sm:p-4">
-                        <div className="text-xs sm:text-sm text-blue-100 mb-1">Tamaño Total</div>
-                        <div className="text-xl sm:text-2xl font-bold">{formatearTamaño(estadisticas.tamañoTotalArchivos)}</div>
+                        <div className="text-xs sm:text-sm text-blue-100 mb-1">Costo Total</div>
+                        <div className="text-xl sm:text-2xl font-bold">128.20</div>
                     </div>
                 </div>
             </div>
