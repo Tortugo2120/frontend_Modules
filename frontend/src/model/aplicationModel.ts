@@ -17,7 +17,7 @@ export interface Participant {
     address: string;
     email: string;
     phone: string;
-    ubigeoId: number;
+    ubigeoId: string;
     maritalStatus: string;
     rol: ParticipantRol;
 }

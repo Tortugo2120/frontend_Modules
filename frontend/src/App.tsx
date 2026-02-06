@@ -8,6 +8,7 @@ import NewRequest from "./Page/requests/new.tsx";
 import History from "./Page/requests/history.tsx";
 import { Reportes } from "./Page/Reportes.tsx";
 import { AuthProvider } from "./context/AuthContext.tsx";
+import {ApplicationProvider} from "./context/ApplicationContext.tsx";
 import { ProtectedRoute } from "./components/ProtectedRoute.tsx";
 import VerDocumento from "./Page/documents/SeeDoc.tsx";
 import EmitirDocumentos from "./Page/documents/issueDoc.tsx";
@@ -24,7 +25,9 @@ function App() {
                     <Route path="/" element={<Login />} />
                     <Route path={"/dashboard"} element={
                         <ProtectedRoute>
-                            <Dashboard />
+                            <ApplicationProvider>
+                                <Dashboard />
+                            </ApplicationProvider>
                         </ProtectedRoute>
                     }>
                         <Route index element={<Home />} />

@@ -1,4 +1,4 @@
-import { useState } from "react";
+import {useEffect, useState} from "react";
 import StepProgressBar from "../../components/requests/new/Stepprogresebar";
 import RequestTypeCard from "../../components/requests/new/Requesttypecard";
 import ApplicantForm from "../../components/requests/new/Applicantform";
@@ -9,6 +9,8 @@ import Contrayente from "../../components/requests/new/Contrayente.tsx";
 import Testigos from "../../components/requests/new/Testigos.tsx";
 import Requisitos from "../../components/requests/new/Requisitos.tsx";
 import ResumenSolicitud from "../../components/requests/new/ResumenSolicitud.tsx";
+import {ApplicationHandler} from "../../context/ApplicationContext.tsx";
+import {Auth} from "../../context/AuthContext.tsx";
 
 export default function NewRequest() {
     const [tipoSolicitud, setTipoSolicitud] = useState<number | null>(null);
@@ -16,8 +18,8 @@ export default function NewRequest() {
     const [contrayentes, setContrayentes] = useState<any[]>([]);
     const [requisitos, setRequisitos] = useState<any[]>([]);
     const [archivos, setArchivos] = useState<any[]>([]);
-
-
+    const {updateApplicationData,addParticipant,formDataAplication} = ApplicationHandler();
+    const {user} = Auth();
     const [formData, setFormData] = useState({
         // Datos del solicitante
         nombresSolicitante: '',
@@ -51,6 +53,19 @@ export default function NewRequest() {
         );
     };
 
+    useEffect(() => {
+        if (user) {
+            updateApplicationData({ userId: user.user_id });
+        }
+    }, [user, updateApplicationData]);
+
+    useEffect(() => {
+        if (tipoSolicitud) {
+            updateApplicationData({ applicationTypeId: tipoSolicitud });
+        }
+    }, [tipoSolicitud, updateApplicationData]);
+
+
     const { tiposolicitud } = useTipoSolici();
     const [currentStep, setCurrentStep] = useState(1);
 
@@ -81,7 +96,6 @@ export default function NewRequest() {
     const filteredSolicitudes = tiposolicitud.filter(tipo =>
         tipo.nombre_solicitud.toLowerCase().includes(searchTerm.toLowerCase())
     );
-
     return (
         <div className="min-h-screen bg-blue-300/40 from-slate-50 via-blue-50 to-indigo-50 p-4 sm:p-6 lg:p-6">
             <div className="mb-4">
