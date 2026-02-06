@@ -5,10 +5,11 @@ import ApplicantForm from "../../components/requests/new/Applicantform";
 import ConfirmationSummary from "../../components/requests/new/Confirmationsummary";
 import NavigationButtons from "../../components/requests/new/Navigationbuttons";
 import useTipoSolici from "../../hooks/useTipoSolici.ts";
-import Contrayente from "../../components/requests/new/Contrayente.tsx";
-import Testigos from "../../components/requests/new/Testigos.tsx";
-import Requisitos from "../../components/requests/new/Requisitos.tsx";
+import Contrayente from "../../components/requests/new/Matrimonio/Contrayente";
+import Testigos from "../../components/requests/new/Matrimonio/Testigos.tsx";
+import Requisitos from "../../components/requests/new/Matrimonio/Requisitos.tsx";
 import ResumenSolicitud from "../../components/requests/new/ResumenSolicitud.tsx";
+import SeleccionMatrimonio from "../../components/requests/new/Matrimonio/SeleccionMatrimonio.tsx";
 
 export default function NewRequest() {
     const [tipoSolicitud, setTipoSolicitud] = useState<number | null>(null);
@@ -31,18 +32,6 @@ export default function NewRequest() {
         telefonoSolicitante: '',
         ubigeoSolicitante: 0,
         estadoCivilSolicitante: '',
-
-        // Datos específicos según tipo
-        nombreCompleto1: '',
-        dniPersona1: '',
-        nombreCompleto2: '',
-        dniPersona2: '',
-        fechaEvento: '',
-        lugarEvento: '',
-
-        // Documentos y observaciones
-        documentosAdjuntos: '',
-        observaciones: ''
     });
 
     const handleSelectTipoSolicitud = (id: number) => {
@@ -68,7 +57,7 @@ export default function NewRequest() {
     };
 
     const nextStep = () => {
-        if (currentStep < 7) setCurrentStep(currentStep + 1);
+        if (currentStep < 8) setCurrentStep(currentStep + 1);
     };
 
     const prevStep = () => {
@@ -213,23 +202,25 @@ export default function NewRequest() {
                                 <Requisitos tipoSolicitudNombre={selectedRequestType?.nombre_solicitud} />
                             </div>
                         )}
-                        {/* Step 6: Resumen */}
+                        {/* Step 6: Tipo Matrimonio */}
                         {currentStep === 6 && (
                             <div className="p-6 lg:p-6">
-                                {currentStep === 6 && (
-                                    <ResumenSolicitud
-                                        tipoSolicitudNombre={selectedRequestType?.nombre_solicitud}
-                                        contrayentes={contrayentes}
-                                        requisitos={requisitos}
-                                        archivos={archivos}
-                                    />
-                                )}
-
-
+                                <SeleccionMatrimonio tipoSolicitudNombre={selectedRequestType?.nombre_solicitud} />
                             </div>
                         )}
-                        {/* Step 6: Confirmación */}
+                        {/* Step 7: Resumen */}
                         {currentStep === 7 && (
+                            <div className="p-6 lg:p-6">
+                                <ResumenSolicitud
+                                    tipoSolicitudNombre={selectedRequestType?.nombre_solicitud}
+                                    contrayentes={contrayentes}
+                                    requisitos={requisitos}
+                                    archivos={archivos}
+                                />
+                            </div>
+                        )}
+                        {/* Step 8: Confirmación */}
+                        {currentStep === 8 && (
                             <div className="p-6 lg:p-6">
                                 <ConfirmationSummary
                                     tipoSolicitud={tipoSolicitud}
@@ -241,7 +232,7 @@ export default function NewRequest() {
 
                         <NavigationButtons
                             currentStep={currentStep}
-                            totalSteps={7}
+                            totalSteps={8}
                             canProceed={currentStep === 1 ? !!tipoSolicitud : true}
                             onPrevious={prevStep}
                             onNext={nextStep}

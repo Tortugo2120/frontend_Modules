@@ -456,7 +456,7 @@ export default function ApplicantForm({
                             aria-label="Buscar solicitante por DNI"
                             aria-describedby="dni-help"
                             {...register('documentNumber')}
-                            placeholder={tipoDocumentoSeleccionado === 'dni' ? "8 dígitos" : tipoDocumentoSeleccionado === 'pas' ? "Pasaporte" : "Cédula"}
+                            placeholder={tipoDocumentoSeleccionado === 'dni' ? "8 dígitos" : tipoDocumentoSeleccionado === 'pas' ? "Carnet de extranjería" : "Cédula"}
                             maxLength={tipoDocumentoSeleccionado === 'dni' ? 8 : tipoDocumentoSeleccionado === 'ced' ? 10 : 20}
                         />
                         {numDni && numDni.length > 0 && (
@@ -504,7 +504,7 @@ export default function ApplicantForm({
                             {...register('documentType')}
                     >
                         <option value="dni">DNI</option>
-                        <option value="pas">PASAPORTE</option>
+                        <option value="pas">CARNET DE EXTRANJERÍA</option>
                         <option value="ced">CEDULA</option>
                     </select>
                 </div>
