@@ -1,5 +1,5 @@
 import apiAxios from "../api/Axios.tsx";
-import type {AplicationRequest, AplicationResponse, GetAplicationState} from "../model/aplicationModel.ts";
+import type {CreateApplicationPayload, AplicationResponse, GetAplicationState} from "../model/aplicationModel.ts";
 
 export const PendingApplications = async (): Promise<GetAplicationState> => {
     const response = await apiAxios.get("/api/v1/application/pending");
@@ -11,7 +11,7 @@ export const CompleteApplications = async (): Promise<GetAplicationState> => {
     return response.data.data;
 }
 
-export const CreateAplication = async (aplication:AplicationRequest):Promise<AplicationResponse> => {
+export const CreateAplication = async (aplication:CreateApplicationPayload):Promise<AplicationResponse> => {
     const response = await apiAxios.post("/api/v1/application",aplication);
     return response.data;
 }
