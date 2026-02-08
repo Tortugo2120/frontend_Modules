@@ -25,6 +25,7 @@ export const ApplicationProvider: React.FC<{ children: React.ReactNode }> = ({ c
     }, [formDataAplication]);
 
     const addParticipant = useCallback((newParticipant: Participant) => {
+        console.log(newParticipant);
         setFormDataAplication(prev => ({
             ...prev,
             participants: [

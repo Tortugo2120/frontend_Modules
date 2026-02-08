@@ -61,10 +61,10 @@ export default function ApplicantForm({
         // useForm con Zod para el formulario de datos del solicitante
     const {
         register,
-        handleSubmit,
         formState: { errors },
         setValue,
-        reset
+        reset,
+        getValues
     } = useForm<SolicitanteFormData>({
         resolver: zodResolver(solicitanteSchema),
         mode: 'onChange',
@@ -225,16 +225,20 @@ export default function ApplicantForm({
     }, [handleSearchApplicant]);
 
     // Agregar solicitante (con validación de Zod)
-    const handleAddSolicitante = handleSubmit((data) => {
+    const handleAddSolicitante = (() => {
         // Verificar duplicados
+        const data = getValues();
+        console.log('Data recibida: ',data)
         const isDuplicate = solicitantesAgregados.some(s => s.dni === data.dni);
         if (isDuplicate) {
+            console.log('esta dni ya fue registrado')
             setSearchError('Este DNI ya ha sido agregado a la solicitud');
             return;
         }
-
+        console.log('Agregando solicitante: ', data);
         addParticipant({...data,rol:'solicitante'});
         setSolicitantesAgregados(prev => [...prev, {...data,rol:'solicitante'}]);
+        console.log('List soicitantes: ',solicitantesAgregados)
         handleClearSearch();
 
         // Mensaje de éxito
@@ -370,214 +374,212 @@ export default function ApplicantForm({
             </div>
 
             {/* Formulario de datos */}
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 sm:gap-6">
-                <div className='mb-0'>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">
-                        DNI <span className="text-red-500">*</span>
-                    </label>
-                    <input
-                        type="text"
-                        {...register('dni')}
-                        className={`w-full px-3 sm:px-4 py-2 text-sm sm:text-base border rounded-lg bg-white outline-0 transition-all focus:ring-2 focus:ring-blue-500 focus:border-transparent ${
-                            errors.dni ? 'border-red-500 bg-red-50' : 'border-gray-300'
-                        }`}
-                        placeholder="8 dígitos"
-                        maxLength={8}
-                    />
-                    {errors.dni && (
-                        <p className="text-red-500 text-xs mt-1">{errors.dni.message}</p>
-                    )}
-                </div>
-                <div className='mb-0 sm:col-span-2 lg:col-span-1'>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">
-                        Nombres <span className="text-red-500">*</span>
-                    </label>
-                    <input
-                        type="text"
-                        {...register('names')}
-                        className={`w-full px-3 sm:px-4 py-2 text-sm sm:text-base border rounded-lg bg-white outline-0 transition-all focus:ring-2 focus:ring-blue-500 focus:border-transparent ${
-                            errors.names ? 'border-red-500 bg-red-50' : 'border-gray-300'
-                        }`}
-                        placeholder="Nombres"
-                    />
-                    {errors.names && (
-                        <p className="text-red-500 text-xs mt-1">{errors.names.message}</p>
-                    )}
-                </div>
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 sm:gap-6">
+                    <div className='mb-0'>
+                        <label className="block text-sm font-medium text-gray-700 mb-2">
+                            DNI <span className="text-red-500">*</span>
+                        </label>
+                        <input
+                            type="text"
+                            {...register('dni')}
+                            className={`w-full px-3 sm:px-4 py-2 text-sm sm:text-base border rounded-lg bg-white outline-0 transition-all focus:ring-2 focus:ring-blue-500 focus:border-transparent ${
+                                errors.dni ? 'border-red-500 bg-red-50' : 'border-gray-300'
+                            }`}
+                            placeholder="8 dígitos"
+                            maxLength={8}
+                        />
+                        {errors.dni && (
+                            <p className="text-red-500 text-xs mt-1">{errors.dni.message}</p>
+                        )}
+                    </div>
+                    <div className='mb-0 sm:col-span-2 lg:col-span-1'>
+                        <label className="block text-sm font-medium text-gray-700 mb-2">
+                            Nombres <span className="text-red-500">*</span>
+                        </label>
+                        <input
+                            type="text"
+                            {...register('names')}
+                            className={`w-full px-3 sm:px-4 py-2 text-sm sm:text-base border rounded-lg bg-white outline-0 transition-all focus:ring-2 focus:ring-blue-500 focus:border-transparent ${
+                                errors.names ? 'border-red-500 bg-red-50' : 'border-gray-300'
+                            }`}
+                            placeholder="Nombres"
+                        />
+                        {errors.names && (
+                            <p className="text-red-500 text-xs mt-1">{errors.names.message}</p>
+                        )}
+                    </div>
 
-                <div className='mb-0 sm:col-span-2 lg:col-span-1'>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">
-                        Apellido Paterno <span className="text-red-500">*</span>
-                    </label>
-                    <input
-                        type="text"
-                        {...register('paternalSurname')}
-                        className={`w-full px-3 sm:px-4 py-2 text-sm sm:text-base border rounded-lg bg-white outline-0 transition-all focus:ring-2 focus:ring-blue-500 focus:border-transparent ${
-                            errors.paternalSurname ? 'border-red-500 bg-red-50' : 'border-gray-300'
-                        }`}
-                        placeholder="Apellido paterno"
-                    />
-                    {errors.paternalSurname && (
-                        <p className="text-red-500 text-xs mt-1">{errors.paternalSurname.message}</p>
-                    )}
-                </div>
+                    <div className='mb-0 sm:col-span-2 lg:col-span-1'>
+                        <label className="block text-sm font-medium text-gray-700 mb-2">
+                            Apellido Paterno <span className="text-red-500">*</span>
+                        </label>
+                        <input
+                            type="text"
+                            {...register('paternalSurname')}
+                            className={`w-full px-3 sm:px-4 py-2 text-sm sm:text-base border rounded-lg bg-white outline-0 transition-all focus:ring-2 focus:ring-blue-500 focus:border-transparent ${
+                                errors.paternalSurname ? 'border-red-500 bg-red-50' : 'border-gray-300'
+                            }`}
+                            placeholder="Apellido paterno"
+                        />
+                        {errors.paternalSurname && (
+                            <p className="text-red-500 text-xs mt-1">{errors.paternalSurname.message}</p>
+                        )}
+                    </div>
 
-                <div className='mb-0 sm:col-span-2 lg:col-span-1'>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">
-                        Apellido Materno <span className="text-red-500">*</span>
-                    </label>
-                    <input
-                        type="text"
-                        {...register('maternalSurname')}
-                        className={`w-full px-3 sm:px-4 py-2 text-sm sm:text-base border rounded-lg bg-white outline-0 transition-all focus:ring-2 focus:ring-blue-500 focus:border-transparent ${
-                            errors.maternalSurname ? 'border-red-500 bg-red-50' : 'border-gray-300'
-                        }`}
-                        placeholder="Apellido materno"
-                    />
-                    {errors.maternalSurname && (
-                        <p className="text-red-500 text-xs mt-1">{errors.maternalSurname.message}</p>
-                    )}
+                    <div className='mb-0 sm:col-span-2 lg:col-span-1'>
+                        <label className="block text-sm font-medium text-gray-700 mb-2">
+                            Apellido Materno <span className="text-red-500">*</span>
+                        </label>
+                        <input
+                            type="text"
+                            {...register('maternalSurname')}
+                            className={`w-full px-3 sm:px-4 py-2 text-sm sm:text-base border rounded-lg bg-white outline-0 transition-all focus:ring-2 focus:ring-blue-500 focus:border-transparent ${
+                                errors.maternalSurname ? 'border-red-500 bg-red-50' : 'border-gray-300'
+                            }`}
+                            placeholder="Apellido materno"
+                        />
+                        {errors.maternalSurname && (
+                            <p className="text-red-500 text-xs mt-1">{errors.maternalSurname.message}</p>
+                        )}
+                    </div>
+                    <div className='mb-0'>
+                        <label className="block text-sm font-medium text-gray-700 mb-2">
+                            Fecha Nacimiento <span className="text-red-500">*</span>
+                        </label>
+                        <input
+                            type="date"
+                            {...register('birthdate')}
+                            className={`w-full px-3 sm:px-4 py-2 text-sm sm:text-base border rounded-lg bg-white outline-0 transition-all focus:ring-2 focus:ring-blue-500 focus:border-transparent ${
+                                errors.birthdate ? 'border-red-500 bg-red-50' : 'border-gray-300'
+                            }`}
+                        />
+                        {errors.birthdate && (
+                            <p className="text-red-500 text-xs mt-1">{errors.birthdate.message}</p>
+                        )}
+                    </div>
+                    <div className='mb-0'>
+                        <label className="block text-sm font-medium text-gray-700 mb-2">
+                            Sexo <span className="text-red-500">*</span>
+                        </label>
+                        <select
+                            {...register('gender')}
+                            className={`w-full px-3 sm:px-4 py-2 text-sm sm:text-base border rounded-lg bg-white outline-0 transition-all focus:ring-2 focus:ring-blue-500 focus:border-transparent ${
+                                errors.gender ? 'border-red-500 bg-red-50' : 'border-gray-300'
+                            }`}
+                        >
+                            <option value="M">Masculino</option>
+                            <option value="F">Femenino</option>
+                        </select>
+                        {errors.gender && (
+                            <p className="text-red-500 text-xs mt-1">{errors.gender.message}</p>
+                        )}
+                    </div>
+                    <div className='mb-0 sm:col-span-2 lg:col-span-2'>
+                        <label className="block text-sm font-medium text-gray-700 mb-2">
+                            Dirección <span className="text-red-500">*</span>
+                        </label>
+                        <input
+                            type="text"
+                            {...register('address')}
+                            className={`w-full px-3 sm:px-4 py-2 text-sm sm:text-base border rounded-lg bg-white outline-0 transition-all focus:ring-2 focus:ring-blue-500 focus:border-transparent ${
+                                errors.address ? 'border-red-500 bg-red-50' : 'border-gray-300'
+                            }`}
+                            placeholder="Dirección completa"
+                        />
+                        {errors.address && (
+                            <p className="text-red-500 text-xs mt-1">{errors.address.message}</p>
+                        )}
+                    </div>
+                    <div className='mb-0 sm:col-span-2 lg:col-span-1'>
+                        <label className="block text-sm font-medium text-gray-700 mb-2">
+                            Correo Electrónico <span className="text-red-500">*</span>
+                        </label>
+                        <input
+                            type="email"
+                            {...register('email')}
+                            className={`w-full px-3 sm:px-4 py-2 text-sm sm:text-base border rounded-lg bg-white outline-0 transition-all focus:ring-2 focus:ring-blue-500 focus:border-transparent ${
+                                errors.email ? 'border-red-500 bg-red-50' : 'border-gray-300'
+                            }`}
+                            placeholder="correo@ejemplo.com"
+                        />
+                        {errors.email && (
+                            <p className="text-red-500 text-xs mt-1">{errors.email.message}</p>
+                        )}
+                    </div>
+                    <div className='mb-0 sm:col-span-2 lg:col-span-1'>
+                        <label className="block text-sm font-medium text-gray-700 mb-2">
+                            Teléfono <span className="text-red-500">*</span>
+                        </label>
+                        <input
+                            type="text"
+                            {...register('phone')}
+                            className={`w-full px-3 sm:px-4 py-2 text-sm sm:text-base border rounded-lg bg-white outline-0 transition-all focus:ring-2 focus:ring-blue-500 focus:border-transparent ${
+                                errors.phone ? 'border-red-500 bg-red-50' : 'border-gray-300'
+                            }`}
+                            placeholder="987654321"
+                            maxLength={9}
+                        />
+                        {errors.phone && (
+                            <p className="text-red-500 text-xs mt-1">{errors.phone.message}</p>
+                        )}
+                    </div>
+                    <div className='mb-0 sm:col-span-2 lg:col-span-1'>
+                        <label className="block text-sm font-medium text-gray-700 mb-2">
+                            Ubigeo <span className="text-red-500">*</span>
+                        </label>
+                        <input
+                            type="text"
+                            {...register('ubigeoId')}
+                            className={`w-full px-3 sm:px-4 py-2 text-sm sm:text-base border rounded-lg bg-white outline-0 transition-all focus:ring-2 focus:ring-blue-500 focus:border-transparent ${
+                                errors.ubigeoId ? 'border-red-500 bg-red-50' : 'border-gray-300'
+                            }`}
+                            placeholder="140101"
+                            maxLength={6}
+                        />
+                        {errors.ubigeoId && (
+                            <p className="text-red-500 text-xs mt-1">{errors.ubigeoId.message}</p>
+                        )}
+                    </div>
+                    <div className='mb-0 sm:col-span-2 lg:col-span-1'>
+                        <label className="block text-sm font-medium text-gray-700 mb-2">
+                            Estado Civil <span className="text-red-500">*</span>
+                        </label>
+                        <select
+                            {...register('maritalStatus')}
+                            className={`w-full px-3 sm:px-4 py-2 text-sm sm:text-base border rounded-lg bg-white outline-0 transition-all focus:ring-2 focus:ring-blue-500 focus:border-transparent ${
+                                errors.maritalStatus ? 'border-red-500 bg-red-50' : 'border-gray-300'
+                            }`}
+                        >
+                            <option value="Single">Soltero(a)</option>
+                            <option value="Married">Casado(a)</option>
+                            <option value="Divorced">Divorciado(a)</option>
+                            <option value="Widower">Viudo(a)</option>
+                        </select>
+                        {errors.maritalStatus && (
+                            <p className="text-red-500 text-xs mt-1">{errors.maritalStatus.message}</p>
+                        )}
+                    </div>
                 </div>
-                <div className='mb-0'>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">
-                        Fecha Nacimiento <span className="text-red-500">*</span>
-                    </label>
-                    <input
-                        type="date"
-                        {...register('birthdate')}
-                        className={`w-full px-3 sm:px-4 py-2 text-sm sm:text-base border rounded-lg bg-white outline-0 transition-all focus:ring-2 focus:ring-blue-500 focus:border-transparent ${
-                            errors.birthdate ? 'border-red-500 bg-red-50' : 'border-gray-300'
-                        }`}
-                    />
-                    {errors.birthdate && (
-                        <p className="text-red-500 text-xs mt-1">{errors.birthdate.message}</p>
-                    )}
-                </div>
-                <div className='mb-0'>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">
-                        Sexo <span className="text-red-500">*</span>
-                    </label>
-                    <select
-                        {...register('gender')}
-                        className={`w-full px-3 sm:px-4 py-2 text-sm sm:text-base border rounded-lg bg-white outline-0 transition-all focus:ring-2 focus:ring-blue-500 focus:border-transparent ${
-                            errors.gender ? 'border-red-500 bg-red-50' : 'border-gray-300'
-                        }`}
+                {/* Botones de acción */}
+                <div className="flex flex-col sm:flex-row gap-2 sm:gap-3 sm:justify-end">
+                    <button
+                        type="button"
+                        onClick={handleClearSearch}
+                        className="w-full sm:w-auto px-4 sm:px-6 py-2 sm:py-2.5 text-sm sm:text-base border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed transition-colors flex items-center justify-center gap-2"
                     >
-                        <option value="M">Masculino</option>
-                        <option value="F">Femenino</option>
-                    </select>
-                    {errors.gender && (
-                        <p className="text-red-500 text-xs mt-1">{errors.gender.message}</p>
-                    )}
-                </div>
-                <div className='mb-0 sm:col-span-2 lg:col-span-2'>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">
-                        Dirección <span className="text-red-500">*</span>
-                    </label>
-                    <input
-                        type="text"
-                        {...register('address')}
-                        className={`w-full px-3 sm:px-4 py-2 text-sm sm:text-base border rounded-lg bg-white outline-0 transition-all focus:ring-2 focus:ring-blue-500 focus:border-transparent ${
-                            errors.address ? 'border-red-500 bg-red-50' : 'border-gray-300'
-                        }`}
-                        placeholder="Dirección completa"
-                    />
-                    {errors.address && (
-                        <p className="text-red-500 text-xs mt-1">{errors.address.message}</p>
-                    )}
-                </div>
-                <div className='mb-0 sm:col-span-2 lg:col-span-1'>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">
-                        Correo Electrónico <span className="text-red-500">*</span>
-                    </label>
-                    <input
-                        type="email"
-                        {...register('email')}
-                        className={`w-full px-3 sm:px-4 py-2 text-sm sm:text-base border rounded-lg bg-white outline-0 transition-all focus:ring-2 focus:ring-blue-500 focus:border-transparent ${
-                            errors.email ? 'border-red-500 bg-red-50' : 'border-gray-300'
-                        }`}
-                        placeholder="correo@ejemplo.com"
-                    />
-                    {errors.email && (
-                        <p className="text-red-500 text-xs mt-1">{errors.email.message}</p>
-                    )}
-                </div>
-                <div className='mb-0 sm:col-span-2 lg:col-span-1'>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">
-                        Teléfono <span className="text-red-500">*</span>
-                    </label>
-                    <input
-                        type="text"
-                        {...register('phone')}
-                        className={`w-full px-3 sm:px-4 py-2 text-sm sm:text-base border rounded-lg bg-white outline-0 transition-all focus:ring-2 focus:ring-blue-500 focus:border-transparent ${
-                            errors.phone ? 'border-red-500 bg-red-50' : 'border-gray-300'
-                        }`}
-                        placeholder="987654321"
-                        maxLength={9}
-                    />
-                    {errors.phone && (
-                        <p className="text-red-500 text-xs mt-1">{errors.phone.message}</p>
-                    )}
-                </div>
-                <div className='mb-0 sm:col-span-2 lg:col-span-1'>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">
-                        Ubigeo <span className="text-red-500">*</span>
-                    </label>
-                    <input
-                        type="text"
-                        {...register('ubigeoId')}
-                        className={`w-full px-3 sm:px-4 py-2 text-sm sm:text-base border rounded-lg bg-white outline-0 transition-all focus:ring-2 focus:ring-blue-500 focus:border-transparent ${
-                            errors.ubigeoId ? 'border-red-500 bg-red-50' : 'border-gray-300'
-                        }`}
-                        placeholder="140101"
-                        maxLength={6}
-                    />
-                    {errors.ubigeoId && (
-                        <p className="text-red-500 text-xs mt-1">{errors.ubigeoId.message}</p>
-                    )}
-                </div>
-                <div className='mb-0 sm:col-span-2 lg:col-span-1'>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">
-                        Estado Civil <span className="text-red-500">*</span>
-                    </label>
-                    <select
-                        {...register('maritalStatus')}
-                        className={`w-full px-3 sm:px-4 py-2 text-sm sm:text-base border rounded-lg bg-white outline-0 transition-all focus:ring-2 focus:ring-blue-500 focus:border-transparent ${
-                            errors.maritalStatus ? 'border-red-500 bg-red-50' : 'border-gray-300'
-                        }`}
+                        <i className="fas fa-eraser"></i>
+                        <span>Limpiar Formulario</span>
+                    </button>
+                    <button
+                        type="button"
+                        onClick={handleAddSolicitante}
+                        className="w-full sm:w-auto px-4 sm:px-6 py-2 sm:py-2.5 text-sm sm:text-base bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:bg-gray-400 disabled:cursor-not-allowed transition-colors flex items-center justify-center gap-2 cursor-pointer"
+                        disabled={solicitantesAgregados.length >= 1}
                     >
-                        <option value="Single">Soltero(a)</option>
-                        <option value="Married">Casado(a)</option>
-                        <option value="Divorced">Divorciado(a)</option>
-                        <option value="Widower">Viudo(a)</option>
-                    </select>
-                    {errors.maritalStatus && (
-                        <p className="text-red-500 text-xs mt-1">{errors.maritalStatus.message}</p>
-                    )}
+                        <i className="fas fa-plus-circle"></i>
+                        <span>Agregar Solicitante</span>
+                    </button>
                 </div>
-            </div>
-
-            {/* Botones de acción */}
-            <div className="flex flex-col sm:flex-row gap-2 sm:gap-3 sm:justify-end">
-                <button
-                    type="button"
-                    onClick={handleClearSearch}
-                    className="w-full sm:w-auto px-4 sm:px-6 py-2 sm:py-2.5 text-sm sm:text-base border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed transition-colors flex items-center justify-center gap-2"
-                >
-                    <i className="fas fa-eraser"></i>
-                    <span>Limpiar Formulario</span>
-                </button>
-                <button
-                    type="button"
-                    onClick={handleAddSolicitante}
-                    className="w-full sm:w-auto px-4 sm:px-6 py-2 sm:py-2.5 text-sm sm:text-base bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:bg-gray-400 disabled:cursor-not-allowed transition-colors flex items-center justify-center gap-2"
-                    disabled={solicitantesAgregados.length >= 1}
-                >
-                    <i className="fas fa-plus-circle"></i>
-                    <span>Agregar Solicitante</span>
-                </button>
-            </div>
-
             {/* Lista de Solicitantes Agregados */}
             {solicitantesAgregados.length > 0 ? (
                 <div className="mt-6 sm:mt-8">
