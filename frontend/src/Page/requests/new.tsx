@@ -140,6 +140,7 @@ export default function NewRequest() {
                                                 key={tipo.id}
                                                 id={tipo.id}
                                                 nombre={tipo.nombre_solicitud.toUpperCase()}
+                                                descripcion={tipo.descripcion}
                                                 precio={tipo.precio}
                                                 isSelected={tipoSolicitud === tipo.id}
                                                 onSelect={handleSelectTipoSolicitud}
