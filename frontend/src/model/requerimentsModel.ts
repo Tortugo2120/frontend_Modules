@@ -1,5 +1,5 @@
 export interface Requirement {
-  id: number | string; // Aceptar ambos tipos porque el backend puede enviar strings
+  id: number | string;
   nombre_requisito: string;
   nombre_solicitud: string;
   descripcion: string;

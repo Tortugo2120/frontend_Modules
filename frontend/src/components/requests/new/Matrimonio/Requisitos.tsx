@@ -1,9 +1,6 @@
 import { useState, useCallback, useEffect } from 'react';
 import {useGetRequirements} from "../../../../hooks/useGetRequeriments.ts";
 import {useApplicationContext} from "../../../../context/ApplicationContext.tsx";
-import Divorciado from './Divorciado';
-import Viudo from './Viudos';
-import Extranjero from './Extranjeros';
 
 interface Requisito {
     id: string;
@@ -368,7 +365,7 @@ const RequisitosMatrimonio = ({
                     className="w-full sm:w-auto px-4 py-2 text-sm bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors flex items-center justify-center gap-2"
                 >
                     <i className="fas fa-check-double"></i>
-                    <span>Marcar Obligatorios</span>
+                    <span>Marcar Todos</span>
                 </button>
                 <button
                     type="button"
@@ -388,35 +385,17 @@ const RequisitosMatrimonio = ({
                 </h4>
 
                 <div className="bg-white border border-gray-200 rounded-lg divide-y divide-gray-200">
-                    {(requirements.length > 0 ? requirements : requisitos).map((requisito, index) => {
-                        // Convertir el ID a número si es string para buscar en el Map
+                    {requirements.map((requisito, index) => {
                         const requistoIdNum = typeof requisito.id === 'string' ? parseInt(requisito.id) : requisito.id;
 
-                        // Determinar si está completado según el tipo de data
                         const estadoEnMap = requisitosEstados.get(requistoIdNum);
                         const isCompleted = requirements.length > 0
                             ? Boolean(estadoEnMap)
-                            : (requisito as Requisito).completado;
-
-                        // Debug log
-                        if (requirements.length > 0 && index === 0) {
-                            console.log('Renderizando requisitos. Map size:', requisitosEstados.size);
-                            console.log('Primer requisito - ID:', requisito.id, 'Tipo:', typeof requisito.id, 'ID convertido:', requistoIdNum);
-                            console.log('Estado en Map:', estadoEnMap, 'isCompleted:', isCompleted);
-                        }
-
-                        // Adaptar propiedades según el tipo de data
-                        const titulo = requirements.length > 0
-                            ? (requisito as any).nombre_requisito
-                            : (requisito as Requisito).titulo;
-                        const descripcion = requirements.length > 0
-                            ? (requisito as any).descripcion
-                            : (requisito as Requisito).descripcion;
-                        const id = requisito.id;
+                            : false;
 
                         return (
                             <div
-                                key={id}
+                                key={requisito.id}
                                 className={`p-4 hover:bg-gray-50 transition-colors ${
                                     isCompleted ? 'bg-green-50' : ''
                                 }`}
@@ -426,9 +405,9 @@ const RequisitosMatrimonio = ({
                                     <div className="flex items-center h-5 mt-0.5">
                                         <input
                                             type="checkbox"
-                                            id={`requisito-${id}`}
+                                            id={`requisito-${requisito.id}`}
                                             checked={isCompleted}
-                                            onChange={() => handleCheckboxChange(id)}
+                                            onChange={() => handleCheckboxChange(requisito.id)}
                                             className="w-5 h-5 text-blue-600 bg-white border-gray-300 rounded focus:ring-blue-500 focus:ring-2 cursor-pointer"
                                         />
                                     </div>
@@ -436,7 +415,7 @@ const RequisitosMatrimonio = ({
                                     {/* Contenido */}
                                     <div className="flex-1 min-w-0">
                                         <label
-                                            htmlFor={`requisito-${id}`}
+                                            htmlFor={`requisito-${requisito.id}`}
                                             className="cursor-pointer"
                                         >
                                             <div className="flex items-start justify-between gap-2 mb-1">
@@ -445,32 +424,19 @@ const RequisitosMatrimonio = ({
                                                         ? 'text-gray-500 line-through'
                                                         : 'text-gray-900'
                                                 }`}>
-                                                    {index + 1}. {titulo}
+                                                    {index + 1}. {requisito.nombre_requisito}
                                                 </span>
                                                 {/* Para requirements del hook, todos son obligatorios */}
-                                                {requirements.length > 0 ? (
+                                                {requirements.length &&
                                                     <span className="shrink-0 bg-red-100 text-red-800 text-xs font-semibold px-2 py-0.5 rounded">
-                                                        Obligatorio
+                                                        {requisito.condicion === 'GENERAL' ? 'Requisito General' : requisito.condicion === 'DIVORCED' ? 'Requisito para Divorciados' : requisito.condicion === 'WIDOWED' ? 'Requisito para Viudos' : 'Requisito Obligatorio'}
                                                     </span>
-                                                ) : (
-                                                    <>
-                                                        {(requisito as Requisito).obligatorio && (
-                                                            <span className="shrink-0 bg-red-100 text-red-800 text-xs font-semibold px-2 py-0.5 rounded">
-                                                                Obligatorio
-                                                            </span>
-                                                        )}
-                                                        {!(requisito as Requisito).obligatorio && (
-                                                            <span className="shrink-0 bg-gray-100 text-gray-600 text-xs font-semibold px-2 py-0.5 rounded">
-                                                                Opcional
-                                                            </span>
-                                                        )}
-                                                    </>
-                                                )}
+                                                }
                                             </div>
                                             <p className={`text-xs ${
                                                 isCompleted ? 'text-gray-400' : 'text-gray-600'
                                             }`}>
-                                                {descripcion}
+                                                {requisito.descripcion}
                                             </p>
                                         </label>
                                     </div>
@@ -487,10 +453,6 @@ const RequisitosMatrimonio = ({
                     })}
                 </div>
             </div>
-
-            <Divorciado />
-            <Viudo />
-            <Extranjero />
 
             {/* Sección de Carga de Archivos (Opcional) */}
             <div className="space-y-3 mt-6">
