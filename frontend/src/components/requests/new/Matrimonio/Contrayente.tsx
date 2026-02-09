@@ -113,7 +113,7 @@ const Contrayente = (props: Solicitud) => {
     // Sincronizar con el estado global del contexto
     useEffect(() => {
         const contrayentes = formDataAplication.participants.filter((p: Participant) =>
-            p.roles.includes('contrayente')
+            p.role === 'contrayente'
         );
         setContrayente1Added(contrayentes.length >= 1);
         setContrayente2Added(contrayentes.length >= 2);
@@ -199,7 +199,7 @@ const Contrayente = (props: Solicitud) => {
         handleSubmit((data: ContrayenteFormData) => {
             // Verificar si ya existe como contrayente
             const isDuplicateContrayente = formDataAplication.participants.some((p: Participant) =>
-                p.dni === data.dni && p.roles.includes('contrayente')
+                p.dni === data.dni && p.role === 'contrayente'
             );
 
             if (isDuplicateContrayente) {
@@ -207,8 +207,8 @@ const Contrayente = (props: Solicitud) => {
                 return;
             }
 
-            // Agregar como contrayente (puede tener otros roles también)
-            addParticipant({ ...data, rol: 'contrayente' });
+            // Agregar como contrayente
+            addParticipant({ ...data, role: 'contrayente' });
             setAdded(true);
             setError('');
         })();
@@ -216,8 +216,8 @@ const Contrayente = (props: Solicitud) => {
 
     // Función para eliminar contrayente
     const handleDeleteContrayente = useCallback((dni: string, contrayenteNum: 1 | 2) => {
-        // Solo eliminar el rol de 'contrayente', no todo el participante
-        deleteParticipant(dni, 'contrayente');
+        // Eliminar el participante completamente
+        deleteParticipant(dni);
 
         const setAdded = contrayenteNum === 1 ? setContrayente1Added : setContrayente2Added;
         const resetForm = contrayenteNum === 1 ? resetForm1 : resetForm2;
@@ -608,7 +608,7 @@ const Contrayente = (props: Solicitud) => {
             </div>
 
             {/* Tabla de contrayentes agregados */}
-            {formDataAplication.participants.filter((p: Participant) => p.roles.includes('contrayente')).length > 0 && (
+            {formDataAplication.participants.filter((p: Participant) => p.role === 'contrayente').length > 0 && (
                 <div className="mt-6">
                     <h4 className="text-lg font-semibold text-gray-800 mb-4 flex items-center gap-2">
                         <i className="fas fa-list text-blue-600"></i>
@@ -622,12 +622,12 @@ const Contrayente = (props: Solicitud) => {
                                     <th className="px-4 py-2 text-left text-sm font-semibold text-gray-700">Nombres Completos</th>
                                     <th className="px-4 py-2 text-left text-sm font-semibold text-gray-700">Sexo</th>
                                     <th className="px-4 py-2 text-left text-sm font-semibold text-gray-700">Email</th>
-                                    <th className="px-4 py-2 text-left text-sm font-semibold text-gray-700">Roles</th>
+                                    <th className="px-4 py-2 text-left text-sm font-semibold text-gray-700">Rol</th>
                                     <th className="px-4 py-2 text-center text-sm font-semibold text-gray-700">Acciones</th>
                                 </tr>
                             </thead>
                             <tbody>
-                                {formDataAplication.participants.filter((p: Participant) => p.roles.includes('contrayente')).map((contrayente: Participant, index: number) => (
+                                {formDataAplication.participants.filter((p: Participant) => p.role === 'contrayente').map((contrayente: Participant, index: number) => (
                                     <tr key={contrayente.dni} className="border-t border-gray-200">
                                         <td className="px-4 py-2 text-sm text-gray-700">{contrayente.dni}</td>
                                         <td className="px-4 py-2 text-sm text-gray-700">
@@ -638,16 +638,9 @@ const Contrayente = (props: Solicitud) => {
                                         </td>
                                         <td className="px-4 py-2 text-sm text-gray-700">{contrayente.email}</td>
                                         <td className="px-4 py-2 text-sm text-gray-700">
-                                            <div className="flex flex-wrap gap-1">
-                                                {contrayente.roles.map((rol) => (
-                                                    <span
-                                                        key={rol}
-                                                        className="px-2 py-1 bg-blue-100 text-blue-800 text-xs rounded-full"
-                                                    >
-                                                        {rol}
-                                                    </span>
-                                                ))}
-                                            </div>
+                                            <span className="px-2 py-1 bg-blue-100 text-blue-800 text-xs rounded-full">
+                                                {contrayente.role}
+                                            </span>
                                         </td>
                                         <td className="px-4 py-2 text-center">
                                             <button

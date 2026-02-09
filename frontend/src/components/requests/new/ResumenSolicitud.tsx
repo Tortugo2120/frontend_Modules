@@ -34,9 +34,9 @@ interface ArchivoSubido {
 
 interface ResumenSolicitudProps {
     tipoSolicitudNombre?: string;
-    contrayentes: Contrayente[];
-    requisitos: Requisito[];
-    archivos: ArchivoSubido[];
+    contrayentes?: Contrayente[];
+    requisitos?: Requisito[];
+    archivos?: ArchivoSubido[];
     onEditar?: (seccion: 'contrayentes' | 'requisitos' | 'archivos') => void;
     onConfirmar?: () => void;
     onCancelar?: () => void;
@@ -44,13 +44,18 @@ interface ResumenSolicitudProps {
 
 const ResumenSolicitud = ({
     tipoSolicitudNombre = 'Matrimonio Civil',
-    contrayentes,
-    requisitos,
-    archivos,
+    contrayentes: contrayentesProp,
+    requisitos: requisitosProp,
+    archivos: archivosProp,
     onEditar,
     onConfirmar,
     onCancelar
 }: ResumenSolicitudProps) => {
+    // Usar props si están disponibles, sino usar valores vacíos
+    const contrayentes = contrayentesProp || [];
+    const requisitos = requisitosProp || [];
+    const archivos = archivosProp || [];
+
     const [mostrarDetalles, setMostrarDetalles] = useState({
         contrayente1: true,
         contrayente2: true,

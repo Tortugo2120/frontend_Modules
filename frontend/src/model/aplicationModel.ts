@@ -19,7 +19,7 @@ export interface Participant {
     phone: string;
     ubigeoId: string;
     maritalStatus: string;
-    roles: ParticipantRol[]; // Cambiado a array para soportar múltiples roles
+    role: ParticipantRol; // Cambiado de roles[] a role (un solo rol)
 }
 
 export interface ApplicationData {
@@ -28,9 +28,15 @@ export interface ApplicationData {
     expedientNumber: string;
 }
 
+export interface RequisitoEstado {
+    requirementId: number | string; // Aceptar ambos tipos porque el backend puede enviar strings
+    delivered: boolean;
+}
+
 export interface CreateApplicationPayload {
     application: ApplicationData;
     participants: Participant[];
+    requisitos?: RequisitoEstado[];
 }
 
 export interface AplicationResponse {

@@ -113,7 +113,7 @@ const Testigo = (props: Solicitud) => {
     // Sincronizar con el estado global del contexto
     useEffect(() => {
         const testigos = formDataAplication.participants.filter((p: Participant) =>
-            p.roles.includes('testigo')
+            p.role === 'testigo'
         );
         setTestigo1Added(testigos.length >= 1);
         setTestigo2Added(testigos.length >= 2);
@@ -199,7 +199,7 @@ const Testigo = (props: Solicitud) => {
         handleSubmit((data: TestigoFormData) => {
             // Verificar si ya existe como testigo
             const isDuplicateTestigo = formDataAplication.participants.some((p: Participant) =>
-                p.dni === data.dni && p.roles.includes('testigo')
+                p.dni === data.dni && p.role === 'testigo'
             );
 
             if (isDuplicateTestigo) {
@@ -207,8 +207,8 @@ const Testigo = (props: Solicitud) => {
                 return;
             }
 
-            // Agregar como testigo (puede tener otros roles también)
-            addParticipant({ ...data, rol: 'testigo' });
+            // Agregar como testigo
+            addParticipant({ ...data, role: 'testigo' });
             setAdded(true);
             setError('');
         })();
@@ -216,8 +216,8 @@ const Testigo = (props: Solicitud) => {
 
     // Función para eliminar testigo
     const handleDeleteTestigo = useCallback((dni: string, testigoNum: 1 | 2) => {
-        // Solo eliminar el rol de 'testigo', no todo el participante
-        deleteParticipant(dni, 'testigo');
+        // Eliminar el participante completamente
+        deleteParticipant(dni);
 
         const setAdded = testigoNum === 1 ? setTestigo1Added : setTestigo2Added;
         const resetForm = testigoNum === 1 ? resetForm1 : resetForm2;
@@ -608,7 +608,7 @@ const Testigo = (props: Solicitud) => {
             </div>
 
             {/* Tabla de testigos agregados */}
-            {formDataAplication.participants.filter((p: Participant) => p.roles.includes('testigo')).length > 0 && (
+            {formDataAplication.participants.filter((p: Participant) => p.role === 'testigo').length > 0 && (
                 <div className="mt-6">
                     <h4 className="text-lg font-semibold text-gray-800 mb-4 flex items-center gap-2">
                         <i className="fas fa-list text-green-600"></i>
@@ -622,12 +622,12 @@ const Testigo = (props: Solicitud) => {
                                     <th className="px-4 py-2 text-left text-sm font-semibold text-gray-700">Nombres Completos</th>
                                     <th className="px-4 py-2 text-left text-sm font-semibold text-gray-700">Sexo</th>
                                     <th className="px-4 py-2 text-left text-sm font-semibold text-gray-700">Email</th>
-                                    <th className="px-4 py-2 text-left text-sm font-semibold text-gray-700">Roles</th>
+                                    <th className="px-4 py-2 text-left text-sm font-semibold text-gray-700">Rol</th>
                                     <th className="px-4 py-2 text-center text-sm font-semibold text-gray-700">Acciones</th>
                                 </tr>
                             </thead>
                             <tbody>
-                                {formDataAplication.participants.filter((p: Participant) => p.roles.includes('testigo')).map((testigo: Participant, index: number) => (
+                                {formDataAplication.participants.filter((p: Participant) => p.role === 'testigo').map((testigo: Participant, index: number) => (
                                     <tr key={testigo.dni} className="border-t border-gray-200">
                                         <td className="px-4 py-2 text-sm text-gray-700">{testigo.dni}</td>
                                         <td className="px-4 py-2 text-sm text-gray-700">
@@ -638,23 +638,16 @@ const Testigo = (props: Solicitud) => {
                                         </td>
                                         <td className="px-4 py-2 text-sm text-gray-700">{testigo.email}</td>
                                         <td className="px-4 py-2 text-sm text-gray-700">
-                                            <div className="flex flex-wrap gap-1">
-                                                {testigo.roles.map((rol) => (
-                                                    <span
-                                                        key={rol}
-                                                        className="px-2 py-1 bg-green-100 text-green-800 text-xs rounded-full"
-                                                    >
-                                                        {rol}
-                                                    </span>
-                                                ))}
-                                            </div>
+                                            <span className="px-2 py-1 bg-green-100 text-green-800 text-xs rounded-full">
+                                                {testigo.role}
+                                            </span>
                                         </td>
                                         <td className="px-4 py-2 text-center">
                                             <button
                                                 type="button"
                                                 onClick={() => handleDeleteTestigo(testigo.dni, (index + 1) as 1 | 2)}
                                                 className="text-red-600 hover:text-red-800 transition-colors"
-                                                title="Eliminar rol de testigo"
+                                                title="Eliminar testigo"
                                             >
                                                 <i className="fas fa-trash"></i>
                                             </button>

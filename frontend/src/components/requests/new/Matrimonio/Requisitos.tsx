@@ -1,4 +1,6 @@
 import { useState, useCallback, useEffect } from 'react';
+import {useGetRequirements} from "../../../../hooks/useGetRequeriments.ts";
+import {useApplicationContext} from "../../../../context/ApplicationContext.tsx";
 
 interface Requisito {
     id: string;
@@ -75,6 +77,39 @@ const RequisitosMatrimonio = ({
     const [requisitos, setRequisitos] = useState<Requisito[]>(REQUISITOS_INICIALES);
     const [archivos, setArchivos] = useState<ArchivoSubido[]>([]);
     const [isDragging, setIsDragging] = useState(false);
+    const [requisitosEstados, setRequisitosEstados] = useState<Map<number, boolean>>(new Map());
+    const {formDataAplication, updateRequisitos} = useApplicationContext();
+    const {requirements,fetchRequirements} = useGetRequirements();
+
+    // Cargar requisitos guardados desde el contexto al iniciar
+    useEffect(() => {
+        if (formDataAplication.requisitos && formDataAplication.requisitos.length > 0) {
+            const newMap = new Map(
+                formDataAplication.requisitos.map(r => {
+                    // Convertir ID a número si es string
+                    const idNum = typeof r.requirementId === 'string' ? parseInt(r.requirementId) : r.requirementId;
+                    return [idNum, r.delivered];
+                })
+            );
+            setRequisitosEstados(newMap);
+        }
+    }, []);
+
+    useEffect(() => {
+        if (requirements.length === 0) return;
+        const requisitosArray = requirements.map(req => {
+            const reqId = typeof req.id === 'string' ? parseInt(req.id) : req.id;
+            return {
+                requirementId: req.id, // Mantener el ID original (puede ser string o number)
+                delivered: requisitosEstados.get(reqId) ?? false
+            };
+        });
+
+        console.log('Sincronizando requisitos:', requisitosArray);
+        updateRequisitos(requisitosArray);
+
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [requisitosEstados, requirements]);
 
     // Notificar cambios en requisitos
     useEffect(() => {
@@ -90,50 +125,118 @@ const RequisitosMatrimonio = ({
         }
     }, [archivos, onArchivosChange]);
 
-    // Calcular progreso
+    useEffect(() => {
+        const obtenerCondiciones = () => {
+            const conds = new Set<string>(["GENERAL"]);
+
+            formDataAplication.participants.forEach((p) => {
+                if (p.maritalStatus && p.maritalStatus !== "Single") {
+                    conds.add(p.maritalStatus.toUpperCase());
+                }
+            });
+            return Array.from(conds).join(',');
+        }
+
+        const cargarRequeriments = async ()=>{
+            const applicationTypeId = formDataAplication.application.applicationTypeId;
+            const condition = obtenerCondiciones();
+            console.log("Llamando a requisitos con:", { applicationTypeId, condition });
+            await fetchRequirements(applicationTypeId, condition);
+        }
+        if (formDataAplication.application.applicationTypeId > 0) {
+            cargarRequeriments();
+        }
+    }, [formDataAplication.application.applicationTypeId]);
+
     const calcularProgreso = useCallback(() => {
-        const requisitosObligatorios = requisitos.filter(r => r.obligatorio);
-        const completados = requisitosObligatorios.filter(r => r.completado).length;
-        const total = requisitosObligatorios.length;
+        const listaRequisitos = requirements.length > 0 ? requirements : requisitos;
+        const total = listaRequisitos.length;
+        const completados = requirements.length > 0
+            ? Array.from(requisitosEstados.values()).filter(estado => estado).length
+            : requisitos.filter(r => r.completado).length;
+
         return {
             completados,
             total,
             porcentaje: total > 0 ? Math.round((completados / total) * 100) : 0
         };
-    }, [requisitos]);
+    }, [requisitos, requirements, requisitosEstados]);
 
     const progreso = calcularProgreso();
 
     // Manejar cambio de checkbox
-    const handleCheckboxChange = useCallback((id: string) => {
-        setRequisitos(prev =>
-            prev.map(req =>
-                req.id === id
-                    ? { ...req, completado: !req.completado }
-                    : req
-            )
-        );
-    }, []);
+    const handleCheckboxChange = useCallback((id: string | number) => {
+        if (requirements.length > 0) {
+            // Usar requirements del hook
+            const numId = typeof id === 'string' ? parseInt(id) : id;
 
-    // Marcar todos los obligatorios
+            setRequisitosEstados(prev => {
+                const newMap = new Map(prev);
+                // Obtener el estado actual, si no existe, usar false
+                const estadoActual = newMap.get(numId) ?? false;
+                const nuevoEstado = !estadoActual;
+
+                // Toggle entre true y false
+                newMap.set(numId, nuevoEstado);
+
+                console.log(`Checkbox ${numId}: ${estadoActual} -> ${nuevoEstado}`);
+
+                return newMap;
+            });
+        } else {
+            // Usar requisitos locales
+            setRequisitos(prev =>
+                prev.map(req =>
+                    req.id === id
+                        ? { ...req, completado: !req.completado }
+                        : req
+                )
+            );
+        }
+    }, [requirements]);
+
     const marcarTodosObligatorios = useCallback(() => {
-        setRequisitos(prev =>
-            prev.map(req =>
-                req.obligatorio
-                    ? { ...req, completado: true }
-                    : req
-            )
-        );
-    }, []);
+        if (requirements.length > 0) {
+            // Marcar todos los requirements del hook como true
+            setRequisitosEstados(prev => {
+                const newMap = new Map(prev);
+                requirements.forEach(req => {
+                    const reqId = typeof req.id === 'string' ? parseInt(req.id) : req.id;
+                    newMap.set(reqId, true);
+                });
+                return newMap;
+            });
+        } else {
+            setRequisitos(prev =>
+                prev.map(req =>
+                    req.obligatorio
+                        ? { ...req, completado: true }
+                        : req
+                )
+            );
+        }
+    }, [requirements]);
 
     // Desmarcar todos
     const desmarcarTodos = useCallback(() => {
-        setRequisitos(prev =>
-            prev.map(req => ({ ...req, completado: false }))
-        );
-    }, []);
+        if (requirements.length > 0) {
+            setRequisitosEstados(prev => {
+                const newMap = new Map(prev);
+                requirements.forEach(req => {
 
-    // Formatear tamaño de archivo
+                    const reqId = typeof req.id === 'string' ? parseInt(req.id) : req.id;
+                    newMap.set(reqId, false);
+                });
+                return newMap;
+            });
+        } else {
+
+            setRequisitos(prev =>
+                prev.map(req => ({ ...req, completado: false }))
+            );
+        }
+    }, [requirements]);
+
     const formatearTamaño = (bytes: number): string => {
         if (bytes === 0) return '0 Bytes';
         const k = 1024;
@@ -142,7 +245,6 @@ const RequisitosMatrimonio = ({
         return Math.round(bytes / Math.pow(k, i) * 100) / 100 + ' ' + sizes[i];
     };
 
-    // Manejar carga de archivos
     const handleFileChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
         const files = e.target.files;
         if (!files) return;
@@ -159,12 +261,10 @@ const RequisitosMatrimonio = ({
         e.target.value = ''; // Resetear input
     }, []);
 
-    // Eliminar archivo
     const handleEliminarArchivo = useCallback((id: string) => {
         setArchivos(prev => prev.filter(a => a.id !== id));
     }, []);
 
-    // Drag and Drop handlers
     const handleDragEnter = useCallback((e: React.DragEvent) => {
         e.preventDefault();
         e.stopPropagation();
@@ -201,7 +301,6 @@ const RequisitosMatrimonio = ({
         setArchivos(prev => [...prev, ...nuevosArchivos]);
     }, []);
 
-    // Obtener ícono según tipo de archivo
     const getIconoArchivo = (tipo: string): string => {
         if (tipo.includes('pdf')) return 'fa-file-pdf text-red-500';
         if (tipo.includes('image')) return 'fa-file-image text-blue-500';
@@ -288,67 +387,103 @@ const RequisitosMatrimonio = ({
                 </h4>
                 
                 <div className="bg-white border border-gray-200 rounded-lg divide-y divide-gray-200">
-                    {requisitos.map((requisito, index) => (
-                        <div
-                            key={requisito.id}
-                            className={`p-4 hover:bg-gray-50 transition-colors ${
-                                requisito.completado ? 'bg-green-50' : ''
-                            }`}
-                        >
-                            <div className="flex items-start gap-3">
-                                {/* Checkbox */}
-                                <div className="flex items-center h-5 mt-0.5">
-                                    <input
-                                        type="checkbox"
-                                        id={`requisito-${requisito.id}`}
-                                        checked={requisito.completado}
-                                        onChange={() => handleCheckboxChange(requisito.id)}
-                                        className="w-5 h-5 text-blue-600 bg-white border-gray-300 rounded focus:ring-blue-500 focus:ring-2 cursor-pointer"
-                                    />
-                                </div>
+                    {(requirements.length > 0 ? requirements : requisitos).map((requisito, index) => {
+                        // Convertir el ID a número si es string para buscar en el Map
+                        const requistoIdNum = typeof requisito.id === 'string' ? parseInt(requisito.id) : requisito.id;
 
-                                {/* Contenido */}
-                                <div className="flex-1 min-w-0">
-                                    <label
-                                        htmlFor={`requisito-${requisito.id}`}
-                                        className="cursor-pointer"
-                                    >
-                                        <div className="flex items-start justify-between gap-2 mb-1">
-                                            <span className={`text-sm font-medium ${
-                                                requisito.completado
-                                                    ? 'text-gray-500 line-through'
-                                                    : 'text-gray-900'
-                                            }`}>
-                                                {index + 1}. {requisito.titulo}
-                                            </span>
-                                            {requisito.obligatorio && (
-                                                <span className="shrink-0 bg-red-100 text-red-800 text-xs font-semibold px-2 py-0.5 rounded">
-                                                    Obligatorio
-                                                </span>
-                                            )}
-                                            {!requisito.obligatorio && (
-                                                <span className="shrink-0 bg-gray-100 text-gray-600 text-xs font-semibold px-2 py-0.5 rounded">
-                                                    Opcional
-                                                </span>
-                                            )}
-                                        </div>
-                                        <p className={`text-xs ${
-                                            requisito.completado ? 'text-gray-400' : 'text-gray-600'
-                                        }`}>
-                                            {requisito.descripcion}
-                                        </p>
-                                    </label>
-                                </div>
+                        // Determinar si está completado según el tipo de data
+                        const estadoEnMap = requisitosEstados.get(requistoIdNum);
+                        const isCompleted = requirements.length > 0
+                            ? Boolean(estadoEnMap)
+                            : (requisito as Requisito).completado;
 
-                                {/* Estado */}
-                                {requisito.completado && (
-                                    <div className="shrink-0">
-                                        <i className="fas fa-check-circle text-green-600 text-xl"></i>
+                        // Debug log
+                        if (requirements.length > 0 && index === 0) {
+                            console.log('Renderizando requisitos. Map size:', requisitosEstados.size);
+                            console.log('Primer requisito - ID:', requisito.id, 'Tipo:', typeof requisito.id, 'ID convertido:', requistoIdNum);
+                            console.log('Estado en Map:', estadoEnMap, 'isCompleted:', isCompleted);
+                        }
+
+                        // Adaptar propiedades según el tipo de data
+                        const titulo = requirements.length > 0
+                            ? (requisito as any).nombre_requisito
+                            : (requisito as Requisito).titulo;
+                        const descripcion = requirements.length > 0
+                            ? (requisito as any).descripcion
+                            : (requisito as Requisito).descripcion;
+                        const id = requisito.id;
+
+                        return (
+                            <div
+                                key={id}
+                                className={`p-4 hover:bg-gray-50 transition-colors ${
+                                    isCompleted ? 'bg-green-50' : ''
+                                }`}
+                            >
+                                <div className="flex items-start gap-3">
+                                    {/* Checkbox */}
+                                    <div className="flex items-center h-5 mt-0.5">
+                                        <input
+                                            type="checkbox"
+                                            id={`requisito-${id}`}
+                                            checked={isCompleted}
+                                            onChange={() => handleCheckboxChange(id)}
+                                            className="w-5 h-5 text-blue-600 bg-white border-gray-300 rounded focus:ring-blue-500 focus:ring-2 cursor-pointer"
+                                        />
                                     </div>
-                                )}
+
+                                    {/* Contenido */}
+                                    <div className="flex-1 min-w-0">
+                                        <label
+                                            htmlFor={`requisito-${id}`}
+                                            className="cursor-pointer"
+                                        >
+                                            <div className="flex items-start justify-between gap-2 mb-1">
+                                                <span className={`text-sm font-medium ${
+                                                    isCompleted
+                                                        ? 'text-gray-500 line-through'
+                                                        : 'text-gray-900'
+                                                }`}>
+                                                    {index + 1}. {titulo}
+                                                </span>
+                                                {/* Para requirements del hook, todos son obligatorios */}
+                                                {requirements.length > 0 ? (
+                                                    <span className="shrink-0 bg-red-100 text-red-800 text-xs font-semibold px-2 py-0.5 rounded">
+                                                        Obligatorio
+                                                    </span>
+                                                ) : (
+                                                    <>
+                                                        {(requisito as Requisito).obligatorio && (
+                                                            <span className="shrink-0 bg-red-100 text-red-800 text-xs font-semibold px-2 py-0.5 rounded">
+                                                                Obligatorio
+                                                            </span>
+                                                        )}
+                                                        {!(requisito as Requisito).obligatorio && (
+                                                            <span className="shrink-0 bg-gray-100 text-gray-600 text-xs font-semibold px-2 py-0.5 rounded">
+                                                                Opcional
+                                                            </span>
+                                                        )}
+                                                    </>
+                                                )}
+                                            </div>
+                                            <p className={`text-xs ${
+                                                isCompleted ? 'text-gray-400' : 'text-gray-600'
+                                            }`}>
+                                                {descripcion}
+                                            </p>
+                                        </label>
+                                    </div>
+
+                                    {/* Estado */}
+                                    {isCompleted && (
+                                        <div className="shrink-0">
+                                            <i className="fas fa-check-circle text-green-600 text-xl"></i>
+                                        </div>
+                                    )}
+                                </div>
                             </div>
-                        </div>
-                    ))}
+                        );
+                    })}
                 </div>
             </div>
 

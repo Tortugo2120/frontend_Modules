@@ -1,11 +1,12 @@
-import type {CreateApplicationPayload, Participant} from "../model/aplicationModel.ts";
+import type {CreateApplicationPayload, Participant, ParticipantRol, RequisitoEstado} from "../model/aplicationModel.ts";
 import React, {createContext, type ReactNode, useCallback, useContext, useEffect, useState} from "react";
 
 interface ApplicationContextType {
     formDataAplication: CreateApplicationPayload;
-    addParticipant: (participant: Omit<Participant, 'roles'> & { rol: string }) => void;
-    deleteParticipant: (dni: string, rol?: string) => void;
+    addParticipant: (participant: Omit<Participant, 'role'> & { role: ParticipantRol }) => void;
+    deleteParticipant: (dni: string) => void;
     updateApplicationData: (data: Partial<CreateApplicationPayload['application']>) => void;
+    updateRequisitos: (requisitos: RequisitoEstado[]) => void;
     resetForm: () => void;
 }
 
@@ -16,7 +17,8 @@ export const ApplicationProvider: React.FC<{ children: React.ReactNode }> = ({ c
         const saved = localStorage.getItem('pending_application');
         return saved ? JSON.parse(saved) : {
             application: { userId: 0, applicationTypeId: 0, expedientNumber: "" },
-            participants: []
+            participants: [],
+            requisitos: []
         };
     });
 
@@ -24,30 +26,20 @@ export const ApplicationProvider: React.FC<{ children: React.ReactNode }> = ({ c
         localStorage.setItem('pending_application', JSON.stringify(formDataAplication));
     }, [formDataAplication]);
 
-    const addParticipant = useCallback((newParticipant: Omit<Participant, 'roles'> & { rol: string }) => {
+    const addParticipant = useCallback((newParticipant: Omit<Participant, 'role'> & { role: ParticipantRol }) => {
         console.log('Agregando participante:', newParticipant);
 
         setFormDataAplication(prev => {
             const existingIndex = prev.participants.findIndex(p => p.dni === newParticipant.dni);
 
             if (existingIndex >= 0) {
-                // Si ya existe, agregar el nuevo rol al array de roles
+                // Si ya existe, reemplazar con el nuevo rol
                 const updatedParticipants = [...prev.participants];
-                const existingParticipant = updatedParticipants[existingIndex];
-
-                // Obtener roles actuales
-                const currentRoles = existingParticipant.roles || [];
-
-                // Si el rol no existe, agregarlo
-                if (!currentRoles.includes(newParticipant.rol as any)) {
-                    updatedParticipants[existingIndex] = {
-                        ...existingParticipant,
-                        roles: [...currentRoles, newParticipant.rol as any]
-                    };
-                    console.log('Rol agregado a participante existente:', updatedParticipants[existingIndex]);
-                } else {
-                    console.log('El participante ya tiene ese rol');
-                }
+                updatedParticipants[existingIndex] = {
+                    ...updatedParticipants[existingIndex],
+                    ...newParticipant
+                };
+                console.log('Participante actualizado:', updatedParticipants[existingIndex]);
 
                 return {
                     ...prev,
@@ -55,18 +47,16 @@ export const ApplicationProvider: React.FC<{ children: React.ReactNode }> = ({ c
                 };
             }
 
-            // Si no existe, crear nuevo participante con array de roles
-            const { rol, ...participantData } = newParticipant;
-            const newParticipantWithRoles: Participant = {
-                ...participantData,
-                roles: [rol as any]
+            // Si no existe, crear nuevo participante
+            const newParticipantData: Participant = {
+                ...newParticipant
             };
 
-            console.log('Nuevo participante creado:', newParticipantWithRoles);
+            console.log('Nuevo participante creado:', newParticipantData);
 
             return {
                 ...prev,
-                participants: [...prev.participants, newParticipantWithRoles]
+                participants: [...prev.participants, newParticipantData]
             };
         });
     }, []);
@@ -78,42 +68,25 @@ export const ApplicationProvider: React.FC<{ children: React.ReactNode }> = ({ c
         }));
     }, []);
 
+    const updateRequisitos = useCallback((requisitos: RequisitoEstado[]) => {
+        setFormDataAplication(prev => ({
+            ...prev,
+            requisitos
+        }));
+    }, []);
+
     const resetForm = useCallback(() => {
         localStorage.removeItem('pending_application');
         setFormDataAplication({
             application: {userId: 0, applicationTypeId: 0, expedientNumber: ""},
-            participants: []
+            participants: [],
+            requisitos: []
         });
     }, []);
 
-    const deleteParticipant = useCallback((dni: string, rol?: string) => {
+    const deleteParticipant = useCallback((dni: string) => {
         setFormDataAplication(prev => {
-            if (rol) {
-                // Si se especifica un rol, solo eliminar ese rol del array
-                const updatedParticipants = prev.participants.map(p => {
-                    if (p.dni === dni) {
-                        const updatedRoles = p.roles.filter(r => r !== rol);
-
-                        // Si no quedan roles, marcar para eliminar
-                        if (updatedRoles.length === 0) {
-                            return null;
-                        }
-
-                        return {
-                            ...p,
-                            roles: updatedRoles
-                        };
-                    }
-                    return p;
-                }).filter((p): p is Participant => p !== null);
-
-                return {
-                    ...prev,
-                    participants: updatedParticipants
-                };
-            }
-
-            // Si no se especifica rol, eliminar completamente al participante
+            // Eliminar completamente al participante por DNI
             return {
                 ...prev,
                 participants: prev.participants.filter(p => p.dni !== dni)
@@ -122,7 +95,7 @@ export const ApplicationProvider: React.FC<{ children: React.ReactNode }> = ({ c
     }, []);
 
     return (
-        <ApplicationContext.Provider value={{ formDataAplication, addParticipant, updateApplicationData, resetForm,deleteParticipant }}>
+        <ApplicationContext.Provider value={{ formDataAplication, addParticipant, updateApplicationData, updateRequisitos, resetForm, deleteParticipant }}>
             {children}
         </ApplicationContext.Provider>
     );

@@ -7,7 +7,7 @@ import {ApplicationHandler} from "../../../context/ApplicationContext.tsx";
 import type {Participant} from "../../../model/aplicationModel.ts";
 
 interface ApplicantFormProps {
-    onChange: (
+    onChange?: (
         e: React.ChangeEvent<
             HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement
         >
@@ -17,7 +17,7 @@ interface ApplicantFormProps {
 }
 
 export default function ApplicantForm({
-    onChange: _onChange,
+    onChange,
     onSolicitantesChange,
     tipoSolicitudNombre
 }: ApplicantFormProps) {
@@ -43,7 +43,7 @@ export default function ApplicantForm({
             if (!pendingApp) return [];
 
             const parsed = JSON.parse(pendingApp);
-            const solicitante = parsed?.participants?.find((p: Participant) => p.roles?.includes('solicitante'));
+            const solicitante = parsed?.participants?.find((p: Participant) => p.role === 'solicitante');
 
             return solicitante ? [solicitante] : [];
         } catch (error) {
@@ -249,8 +249,8 @@ export default function ApplicantForm({
             return;
         }
         console.log('Agregando solicitante: ', data);
-        addParticipant({...data,rol:'solicitante'});
-        setSolicitantesAgregados(prev => [...prev, {...data, roles: ['solicitante']}]);
+        addParticipant({...data, role: 'solicitante'});
+        setSolicitantesAgregados(prev => [...prev, {...data, role: 'solicitante'}]);
         console.log('List soicitantes: ',solicitantesAgregados)
         handleClearSearch();
 
