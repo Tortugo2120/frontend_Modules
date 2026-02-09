@@ -1,42 +1,25 @@
-import { useState } from "react";
+import {useEffect, useState} from "react";
 import StepProgressBar from "../../components/requests/new/Stepprogresebar";
 import RequestTypeCard from "../../components/requests/new/Requesttypecard";
 import ApplicantForm from "../../components/requests/new/Applicantform";
 import ConfirmationSummary from "../../components/requests/new/Confirmationsummary";
 import NavigationButtons from "../../components/requests/new/Navigationbuttons";
 import useTipoSolici from "../../hooks/useTipoSolici.ts";
-import Contrayente from "../../components/requests/new/Matrimonio/Contrayente";
+import Contrayente from "../../components/requests/new/Matrimonio/Contrayente.tsx";
 import Testigos from "../../components/requests/new/Matrimonio/Testigos.tsx";
 import Requisitos from "../../components/requests/new/Matrimonio/Requisitos.tsx";
 import ResumenSolicitud from "../../components/requests/new/ResumenSolicitud.tsx";
-import SeleccionMatrimonio from "../../components/requests/new/Matrimonio/SeleccionMatrimonio.tsx";
-
-// Interface para solicitantes agregados
-interface SolicitanteAgregado {
-    id: string;
-    nombres: string;
-    apellidoPaterno: string;
-    apellidoMaterno: string;
-    fecha_nacimiento: string;
-    sexo: 'M' | 'F';
-    dni: string;
-    direccion?: string;
-    correo?: string;
-    telefono?: string;
-    ubigeo?: number;
-    estado_civil?: string;
-}
+import {ApplicationHandler} from "../../context/ApplicationContext.tsx";
+import {Auth} from "../../context/AuthContext.tsx";
 
 export default function NewRequest() {
     const [tipoSolicitud, setTipoSolicitud] = useState<number | null>(null);
     const [searchTerm, setSearchTerm] = useState("");
-    const [contrayentes] = useState<any[]>([]);
-    const [requisitos] = useState<any[]>([]);
-    const [archivos] = useState<any[]>([]);
-    
-    // Estado para los solicitantes agregados
-    const [solicitantesAgregados, setSolicitantesAgregados] = useState<SolicitanteAgregado[]>([]);
-
+    const [contrayentes, setContrayentes] = useState<any[]>([]);
+    const [requisitos, setRequisitos] = useState<any[]>([]);
+    const [archivos, setArchivos] = useState<any[]>([]);
+    const {updateApplicationData,formDataAplication} = ApplicationHandler();
+    const {user} = Auth();
     const [formData, setFormData] = useState({
         // Datos del solicitante
         nombresSolicitante: '',
@@ -50,6 +33,18 @@ export default function NewRequest() {
         telefonoSolicitante: '',
         ubigeoSolicitante: 0,
         estadoCivilSolicitante: '',
+
+        // Datos específicos según tipo
+        nombreCompleto1: '',
+        dniPersona1: '',
+        nombreCompleto2: '',
+        dniPersona2: '',
+        fechaEvento: '',
+        lugarEvento: '',
+
+        // Documentos y observaciones
+        documentosAdjuntos: '',
+        observaciones: ''
     });
 
     const handleSelectTipoSolicitud = (id: number) => {
@@ -57,6 +52,19 @@ export default function NewRequest() {
             prev === id ? null : id
         );
     };
+
+    useEffect(() => {
+        if (user) {
+            updateApplicationData({ userId: user.user_id });
+        }
+    }, [user, updateApplicationData]);
+
+    useEffect(() => {
+        if (tipoSolicitud) {
+            updateApplicationData({ applicationTypeId: tipoSolicitud });
+        }
+    }, [tipoSolicitud, updateApplicationData]);
+
 
     const { tiposolicitud } = useTipoSolici();
     const [currentStep, setCurrentStep] = useState(1);
@@ -68,37 +76,14 @@ export default function NewRequest() {
         });
     };
 
-    // Handler para recibir los solicitantes del componente hijo
-    const handleSolicitantesChange = (solicitantes: SolicitanteAgregado[]) => {
-        setSolicitantesAgregados(solicitantes);
-        console.log('Solicitantes actualizados en el padre:', solicitantes);
-    };
-
     const handleSubmit = (e: React.FormEvent) => {
         e.preventDefault();
-        
-        // Aquí puedes construir el objeto completo para enviar al backend
-        const dataToSubmit = {
-            tipoSolicitud,
-            formData,
-            solicitantesAgregados,
-            contrayentes,
-            requisitos,
-            archivos
-        };
-        
-        console.log('Solicitud enviada completa:', dataToSubmit);
+        console.log('Solicitud enviada:', formData);
         // Aquí iría la lógica para enviar al backend
     };
 
     const nextStep = () => {
-        // Validar que haya al menos un solicitante agregado antes de avanzar del paso 2
-        if (currentStep === 2 && solicitantesAgregados.length === 0) {
-            alert('Debe agregar al menos un solicitante antes de continuar');
-            return;
-        }
-        
-        if (currentStep < 8) setCurrentStep(currentStep + 1);
+        if (currentStep < 7) setCurrentStep(currentStep + 1);
     };
 
     const prevStep = () => {
@@ -111,7 +96,6 @@ export default function NewRequest() {
     const filteredSolicitudes = tiposolicitud.filter(tipo =>
         tipo.nombre_solicitud.toLowerCase().includes(searchTerm.toLowerCase())
     );
-
     return (
         <div className="min-h-screen bg-blue-300/40 from-slate-50 via-blue-50 to-indigo-50 p-4 sm:p-6 lg:p-6">
             <div className="mb-4">
@@ -198,111 +182,81 @@ export default function NewRequest() {
                         {/* Step 2: Formulario de Datos */}
                         {currentStep === 2 && (
                             <div className="p-6 lg:p-6 animate-fadeIn">
+
                                 <div className="space-y-8">
                                     {/* Datos del Solicitante */}
                                     <ApplicantForm
                                         formData={formData}
                                         onChange={handleInputChange}
-                                        onSolicitantesChange={handleSolicitantesChange}
                                         tipoSolicitudNombre={selectedRequestType?.nombre_solicitud}
-                                        solicitantesIniciales={solicitantesAgregados}
                                     />
 
-                                    {/* Mostrar resumen de solicitantes agregados */}
-                                    {solicitantesAgregados.length > 0 && (
-                                        <div className="bg-green-50 border border-green-200 rounded-lg p-4">
-                                            <div className="flex items-center gap-2 mb-2">
-                                                <i className="fas fa-check-circle text-green-600"></i>
-                                                <p className="text-sm font-semibold text-green-800">
-                                                    {solicitantesAgregados.length} solicitante{solicitantesAgregados.length !== 1 ? 's' : ''} agregado{solicitantesAgregados.length !== 1 ? 's' : ''}
-                                                </p>
-                                            </div>
-                                            <p className="text-xs text-green-700">
-                                                Puede continuar al siguiente paso cuando esté listo
-                                            </p>
-                                        </div>
-                                    )}
+                                    {/* Observaciones 
+                                    <div>
+                                        <label className="block text-sm font-medium text-gray-700 mb-2">
+                                            Observaciones Adicionales
+                                        </label>
+                                        <textarea
+                                            name="observaciones"
+                                            value={formData.observaciones}
+                                            onChange={handleInputChange}
+                                            rows={4}
+                                            className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-0 transition-all resize-none"
+                                            placeholder="Agregue cualquier información adicional relevante..."
+                                        ></textarea>
+                                    </div>
+                                    */}
                                 </div>
                             </div>
                         )}
 
-                        {/* Step 3: Contrayentes */}
+                        {/* Step 3: contrayente */}
                         {currentStep === 3 && (
                             <div className="p-6 lg:p-6">
                                 <Contrayente tipoSolicitudNombre={selectedRequestType?.nombre_solicitud} />
                             </div>
                         )}
-                        
-                        {/* Step 4: Testigos */}
+                        {/* Step 4: testigo */}
                         {currentStep === 4 && (
                             <div className="p-6 lg:p-6">
                                 <Testigos tipoSolicitudNombre={selectedRequestType?.nombre_solicitud} />
                             </div>
                         )}
-                        
-                        {/* Step 5: Requisitos */}
+                        {/* Step 5: requisitos */}
                         {currentStep === 5 && (
                             <div className="p-6 lg:p-6">
                                 <Requisitos tipoSolicitudNombre={selectedRequestType?.nombre_solicitud} />
                             </div>
                         )}
-                        
-                        {/* Step 6: Tipo Matrimonio */}
+                        {/* Step 6: resumen */}
                         {currentStep === 6 && (
                             <div className="p-6 lg:p-6">
-                                <SeleccionMatrimonio tipoSolicitudNombre={selectedRequestType?.nombre_solicitud} />
+                                {currentStep === 6 && (
+                                    <ResumenSolicitud
+                                        tipoSolicitudNombre={selectedRequestType?.nombre_solicitud}
+                                        contrayentes={contrayentes}
+                                        requisitos={requisitos}
+                                        archivos={archivos}
+                                    />
+                                )}
+
+
                             </div>
                         )}
-                        
-                        {/* Step 7: Resumen */}
+                        {/* Step 6: confirmacion */}
                         {currentStep === 7 && (
-                            <div className="p-6 lg:p-6">
-                                <ResumenSolicitud
-                                    tipoSolicitudNombre={selectedRequestType?.nombre_solicitud}
-                                    contrayentes={contrayentes}
-                                    requisitos={requisitos}
-                                    archivos={archivos}
-                                />
-                            </div>
-                        )}
-                        
-                        {/* Step 8: Confirmación */}
-                        {currentStep === 8 && (
                             <div className="p-6 lg:p-6">
                                 <ConfirmationSummary
                                     tipoSolicitud={tipoSolicitud}
                                     tipoNombre={selectedRequestType?.nombre_solicitud}
                                     formData={formData}
                                 />
-                                
-                                {/* Mostrar resumen de solicitantes en la confirmación final */}
-                                <div className="mt-6 bg-blue-50 border border-blue-200 rounded-lg p-6">
-                                    <h4 className="text-lg font-semibold text-gray-900 mb-4">
-                                        Solicitantes Registrados
-                                    </h4>
-                                    {solicitantesAgregados.length > 0 ? (
-                                        <div className="space-y-3">
-                                            {solicitantesAgregados.map((solicitante, index) => (
-                                                <div key={solicitante.id} className="bg-white p-4 rounded-lg border border-gray-200">
-                                                    <p className="font-semibold text-gray-900">
-                                                        {index + 1}. {solicitante.nombres} {solicitante.apellidoPaterno} {solicitante.apellidoMaterno}
-                                                    </p>
-                                                    <p className="text-sm text-gray-600 mt-1">
-                                                        DNI: {solicitante.dni} | Teléfono: {solicitante.telefono}
-                                                    </p>
-                                                </div>
-                                            ))}
-                                        </div>
-                                    ) : (
-                                        <p className="text-gray-500 text-sm">No hay solicitantes agregados</p>
-                                    )}
-                                </div>
                             </div>
                         )}
 
                         <NavigationButtons
                             currentStep={currentStep}
-                            totalSteps={8}
+                            totalSteps={7}
                             canProceed={currentStep === 1 ? !!tipoSolicitud : true}
                             onPrevious={prevStep}
                             onNext={nextStep}

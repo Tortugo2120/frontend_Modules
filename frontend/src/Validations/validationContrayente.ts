@@ -1,6 +1,6 @@
 import { z } from 'zod';
 
-export const solicitanteSchema = z.object({
+export const contrayenteSchema = z.object({
     dni: z
         .string()
         .min(1, 'El DNI es obligatorio')
@@ -42,14 +42,14 @@ export const solicitanteSchema = z.object({
         .min(1, 'La dirección es obligatoria')
         .min(5, 'La dirección debe tener al menos 5 caracteres')
         .max(200, 'La dirección no puede exceder 200 caracteres'),
-    
+
     email: z
         .string()
         .min(1, 'El correo electrónico es obligatorio')
         .email('Ingrese un correo electrónico válido')
         .max(100, 'El correo no puede exceder 100 caracteres')
         .toLowerCase(),
-    
+
     phone: z
         .string()
         .min(1, 'El teléfono es obligatorio')
@@ -63,7 +63,7 @@ export const solicitanteSchema = z.object({
         .regex(/^\d{6}$/, 'El ubigeo debe contener solo números'),
 
     maritalStatus: z
-        .enum(['Single', 'Married', 'Divorced', 'Widower'], {
+        .enum(['Single', 'CASADO', 'Divorced', 'VIUDO'], {
             message: 'Debe seleccionar un estado civil válido'
         }),
 }).superRefine((values, ctx) => {
@@ -74,7 +74,7 @@ export const solicitanteSchema = z.object({
         ctx.addIssue({
             code: z.ZodIssueCode.custom,
             message: 'La fecha de nacimiento no puede ser futura',
-            path: ['fecha_nacimiento'],
+            path: ['birthdate'],
         });
     }
 
@@ -87,10 +87,10 @@ export const solicitanteSchema = z.object({
     if (!isAdult) {
         ctx.addIssue({
             code: z.ZodIssueCode.custom,
-            message: 'El solicitante debe ser mayor de 18 años',
-            path: ['fecha_nacimiento'],
+            message: 'El contrayente debe ser mayor de 18 años',
+            path: ['birthdate'],
         });
     }
 });
 
-export type SolicitanteFormData = z.infer<typeof solicitanteSchema>;
+export type ContrayenteFormData = z.infer<typeof contrayenteSchema>;

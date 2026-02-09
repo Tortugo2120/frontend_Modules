@@ -3,58 +3,28 @@ import { usePersonSearch } from '../../../../hooks/usePersonSearch.ts';
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { searchTypeDocument } from "../../../../Validations/validationSearchTypeDocument.ts";
+import { testigoSchema, type TestigoFormData } from '../../../../Validations/validationTestigo.ts';
+import { useApplicationContext } from '../../../../context/ApplicationContext.tsx';
 import { z } from "zod";
-
-interface Testigo {
-    tipoDocumento: string;
-    dni: string;
-    nombres: string;
-    apellidoPaterno: string;
-    apellidoMaterno: string;
-    fecha_nacimiento?: string;
-    sexo?: 'M' | 'F';
-    direccion?: string;
-    correo?: string;
-    telefono?: string;
-    ubigeo?: string;
-    estado_civil?: string;
-}
-
-interface TestigoAgregado extends Testigo {
-    id: string;
-}
+import type { Participant } from "../../../../model/aplicationModel.ts";
 
 interface Solicitud {
     tipoSolicitudNombre?: string;
-    onTestigosChange?: (Testigos: TestigoAgregado[]) => void;
+    onTestigosChange?: (testigos: Participant[]) => void;
 }
-
-// Función auxiliar para crear Testigo vacío
-const createEmptyTestigo = (): Testigo => ({
-    tipoDocumento: 'DNI',
-    dni: '',
-    nombres: '',
-    apellidoPaterno: '',
-    apellidoMaterno: '',
-    fecha_nacimiento: '',
-    sexo: undefined,
-    direccion: '',
-    correo: '',
-    telefono: '',
-    ubigeo: '',
-    estado_civil: ''
-});
 
 type inputSearch = z.infer<typeof searchTypeDocument>;
 
 const Testigo = (props: Solicitud) => {
     const { tipoSolicitudNombre, onTestigosChange } = props;
+    const { addParticipant, deleteParticipant, formDataAplication } = useApplicationContext();
 
-    // Estados para Testigo 1
+    // Estados para búsqueda de Testigo 1
     const {
         register: register1,
         watch: watch1,
-        formState: { errors: errors1 }
+        formState: { errors: errors1 },
+        reset: resetSearch1
     } = useForm<inputSearch>({
         resolver: zodResolver(searchTypeDocument),
         defaultValues: {
@@ -63,16 +33,65 @@ const Testigo = (props: Solicitud) => {
         }
     });
 
-    // Estados para Testigo 2
+    // Estados para búsqueda de Testigo 2
     const {
         register: register2,
         watch: watch2,
-        formState: { errors: errors2 }
+        formState: { errors: errors2 },
+        reset: resetSearch2
     } = useForm<inputSearch>({
         resolver: zodResolver(searchTypeDocument),
         defaultValues: {
             documentType: 'dni',
             documentNumber: ''
+        }
+    });
+
+    // Formulario de datos del Testigo 1
+    const {
+        register: registerForm1,
+        handleSubmit: handleSubmitForm1,
+        formState: { errors: formErrors1 },
+        setValue: setValueForm1,
+        reset: resetForm1
+    } = useForm<TestigoFormData>({
+        resolver: zodResolver(testigoSchema),
+        defaultValues: {
+            dni: '',
+            names: '',
+            paternalSurname: '',
+            maternalSurname: '',
+            birthdate: '',
+            gender: undefined,
+            address: '',
+            email: '',
+            phone: '',
+            ubigeoId: '',
+            maritalStatus: undefined
+        }
+    });
+
+    // Formulario de datos del Testigo 2
+    const {
+        register: registerForm2,
+        handleSubmit: handleSubmitForm2,
+        formState: { errors: formErrors2 },
+        setValue: setValueForm2,
+        reset: resetForm2
+    } = useForm<TestigoFormData>({
+        resolver: zodResolver(testigoSchema),
+        defaultValues: {
+            dni: '',
+            names: '',
+            paternalSurname: '',
+            maternalSurname: '',
+            birthdate: '',
+            gender: undefined,
+            address: '',
+            email: '',
+            phone: '',
+            ubigeoId: '',
+            maritalStatus: undefined
         }
     });
 
@@ -88,25 +107,30 @@ const Testigo = (props: Solicitud) => {
     const [searchError2, setSearchError2] = useState('');
     const [searchSuccess2, setSearchSuccess2] = useState(false);
 
-    const [Testigo1, setTestigo1] = useState<Testigo>(createEmptyTestigo());
-    const [Testigo2, setTestigo2] = useState<Testigo>(createEmptyTestigo());
+    const [testigo1Added, setTestigo1Added] = useState(false);
+    const [testigo2Added, setTestigo2Added] = useState(false);
 
-    const [TestigosAgregados, setTestigosAgregados] = useState<TestigoAgregado[]>([]);
-
+    // Sincronizar con el estado global del contexto
     useEffect(() => {
+        const testigos = formDataAplication.participants.filter((p: Participant) =>
+            p.roles.includes('testigo')
+        );
+        setTestigo1Added(testigos.length >= 1);
+        setTestigo2Added(testigos.length >= 2);
+
         if (onTestigosChange) {
-            onTestigosChange(TestigosAgregados);
+            onTestigosChange(testigos);
         }
-    }, [TestigosAgregados, onTestigosChange]);
+    }, [formDataAplication.participants, onTestigosChange]);
 
     // Función para buscar persona
-    const handleSearchTestigo = useCallback(async (TestigoNum: 1 | 2) => {
-        const isTestigo1 = TestigoNum === 1;
+    const handleSearchTestigo = useCallback(async (testigoNum: 1 | 2) => {
+        const isTestigo1 = testigoNum === 1;
         const tipoDoc = isTestigo1 ? tipoDoc1 : tipoDoc2;
         const numDoc = isTestigo1 ? numDoc1 : numDoc2;
         const setError = isTestigo1 ? setSearchError1 : setSearchError2;
         const setSuccess = isTestigo1 ? setSearchSuccess1 : setSearchSuccess2;
-        const setTestigo = isTestigo1 ? setTestigo1 : setTestigo2;
+        const setValueForm = isTestigo1 ? setValueForm1 : setValueForm2;
 
         setError('');
         setSuccess(false);
@@ -123,7 +147,6 @@ const Testigo = (props: Solicitud) => {
 
             if (!response || !response.status || !response.data) {
                 setError('No se encontró ninguna persona con ese documento');
-                setTestigo(createEmptyTestigo());
                 return;
             }
 
@@ -132,101 +155,83 @@ const Testigo = (props: Solicitud) => {
                 ? personData.gender as 'M' | 'F'
                 : undefined;
 
-            const foundTestigo: Testigo = {
-                tipoDocumento: tipoDoc.toUpperCase(),
-                dni: numDoc,
-                nombres: personData.name,
-                apellidoPaterno: personData.paternalSurname,
-                apellidoMaterno: personData.maternalSurname,
-                fecha_nacimiento: personData.birthdate,
-                sexo: validGender,
-                direccion: personData.address,
-                correo: personData.email,
-                telefono: personData.phone,
-                ubigeo: personData.ubigeoId,
-                estado_civil: personData.maritalStatus
-            };
+            // Llenar el formulario con los datos encontrados
+            setValueForm('dni', numDoc);
+            setValueForm('names', personData.name || '');
+            setValueForm('paternalSurname', personData.paternalSurname || '');
+            setValueForm('maternalSurname', personData.maternalSurname || '');
+            setValueForm('birthdate', personData.birthdate || '');
+            if (validGender) setValueForm('gender', validGender);
+            setValueForm('address', personData.address || '');
+            setValueForm('email', personData.email || '');
+            setValueForm('phone', personData.phone || '');
+            setValueForm('ubigeoId', personData.ubigeoId || '');
+            if (personData.maritalStatus) setValueForm('maritalStatus', personData.maritalStatus as any);
 
-            setTestigo(foundTestigo);
             setSuccess(true);
-            setTimeout(() => setSuccess(false), 2500);
-        } catch (err) {
-            console.error('Error al buscar Testigo:', err);
-            setError('Error al buscar la persona. Intente nuevamente.');
-            setTestigo(createEmptyTestigo());
+            setTimeout(() => setSuccess(false), 2000);
+        } catch (error: any) {
+            console.error('Error al buscar persona:', error);
+            setError(error.response?.data?.message || 'Error al buscar persona');
         }
-    }, [numDoc1, tipoDoc1, numDoc2, tipoDoc2, fetchPersonSearch]);
+    }, [tipoDoc1, numDoc1, tipoDoc2, numDoc2, fetchPersonSearch, setValueForm1, setValueForm2]);
 
     // Función para limpiar búsqueda
-    const handleClearSearch = useCallback((TestigoNum: 1 | 2) => {
-        const isTestigo1 = TestigoNum === 1;
+    const handleClearSearch = useCallback((testigoNum: 1 | 2) => {
+        const isTestigo1 = testigoNum === 1;
         const setError = isTestigo1 ? setSearchError1 : setSearchError2;
         const setSuccess = isTestigo1 ? setSearchSuccess1 : setSearchSuccess2;
-        const setTestigo = isTestigo1 ? setTestigo1 : setTestigo2;
+        const resetForm = isTestigo1 ? resetForm1 : resetForm2;
+        const resetSearch = isTestigo1 ? resetSearch1 : resetSearch2;
 
         setError('');
         setSuccess(false);
-        setTestigo(createEmptyTestigo());
-    }, []);
+        resetForm();
+        resetSearch();
+    }, [resetForm1, resetForm2, resetSearch1, resetSearch2]);
 
-    // Función para manejar cambios en los inputs
-    const handleInputChange = useCallback((
-        e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>,
-        TestigoNum: 1 | 2
-    ) => {
-        const { name, value } = e.target;
-        const setTestigo = TestigoNum === 1 ? setTestigo1 : setTestigo2;
+    // Función para agregar testigo al contexto
+    const handleAddTestigo = useCallback((testigoNum: 1 | 2) => {
+        const handleSubmit = testigoNum === 1 ? handleSubmitForm1 : handleSubmitForm2;
+        const setAdded = testigoNum === 1 ? setTestigo1Added : setTestigo2Added;
+        const setError = testigoNum === 1 ? setSearchError1 : setSearchError2;
 
-        setTestigo(prev => {
-            const updatedTestigo = { ...prev };
+        handleSubmit((data: TestigoFormData) => {
+            // Verificar si ya existe como testigo
+            const isDuplicateTestigo = formDataAplication.participants.some((p: Participant) =>
+                p.dni === data.dni && p.roles.includes('testigo')
+            );
 
-            switch (name) {
-                case 'tipoDocSolicitante':
-                    updatedTestigo.tipoDocumento = value;
-                    break;
-                case 'dniSolicitante':
-                    updatedTestigo.dni = value.replace(/\D/g, '').slice(0, 8);
-                    break;
-                case 'nombresSolicitante':
-                    updatedTestigo.nombres = value;
-                    break;
-                case 'apellidoPaternoSolicitante':
-                    updatedTestigo.apellidoPaterno = value;
-                    break;
-                case 'apellidoMaternoSolicitante':
-                    updatedTestigo.apellidoMaterno = value;
-                    break;
-                case 'fechaNacimientoSolicitante':
-                    updatedTestigo.fecha_nacimiento = value;
-                    break;
-                case 'sexoSolicitante':
-                    updatedTestigo.sexo = (value === 'M' || value === 'F') ? value as 'M' | 'F' : undefined;
-                    break;
-                case 'direccionSolicitante':
-                    updatedTestigo.direccion = value;
-                    break;
-                case 'correoSolicitante':
-                    updatedTestigo.correo = value;
-                    break;
-                case 'telefonoSolicitante':
-                    updatedTestigo.telefono = value.replace(/\D/g, '').slice(0, 9);
-                    break;
-                case 'ubigeoSolicitante':
-                    updatedTestigo.ubigeo = value.replace(/\D/g, '').slice(0, 6);
-                    break;
-                case 'estadoCivilSolicitante':
-                    updatedTestigo.estado_civil = value;
-                    break;
+            if (isDuplicateTestigo) {
+                setError('Este DNI ya ha sido agregado como testigo');
+                return;
             }
 
-            return updatedTestigo;
-        });
-    }, []);
+            // Agregar como testigo (puede tener otros roles también)
+            addParticipant({ ...data, rol: 'testigo' });
+            setAdded(true);
+            setError('');
+        })();
+    }, [handleSubmitForm1, handleSubmitForm2, addParticipant, formDataAplication.participants]);
 
-    const handleKeyDown = useCallback((e: React.KeyboardEvent<HTMLInputElement>, TestigoNum: 1 | 2) => {
+    // Función para eliminar testigo
+    const handleDeleteTestigo = useCallback((dni: string, testigoNum: 1 | 2) => {
+        // Solo eliminar el rol de 'testigo', no todo el participante
+        deleteParticipant(dni, 'testigo');
+
+        const setAdded = testigoNum === 1 ? setTestigo1Added : setTestigo2Added;
+        const resetForm = testigoNum === 1 ? resetForm1 : resetForm2;
+        const resetSearch = testigoNum === 1 ? resetSearch1 : resetSearch2;
+
+        setAdded(false);
+        resetForm();
+        resetSearch();
+    }, [deleteParticipant, resetForm1, resetForm2, resetSearch1, resetSearch2]);
+
+    const handleKeyDown = useCallback((e: React.KeyboardEvent<HTMLInputElement>, testigoNum: 1 | 2) => {
         if (e.key === 'Enter') {
             e.preventDefault();
-            handleSearchTestigo(TestigoNum);
+            handleSearchTestigo(testigoNum);
         }
     }, [handleSearchTestigo]);
 
@@ -244,95 +249,20 @@ const Testigo = (props: Solicitud) => {
         }
     }, []);
 
-    // Validar si el Testigo está completo
-    const isTestigoValid = useCallback((Testigo: Testigo) => {
-        return !!(
-            Testigo.dni && Testigo.dni.length === 8 &&
-            Testigo.nombres && Testigo.nombres.trim() &&
-            Testigo.apellidoPaterno && Testigo.apellidoPaterno.trim() &&
-            Testigo.apellidoMaterno && Testigo.apellidoMaterno.trim() &&
-            Testigo.fecha_nacimiento &&
-            Testigo.sexo &&
-            Testigo.direccion && Testigo.direccion.trim() &&
-            Testigo.correo && Testigo.correo.trim() &&
-            Testigo.telefono && Testigo.telefono.trim() &&
-            Testigo.ubigeo &&
-            Testigo.estado_civil && Testigo.estado_civil.trim()
-        );
-    }, []);
-
-    // Agregar ambos Testigos
-    const handleAgregarTestigos = useCallback(() => {
-        // Validar Testigo 1
-        if (!isTestigoValid(Testigo1)) {
-            setSearchError1('Por favor complete todos los campos obligatorios del Testigo 1');
-            return;
-        }
-
-        // Validar Testigo 2
-        if (!isTestigoValid(Testigo2)) {
-            setSearchError2('Por favor complete todos los campos obligatorios del Testigo 2');
-            return;
-        }
-
-        // Verificar que no sean el mismo DNI
-        if (Testigo1.dni === Testigo2.dni) {
-            setSearchError1('Los Testigos no pueden tener el mismo DNI');
-            setSearchError2('Los Testigos no pueden tener el mismo DNI');
-            return;
-        }
-
-        const id1 = crypto?.randomUUID?.() || `${Date.now()}-1`;
-        const id2 = crypto?.randomUUID?.() || `${Date.now()}-2`;
-
-        const nuevosTestigos: TestigoAgregado[] = [
-            { id: id1, ...Testigo1 },
-            { id: id2, ...Testigo2 }
-        ];
-
-        setTestigosAgregados(nuevosTestigos);
-        
-        setSearchSuccess1(true);
-        setSearchSuccess2(true);
-        setTimeout(() => {
-            setSearchSuccess1(false);
-            setSearchSuccess2(false);
-        }, 1400);
-    }, [Testigo1, Testigo2, isTestigoValid]);
-
-    // Limpiar todo
-    const handleLimpiarTodo = useCallback(() => {
-        setTestigo1(createEmptyTestigo());
-        setTestigo2(createEmptyTestigo());
-        setSearchError1('');
-        setSearchError2('');
-        setSearchSuccess1(false);
-        setSearchSuccess2(false);
-        setTestigosAgregados([]);
-    }, []);
-
-    // Formatear fecha para mostrar
-    const formatDisplayDate = (dateString: string) => {
-        if (!dateString) return '';
-        if (dateString.includes('-') && dateString.split('-')[0].length === 4) {
-            const [year, month, day] = dateString.split('-');
-            return `${day}/${month}/${year}`;
-        }
-        return dateString;
-    };
-
-    // Renderizar formulario de Testigo
+    // Renderizar formulario de testigo
     const renderTestigoForm = (
-        Testigo: Testigo,
-        TestigoNum: 1 | 2,
-        register: any,
-        errors: any,
-        watch: any,
+        testigoNum: 1 | 2,
+        registerSearch: any,
+        errorsSearch: any,
+        watchSearch: any,
+        registerForm: any,
+        errorsForm: any,
         searchError: string,
-        searchSuccess: boolean
+        searchSuccess: boolean,
+        isAdded: boolean
     ) => {
-        const tipoDoc = watch('documentType');
-        const numDoc = watch('documentNumber');
+        const tipoDoc = watchSearch('documentType');
+        const numDoc = watchSearch('documentNumber');
 
         return (
             <div className="space-y-4">
@@ -352,7 +282,7 @@ const Testigo = (props: Solicitud) => {
                             </div>
                             <input
                                 type="text"
-                                onKeyDown={(e) => handleKeyDown(e, TestigoNum)}
+                                onKeyDown={(e) => handleKeyDown(e, testigoNum)}
                                 onInput={(e) => handleDocumentInput(e, tipoDoc)}
                                 className={`w-full pl-9 sm:pl-11 pr-20 sm:pr-24 py-2 sm:py-2.5 text-sm sm:text-base border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-0 transition-all ${
                                     searchSuccess
@@ -361,14 +291,14 @@ const Testigo = (props: Solicitud) => {
                                             ? 'border-red-300 bg-red-50'
                                             : 'border-gray-300'
                                 }`}
-                                {...register('documentNumber')}
+                                {...registerSearch('documentNumber')}
                                 placeholder={tipoDoc === 'dni' ? "8 dígitos" : tipoDoc === 'pas' ? "Pasaporte" : "Cédula"}
                                 maxLength={tipoDoc === 'dni' ? 8 : tipoDoc === 'ced' ? 10 : 20}
                             />
                             {numDoc && numDoc.length > 0 && (
                                 <button
                                     type="button"
-                                    onClick={() => handleClearSearch(TestigoNum)}
+                                    onClick={() => handleClearSearch(testigoNum)}
                                     className="absolute inset-y-0 right-12 sm:right-16 pr-2 flex items-center text-gray-400 hover:text-gray-600 transition-colors"
                                     title="Limpiar"
                                 >
@@ -377,8 +307,8 @@ const Testigo = (props: Solicitud) => {
                             )}
                             <button
                                 type="button"
-                                onClick={() => handleSearchTestigo(TestigoNum)}
-                                disabled={!!errors.documentNumber || !numDoc || numDoc.length === 0}
+                                onClick={() => handleSearchTestigo(testigoNum)}
+                                disabled={!!errorsSearch.documentNumber || !numDoc || numDoc.length === 0}
                                 className="cursor-pointer absolute inset-y-0 right-0 pr-3 sm:pr-4 flex items-center text-blue-600 hover:text-blue-700 disabled:text-gray-400 disabled:cursor-not-allowed transition-colors"
                                 title="Buscar"
                             >
@@ -390,8 +320,8 @@ const Testigo = (props: Solicitud) => {
                             </button>
                         </div>
                         <div className='h-4 sm:h-5 p-1'>
-                            {errors.documentNumber && (
-                                <p className="text-red-500 text-xs mt-1">{errors.documentNumber.message}</p>
+                            {errorsSearch.documentNumber && (
+                                <p className="text-red-500 text-xs mt-1">{errorsSearch.documentNumber.message}</p>
                             )}
                             {searchError && (
                                 <p className="text-red-500 text-xs mt-1">{searchError}</p>
@@ -409,7 +339,7 @@ const Testigo = (props: Solicitud) => {
                         <select
                             defaultValue={"dni"}
                             className={"select outline-0 w-full py-2 sm:py-2.5 text-sm sm:text-base focus:ring-2 focus:ring-blue-500 transition-all bg-white px-3 border border-gray-300 rounded-lg"}
-                            {...register('documentType')}
+                            {...registerSearch('documentType')}
                         >
                             <option value="dni">DNI</option>
                             <option value="pas">PASAPORTE</option>
@@ -420,23 +350,6 @@ const Testigo = (props: Solicitud) => {
 
                 {/* Formulario de datos */}
                 <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
-                    {/* Tipo de Documento */}
-                    <div className='mb-0'>
-                        <label className="block text-sm font-medium text-gray-700 mb-2">
-                            Tipo de Doc.<span className="text-red-500">*</span>
-                        </label>
-                        <select
-                            name="tipoDocSolicitante"
-                            value={Testigo.tipoDocumento}
-                            onChange={(e) => handleInputChange(e, TestigoNum)}
-                            className="w-full px-3 sm:px-4 py-2 text-sm sm:text-base border border-gray-300 rounded-lg bg-white outline-0 transition-all focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                        >
-                            <option value="">Seleccione</option>
-                            <option value="DNI">DNI</option>
-                            <option value="C. de Extranjeria">Carnet de extranjería</option>
-                        </select>
-                    </div>
-
                     {/* DNI */}
                     <div className='mb-0'>
                         <label className="block text-sm font-medium text-gray-700 mb-2">
@@ -444,13 +357,14 @@ const Testigo = (props: Solicitud) => {
                         </label>
                         <input
                             type="text"
-                            name="dniSolicitante"
-                            value={Testigo.dni}
-                            onChange={(e) => handleInputChange(e, TestigoNum)}
+                            {...registerForm('dni')}
                             className="w-full px-3 sm:px-4 py-2 text-sm sm:text-base border border-gray-300 rounded-lg bg-white outline-0 transition-all focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                             placeholder="DNI"
                             maxLength={8}
                         />
+                        {errorsForm.dni && (
+                            <p className="text-red-500 text-xs mt-1">{errorsForm.dni.message}</p>
+                        )}
                     </div>
 
                     {/* Nombres */}
@@ -460,12 +374,13 @@ const Testigo = (props: Solicitud) => {
                         </label>
                         <input
                             type="text"
-                            name="nombresSolicitante"
-                            value={Testigo.nombres}
-                            onChange={(e) => handleInputChange(e, TestigoNum)}
+                            {...registerForm('names')}
                             className="w-full px-3 sm:px-4 py-2 text-sm sm:text-base border border-gray-300 rounded-lg bg-white outline-0 transition-all focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                             placeholder="Nombres"
                         />
+                        {errorsForm.names && (
+                            <p className="text-red-500 text-xs mt-1">{errorsForm.names.message}</p>
+                        )}
                     </div>
 
                     {/* Apellido Paterno */}
@@ -475,12 +390,13 @@ const Testigo = (props: Solicitud) => {
                         </label>
                         <input
                             type="text"
-                            name="apellidoPaternoSolicitante"
-                            value={Testigo.apellidoPaterno}
-                            onChange={(e) => handleInputChange(e, TestigoNum)}
+                            {...registerForm('paternalSurname')}
                             className="w-full px-3 sm:px-4 py-2 text-sm sm:text-base border border-gray-300 rounded-lg bg-white outline-0 transition-all focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                             placeholder="Apellido paterno"
                         />
+                        {errorsForm.paternalSurname && (
+                            <p className="text-red-500 text-xs mt-1">{errorsForm.paternalSurname.message}</p>
+                        )}
                     </div>
 
                     {/* Apellido Materno */}
@@ -490,12 +406,13 @@ const Testigo = (props: Solicitud) => {
                         </label>
                         <input
                             type="text"
-                            name="apellidoMaternoSolicitante"
-                            value={Testigo.apellidoMaterno}
-                            onChange={(e) => handleInputChange(e, TestigoNum)}
+                            {...registerForm('maternalSurname')}
                             className="w-full px-3 sm:px-4 py-2 text-sm sm:text-base border border-gray-300 rounded-lg bg-white outline-0 transition-all focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                             placeholder="Apellido materno"
                         />
+                        {errorsForm.maternalSurname && (
+                            <p className="text-red-500 text-xs mt-1">{errorsForm.maternalSurname.message}</p>
+                        )}
                     </div>
 
                     {/* Fecha de Nacimiento */}
@@ -505,11 +422,30 @@ const Testigo = (props: Solicitud) => {
                         </label>
                         <input
                             type="date"
-                            name="fechaNacimientoSolicitante"
-                            value={Testigo.fecha_nacimiento || ''}
-                            onChange={(e) => handleInputChange(e, TestigoNum)}
+                            {...registerForm('birthdate')}
                             className="w-full px-3 sm:px-4 py-2 text-sm sm:text-base border border-gray-300 rounded-lg bg-white outline-0 transition-all focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                         />
+                        {errorsForm.birthdate && (
+                            <p className="text-red-500 text-xs mt-1">{errorsForm.birthdate.message}</p>
+                        )}
+                    </div>
+
+                    {/* Sexo */}
+                    <div className='mb-0'>
+                        <label className="block text-sm font-medium text-gray-700 mb-2">
+                            Sexo <span className="text-red-500">*</span>
+                        </label>
+                        <select
+                            {...registerForm('gender')}
+                            className="w-full px-3 sm:px-4 py-2 text-sm sm:text-base border border-gray-300 rounded-lg bg-white outline-0 transition-all focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                        >
+                            <option value="">Seleccione</option>
+                            <option value="M">Masculino</option>
+                            <option value="F">Femenino</option>
+                        </select>
+                        {errorsForm.gender && (
+                            <p className="text-red-500 text-xs mt-1">{errorsForm.gender.message}</p>
+                        )}
                     </div>
 
                     {/* Dirección */}
@@ -519,29 +455,13 @@ const Testigo = (props: Solicitud) => {
                         </label>
                         <input
                             type="text"
-                            name="direccionSolicitante"
-                            value={Testigo.direccion || ''}
-                            onChange={(e) => handleInputChange(e, TestigoNum)}
+                            {...registerForm('address')}
                             className="w-full px-3 sm:px-4 py-2 text-sm sm:text-base border border-gray-300 rounded-lg bg-white outline-0 transition-all focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                             placeholder="Dirección"
                         />
-                    </div>
-
-                    {/* Sexo */}
-                    <div className='mb-0'>
-                        <label className="block text-sm font-medium text-gray-700 mb-2">
-                            Sexo <span className="text-red-500">*</span>
-                        </label>
-                        <select
-                            name="sexoSolicitante"
-                            value={Testigo.sexo || ''}
-                            onChange={(e) => handleInputChange(e, TestigoNum)}
-                            className="w-full px-3 sm:px-4 py-2 text-sm sm:text-base border border-gray-300 rounded-lg bg-white outline-0 transition-all focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                        >
-                            <option value="">Seleccione</option>
-                            <option value="M">Masculino</option>
-                            <option value="F">Femenino</option>
-                        </select>
+                        {errorsForm.address && (
+                            <p className="text-red-500 text-xs mt-1">{errorsForm.address.message}</p>
+                        )}
                     </div>
 
                     {/* Correo */}
@@ -551,12 +471,13 @@ const Testigo = (props: Solicitud) => {
                         </label>
                         <input
                             type="email"
-                            name="correoSolicitante"
-                            value={Testigo.correo || ''}
-                            onChange={(e) => handleInputChange(e, TestigoNum)}
+                            {...registerForm('email')}
                             className="w-full px-3 sm:px-4 py-2 text-sm sm:text-base border border-gray-300 rounded-lg bg-white outline-0 transition-all focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                             placeholder="correo@ejemplo.com"
                         />
+                        {errorsForm.email && (
+                            <p className="text-red-500 text-xs mt-1">{errorsForm.email.message}</p>
+                        )}
                     </div>
 
                     {/* Teléfono */}
@@ -566,13 +487,14 @@ const Testigo = (props: Solicitud) => {
                         </label>
                         <input
                             type="text"
-                            name="telefonoSolicitante"
-                            value={Testigo.telefono || ''}
-                            onChange={(e) => handleInputChange(e, TestigoNum)}
+                            {...registerForm('phone')}
                             className="w-full px-3 sm:px-4 py-2 text-sm sm:text-base border border-gray-300 rounded-lg bg-white outline-0 transition-all focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                             placeholder="987654321"
                             maxLength={9}
                         />
+                        {errorsForm.phone && (
+                            <p className="text-red-500 text-xs mt-1">{errorsForm.phone.message}</p>
+                        )}
                     </div>
 
                     {/* Ubigeo */}
@@ -582,13 +504,14 @@ const Testigo = (props: Solicitud) => {
                         </label>
                         <input
                             type="text"
-                            name="ubigeoSolicitante"
-                            value={Testigo.ubigeo || ''}
-                            onChange={(e) => handleInputChange(e, TestigoNum)}
+                            {...registerForm('ubigeoId')}
                             className="w-full px-3 sm:px-4 py-2 text-sm sm:text-base border border-gray-300 rounded-lg bg-white outline-0 transition-all focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                             placeholder="150101"
                             maxLength={6}
                         />
+                        {errorsForm.ubigeoId && (
+                            <p className="text-red-500 text-xs mt-1">{errorsForm.ubigeoId.message}</p>
+                        )}
                     </div>
 
                     {/* Estado Civil */}
@@ -597,18 +520,32 @@ const Testigo = (props: Solicitud) => {
                             Estado Civil <span className="text-red-500">*</span>
                         </label>
                         <select
-                            name="estadoCivilSolicitante"
-                            value={Testigo.estado_civil || ''}
-                            onChange={(e) => handleInputChange(e, TestigoNum)}
+                            {...registerForm('maritalStatus')}
                             className="w-full px-3 sm:px-4 py-2 text-sm sm:text-base border border-gray-300 rounded-lg bg-white outline-0 transition-all focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                         >
                             <option value="">Seleccione</option>
                             <option value="Single">Soltero(a)</option>
-                            <option value="Married">Casado(a)</option>
+                            <option value="CASADO">Casado(a)</option>
                             <option value="Divorced">Divorciado(a)</option>
-                            <option value="Widower">Viudo(a)</option>
+                            <option value="VIUDO">Viudo(a)</option>
                         </select>
+                        {errorsForm.maritalStatus && (
+                            <p className="text-red-500 text-xs mt-1">{errorsForm.maritalStatus.message}</p>
+                        )}
                     </div>
+                </div>
+
+                {/* Botón para agregar testigo */}
+                <div className="flex justify-end mt-4">
+                    <button
+                        type="button"
+                        onClick={() => handleAddTestigo(testigoNum)}
+                        disabled={isAdded}
+                        className="px-4 sm:px-6 py-2 sm:py-2.5 text-sm sm:text-base bg-green-600 text-white rounded-lg hover:bg-green-700 disabled:bg-gray-400 disabled:cursor-not-allowed transition-colors flex items-center gap-2"
+                    >
+                        <i className="fas fa-user-check"></i>
+                        <span>{isAdded ? 'Testigo Agregado' : 'Agregar Testigo'}</span>
+                    </button>
                 </div>
             </div>
         );
@@ -617,13 +554,13 @@ const Testigo = (props: Solicitud) => {
     return (
         <div className="space-y-4 sm:space-y-6">
             {/* Header */}
-            <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-3 sm:gap-2 pb-3 border-b border-b-blue-300">
+            <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-3 sm:gap-2 pb-3 border-b border-b-green-300">
                 <h3 className="text-base sm:text-lg font-semibold text-gray-900 flex items-center gap-2">
-                    <i className="fas fa-user text-blue-600"></i>
+                    <i className="fas fa-users text-green-600"></i>
                     <span>Datos de los Testigos</span>
                 </h3>
                 {tipoSolicitudNombre && (
-                    <span className="bg-blue-100 text-blue-800 text-xs sm:text-sm font-medium px-3 sm:px-4 py-1.5 sm:py-2 rounded-lg inline-flex items-center w-fit">
+                    <span className="bg-green-100 text-green-800 text-xs sm:text-sm font-medium px-3 sm:px-4 py-1.5 sm:py-2 rounded-lg inline-flex items-center w-fit">
                         <i className="fas fa-file-alt mr-2"></i>
                         {tipoSolicitudNombre.toUpperCase()}
                     </span>
@@ -631,90 +568,101 @@ const Testigo = (props: Solicitud) => {
             </div>
 
             {/* Testigo 1 */}
-            <div className="bg-blue-50 p-4 rounded-lg border border-blue-200">
+            <div className="bg-green-50 p-4 rounded-lg border border-green-200">
                 <h4 className="text-lg font-bold text-gray-800 mb-4 flex items-center gap-2">
-                    <i className="fas fa-user-circle text-blue-600"></i>
+                    <i className="fas fa-user-check text-green-600"></i>
                     Testigo 1
                 </h4>
                 {renderTestigoForm(
-                    Testigo1,
                     1,
                     register1,
                     errors1,
                     watch1,
+                    registerForm1,
+                    formErrors1,
                     searchError1,
-                    searchSuccess1
+                    searchSuccess1,
+                    testigo1Added
                 )}
             </div>
 
             <div className="border-solid border-b border-b-blue-300"></div>
 
             {/* Testigo 2 */}
-            <div className="bg-blue-50 p-4 rounded-lg border border-blue-200">
+            <div className="bg-green-50 p-4 rounded-lg border border-green-200">
                 <h4 className="text-lg font-bold text-gray-800 mb-4 flex items-center gap-2">
-                    <i className="fas fa-user-circle text-blue-600"></i>
+                    <i className="fas fa-user-check text-green-600"></i>
                     Testigo 2
                 </h4>
                 {renderTestigoForm(
-                    Testigo2,
                     2,
                     register2,
                     errors2,
                     watch2,
+                    registerForm2,
+                    formErrors2,
                     searchError2,
-                    searchSuccess2
+                    searchSuccess2,
+                    testigo2Added
                 )}
             </div>
 
-            {/* Botones de acción */}
-            <div className="flex flex-col sm:flex-row gap-2 sm:gap-3 sm:justify-end pt-4">
-                <button
-                    type="button"
-                    onClick={handleLimpiarTodo}
-                    className="w-full sm:w-auto px-4 sm:px-6 py-2 sm:py-2.5 text-sm sm:text-base border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors flex items-center justify-center gap-2"
-                >
-                    <i className="fas fa-eraser"></i>
-                    <span>Limpiar Todo</span>
-                </button>
-                <button
-                    type="button"
-                    onClick={handleAgregarTestigos}
-                    disabled={!isTestigoValid(Testigo1) || !isTestigoValid(Testigo2)}
-                    className="w-full sm:w-auto px-4 sm:px-6 py-2 sm:py-2.5 text-sm sm:text-base bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:bg-gray-400 disabled:cursor-not-allowed transition-colors flex items-center justify-center gap-2"
-                >
-                    <i className="fas fa-user"></i>
-                    <span>Confirmar Testigos</span>
-                </button>
-            </div>
-
-            {/* Lista de Testigos Agregados */}
-            {TestigosAgregados.length > 0 && (
-                <div className="mt-6 sm:mt-8 bg-green-50 border border-green-200 rounded-lg p-6">
-                    <h4 className="text-sm sm:text-base font-semibold text-gray-900 mb-4 flex items-center gap-2">
-                        <i className="fas fa-check-circle text-green-600"></i>
-                        <span>Testigos Confirmados</span>
+            {/* Tabla de testigos agregados */}
+            {formDataAplication.participants.filter((p: Participant) => p.roles.includes('testigo')).length > 0 && (
+                <div className="mt-6">
+                    <h4 className="text-lg font-semibold text-gray-800 mb-4 flex items-center gap-2">
+                        <i className="fas fa-list text-green-600"></i>
+                        Testigos Agregados
                     </h4>
-
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                        {TestigosAgregados.map((Testigo, index) => (
-                            <div
-                                key={Testigo.id}
-                                className="bg-white border border-gray-200 rounded-lg p-4 shadow-sm"
-                            >
-                                <h5 className="font-semibold text-gray-900 text-base mb-3 flex items-center gap-2">
-                                    <i className={`fas fa-user-circle ${index === 0 ? 'text-blue-600' : 'text-pink-600'}`}></i>
-                                    Testigo {index + 1}
-                                </h5>
-                                <div className="space-y-2 text-sm">
-                                    <p><span className="text-gray-600">Nombre:</span> <span className="font-medium">{Testigo.nombres} {Testigo.apellidoPaterno} {Testigo.apellidoMaterno}</span></p>
-                                    <p><span className="text-gray-600">DNI:</span> <span className="font-medium">{Testigo.dni}</span></p>
-                                    <p><span className="text-gray-600">Fecha Nac.:</span> <span className="font-medium">{formatDisplayDate(Testigo.fecha_nacimiento || '')}</span></p>
-                                    <p><span className="text-gray-600">Sexo:</span> <span className="font-medium">{Testigo.sexo === 'M' ? 'Masculino' : 'Femenino'}</span></p>
-                                    <p><span className="text-gray-600">Teléfono:</span> <span className="font-medium">{Testigo.telefono}</span></p>
-                                    <p><span className="text-gray-600">Email:</span> <span className="font-medium">{Testigo.correo}</span></p>
-                                </div>
-                            </div>
-                        ))}
+                    <div className="overflow-x-auto">
+                        <table className="min-w-full bg-white border border-gray-300 rounded-lg">
+                            <thead className="bg-gray-100">
+                                <tr>
+                                    <th className="px-4 py-2 text-left text-sm font-semibold text-gray-700">DNI</th>
+                                    <th className="px-4 py-2 text-left text-sm font-semibold text-gray-700">Nombres Completos</th>
+                                    <th className="px-4 py-2 text-left text-sm font-semibold text-gray-700">Sexo</th>
+                                    <th className="px-4 py-2 text-left text-sm font-semibold text-gray-700">Email</th>
+                                    <th className="px-4 py-2 text-left text-sm font-semibold text-gray-700">Roles</th>
+                                    <th className="px-4 py-2 text-center text-sm font-semibold text-gray-700">Acciones</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {formDataAplication.participants.filter((p: Participant) => p.roles.includes('testigo')).map((testigo: Participant, index: number) => (
+                                    <tr key={testigo.dni} className="border-t border-gray-200">
+                                        <td className="px-4 py-2 text-sm text-gray-700">{testigo.dni}</td>
+                                        <td className="px-4 py-2 text-sm text-gray-700">
+                                            {testigo.names} {testigo.paternalSurname} {testigo.maternalSurname}
+                                        </td>
+                                        <td className="px-4 py-2 text-sm text-gray-700">
+                                            {testigo.gender === 'M' ? 'Masculino' : 'Femenino'}
+                                        </td>
+                                        <td className="px-4 py-2 text-sm text-gray-700">{testigo.email}</td>
+                                        <td className="px-4 py-2 text-sm text-gray-700">
+                                            <div className="flex flex-wrap gap-1">
+                                                {testigo.roles.map((rol) => (
+                                                    <span
+                                                        key={rol}
+                                                        className="px-2 py-1 bg-green-100 text-green-800 text-xs rounded-full"
+                                                    >
+                                                        {rol}
+                                                    </span>
+                                                ))}
+                                            </div>
+                                        </td>
+                                        <td className="px-4 py-2 text-center">
+                                            <button
+                                                type="button"
+                                                onClick={() => handleDeleteTestigo(testigo.dni, (index + 1) as 1 | 2)}
+                                                className="text-red-600 hover:text-red-800 transition-colors"
+                                                title="Eliminar rol de testigo"
+                                            >
+                                                <i className="fas fa-trash"></i>
+                                            </button>
+                                        </td>
+                                    </tr>
+                                ))}
+                            </tbody>
+                        </table>
                     </div>
                 </div>
             )}

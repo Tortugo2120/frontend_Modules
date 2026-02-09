@@ -1,12 +1,12 @@
 import {useState} from "react";
-import type {AplicationRequest} from "../model/aplicationModel.ts";
+import type {CreateApplicationPayload} from "../model/aplicationModel.ts";
 import {CreateAplication} from "../services/AplicationServices.ts";
 
 export default function useCreateAplication() {
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState(null);
 
-    const createSolicitud = async (dataForm:AplicationRequest) => {
+    const createSolicitud = async (dataForm:CreateApplicationPayload) => {
       setLoading(true);
       setError(null);
 

@@ -3,10 +3,34 @@ export interface GetAplicationState {
     delta:number;
 }
 
-export  interface AplicationRequest {
-    id_usuario:number;
-    id_tipo_solicitud:number;
-    numero_expediente:string;
+export type ParticipantRol = 'solicitante' | 'contrayente' | 'testigo';
+
+export type Gender = 'M' | 'F';
+
+export interface Participant {
+    dni: string;
+    names: string;
+    paternalSurname: string;
+    maternalSurname: string;
+    birthdate: string;
+    gender: Gender;
+    address: string;
+    email: string;
+    phone: string;
+    ubigeoId: string;
+    maritalStatus: string;
+    roles: ParticipantRol[]; // Cambiado a array para soportar múltiples roles
+}
+
+export interface ApplicationData {
+    userId: number;
+    applicationTypeId: number;
+    expedientNumber: string;
+}
+
+export interface CreateApplicationPayload {
+    application: ApplicationData;
+    participants: Participant[];
 }
 
 export interface AplicationResponse {
