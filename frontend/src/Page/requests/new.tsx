@@ -209,25 +209,25 @@ export default function NewRequest() {
                             </div>
                         )}
 
-                        {/* Step 3: Confirmación */}
+                        {/* Step 3: contrayente */}
                         {currentStep === 3 && (
                             <div className="p-6 lg:p-6">
                                 <Contrayente tipoSolicitudNombre={selectedRequestType?.nombre_solicitud} />
                             </div>
                         )}
-                        {/* Step 4: Confirmación */}
+                        {/* Step 4: testigo */}
                         {currentStep === 4 && (
                             <div className="p-6 lg:p-6">
                                 <Testigos tipoSolicitudNombre={selectedRequestType?.nombre_solicitud} />
                             </div>
                         )}
-                        {/* Step 5: Confirmación */}
+                        {/* Step 5: requisitos */}
                         {currentStep === 5 && (
                             <div className="p-6 lg:p-6">
                                 <Requisitos tipoSolicitudNombre={selectedRequestType?.nombre_solicitud} />
                             </div>
                         )}
-                        {/* Step 6: Resumen */}
+                        {/* Step 6: resumen */}
                         {currentStep === 6 && (
                             <div className="p-6 lg:p-6">
                                 {currentStep === 6 && (
@@ -242,7 +242,7 @@ export default function NewRequest() {
 
                             </div>
                         )}
-                        {/* Step 6: Confirmación */}
+                        {/* Step 6: confirmacion */}
                         {currentStep === 7 && (
                             <div className="p-6 lg:p-6">
                                 <ConfirmationSummary
