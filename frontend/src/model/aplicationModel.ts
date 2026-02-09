@@ -19,7 +19,7 @@ export interface Participant {
     phone: string;
     ubigeoId: string;
     maritalStatus: string;
-    rol: ParticipantRol;
+    roles: ParticipantRol[]; // Cambiado a array para soportar múltiples roles
 }
 
 export interface ApplicationData {

@@ -7,20 +7,6 @@ import {ApplicationHandler} from "../../../context/ApplicationContext.tsx";
 import type {Participant} from "../../../model/aplicationModel.ts";
 
 interface ApplicantFormProps {
-    formData: {
-        nombresSolicitante: string;
-        apellidoPaternoSolicitante: string;
-        apellidoMaternoSolicitante: string;
-        dniSolicitante: string;
-        fechaNacimientoSolicitante: string;
-        sexoSolicitante: string;
-        direccionSolicitante?: string;
-        correoSolicitante?: string;
-        telefonoSolicitante?: string;
-        ubigeoSolicitante?: number;
-        estadoCivilSolicitante?: string;
-    };
-
     onChange: (
         e: React.ChangeEvent<
             HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement
@@ -35,6 +21,14 @@ export default function ApplicantForm({
     onSolicitantesChange,
     tipoSolicitudNombre
 }: ApplicantFormProps) {
+    const {addParticipant, deleteParticipant, formDataAplication, updateApplicationData} = ApplicationHandler();
+
+    // Estado para número de expediente
+    const [expedientNumber, setExpedientNumber] = useState<string>(() => {
+        return formDataAplication.application.expedientNumber || '';
+    });
+    const [expedientError, setExpedientError] = useState<string>('');
+
     // Estados para el formulario de búsqueda (sin Zod)
     const [tipoDocumentoSeleccionado, setTipoDocumentoSeleccionado] = useState<string>('dni');
     const [numDni, setNumDni] = useState<string>('');
@@ -49,7 +43,7 @@ export default function ApplicantForm({
             if (!pendingApp) return [];
 
             const parsed = JSON.parse(pendingApp);
-            const solicitante = parsed?.participants?.find((p: Participant) => p.rol === 'solicitante');
+            const solicitante = parsed?.participants?.find((p: Participant) => p.roles?.includes('solicitante'));
 
             return solicitante ? [solicitante] : [];
         } catch (error) {
@@ -57,8 +51,27 @@ export default function ApplicantForm({
             return [];
         }
     });
-    const {addParticipant,deleteParticipant} = ApplicationHandler();
-        // useForm con Zod para el formulario de datos del solicitante
+
+    // Función para manejar el cambio de número de expediente
+    const handleExpedientNumberChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
+        const value = e.target.value.trim().toUpperCase();
+        setExpedientNumber(value);
+
+        if (value.length === 0) {
+            setExpedientError('El número de expediente es obligatorio');
+        } else if (value.length < 5) {
+            setExpedientError('El número de expediente debe tener al menos 5 caracteres');
+        } else {
+            setExpedientError('');
+            // Actualizar en el contexto
+            updateApplicationData({ expedientNumber: value });
+        }
+    }, [updateApplicationData]);
+
+    // Verificar si el expediente está completo
+    const isExpedientValid = expedientNumber.length >= 5 && !expedientError;
+
+    // useForm con Zod para el formulario de datos del solicitante
     const {
         register,
         formState: { errors },
@@ -237,7 +250,7 @@ export default function ApplicantForm({
         }
         console.log('Agregando solicitante: ', data);
         addParticipant({...data,rol:'solicitante'});
-        setSolicitantesAgregados(prev => [...prev, {...data,rol:'solicitante'}]);
+        setSolicitantesAgregados(prev => [...prev, {...data, roles: ['solicitante']}]);
         console.log('List soicitantes: ',solicitantesAgregados)
         handleClearSearch();
 
@@ -281,6 +294,79 @@ export default function ApplicantForm({
                     </span>
                 )}
             </div>
+
+            {/* Campo de Número de Expediente */}
+            <div className="bg-yellow-50 border-l-4 border-yellow-400 p-4 rounded-lg">
+                <div className="flex items-start gap-3">
+                    <div className="flex-shrink-0">
+                        <i className="fas fa-folder-open text-yellow-600 text-xl"></i>
+                    </div>
+                    <div className="flex-1">
+                        <label className="block text-sm font-semibold text-gray-900 mb-2">
+                            Número de Expediente <span className="text-red-500">*</span>
+                        </label>
+                        <p className="text-xs text-gray-600 mb-3">
+                            <i className="fas fa-info-circle mr-1"></i>
+                            Debe ingresar el número de expediente antes de continuar con el registro del solicitante
+                        </p>
+                        <div className="flex flex-col sm:flex-row gap-3">
+                            <div className="flex-1">
+                                <input
+                                    type="text"
+                                    value={expedientNumber}
+                                    onChange={handleExpedientNumberChange}
+                                    className={`w-full px-4 py-2.5 text-sm sm:text-base border-2 rounded-lg font-medium uppercase outline-0 transition-all focus:ring-2 focus:ring-yellow-500 ${
+                                        expedientError
+                                            ? 'border-red-500 bg-red-50'
+                                            : isExpedientValid
+                                            ? 'border-green-500 bg-green-50'
+                                            : 'border-gray-300 bg-white'
+                                    }`}
+                                    placeholder="Ej: EXP-2024-001"
+                                    maxLength={20}
+                                />
+                                {expedientError && (
+                                    <p className="text-red-500 text-xs mt-1.5 flex items-center gap-1">
+                                        <i className="fas fa-exclamation-circle"></i>
+                                        {expedientError}
+                                    </p>
+                                )}
+                                {isExpedientValid && (
+                                    <p className="text-green-600 text-xs mt-1.5 flex items-center gap-1">
+                                        <i className="fas fa-check-circle"></i>
+                                        Expediente válido - Puede continuar
+                                    </p>
+                                )}
+                            </div>
+                            {isExpedientValid && (
+                                <div className="flex items-center">
+                                    <span className="px-4 py-2 bg-green-100 text-green-800 rounded-lg text-sm font-medium flex items-center gap-2">
+                                        <i className="fas fa-check"></i>
+                                        Validado
+                                    </span>
+                                </div>
+                            )}
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            {/* Mensaje de bloqueo si no hay expediente */}
+            {!isExpedientValid && (
+                <div className="bg-gray-50 border border-gray-200 rounded-lg p-6 text-center">
+                    <i className="fas fa-lock text-gray-400 text-4xl mb-3"></i>
+                    <p className="text-gray-700 font-medium mb-1">
+                        Formulario Bloqueado
+                    </p>
+                    <p className="text-gray-500 text-sm">
+                        Debe ingresar un número de expediente válido para continuar
+                    </p>
+                </div>
+            )}
+
+            {/* Contenido del formulario - Solo visible si el expediente es válido */}
+            {isExpedientValid && (
+                <>
 
             {/* Búsqueda por DNI */}
             <div className='mb-2 flex flex-col md:flex-row items-start gap-4'>
@@ -711,6 +797,8 @@ export default function ApplicantForm({
                         Busque por DNI o complete el formulario manualmente
                     </p>
                 </div>
+            )}
+            </>
             )}
         </div>
     );
