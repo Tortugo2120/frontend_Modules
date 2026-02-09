@@ -56,6 +56,8 @@ interface ApplicantFormProps {
     ) => void;
     onSolicitantesChange?: (solicitantes: SolicitanteAgregado[]) => void;
     tipoSolicitudNombre?: string;
+    // Nuevas props para sincronizar con el padre
+    solicitantesIniciales?: SolicitanteAgregado[];
 }
 
 // Función auxiliar para crear applicant vacío
@@ -77,7 +79,8 @@ type inputSearch = z.infer<typeof searchTypeDocument>;
 export default function ApplicantForm({
     onChange,
     onSolicitantesChange,
-    tipoSolicitudNombre
+    tipoSolicitudNombre,
+    solicitantesIniciales = []
 }: ApplicantFormProps) {
     const {register,watch,formState:{errors}} = useForm<inputSearch>({
             resolver: zodResolver(searchTypeDocument),
@@ -92,16 +95,24 @@ export default function ApplicantForm({
     const {fetchPersonSearch,loading } = usePersonSearch();
     const [searchError, setSearchError] = useState('');
     const [searchSuccess, setSearchSuccess] = useState(false);
-    const [solicitantesAgregados, setSolicitantesAgregados] = useState<SolicitanteAgregado[]>([]);
+    const [solicitantesAgregados, setSolicitantesAgregados] = useState<SolicitanteAgregado[]>(solicitantesIniciales);
 
     const [formApplicant, setFormApplicant] = useState<Applicant>(createEmptyApplicant());
     const [selectedApplicant, setSelectedApplicant] = useState<Applicant | null>(null);
 
+    // Sincronizar solicitantes agregados con el padre
     useEffect(() => {
         if (onSolicitantesChange) {
             onSolicitantesChange(solicitantesAgregados);
         }
     }, [solicitantesAgregados, onSolicitantesChange]);
+
+    // Cargar solicitantes iniciales si existen
+    useEffect(() => {
+        if (solicitantesIniciales.length > 0) {
+            setSolicitantesAgregados(solicitantesIniciales);
+        }
+    }, [solicitantesIniciales]);
 
     const createChangeEvent = useCallback((name: string, value: string) => {
         return {
@@ -271,6 +282,7 @@ export default function ApplicantForm({
             syncToParent(emptyApplicant);
         }
     }, [numDni, tipoDocumentoSeleccionado, fetchPersonSearch, syncToParent]);
+    
     const handleClearSearch = useCallback(() => {
         setSearchError('');
         setSearchSuccess(false);
@@ -383,7 +395,7 @@ export default function ApplicantForm({
             direccion: direccion?.trim(),
             correo: correo?.trim(),
             telefono: telefono?.trim(),
-            ubigeo: undefined,
+            ubigeo: ubigeo ? parseInt(ubigeo) : undefined,
             estado_civil: estado_civil?.trim()
         };
 
@@ -509,6 +521,17 @@ export default function ApplicantForm({
                     </select>
                 </div>
             </div>
+
+            {/* Mostrar errores de validación */}
+            {searchError && (
+                <div className="bg-red-50 border border-red-200 rounded-lg p-4 flex items-start gap-3">
+                    <i className="fas fa-exclamation-circle text-red-600 mt-0.5"></i>
+                    <div className="flex-1">
+                        <p className="text-sm text-red-800 font-medium">Error</p>
+                        <p className="text-sm text-red-700 mt-1">{searchError}</p>
+                    </div>
+                </div>
+            )}
 
             {/* Formulario de datos */}
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 sm:gap-6">

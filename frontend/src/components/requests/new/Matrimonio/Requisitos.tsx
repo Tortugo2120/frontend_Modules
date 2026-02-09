@@ -1,4 +1,7 @@
 import { useState, useCallback, useEffect } from 'react';
+import Divorciado from './Divorciado';
+import Viudo from './Viudos';
+import Extranjero from './Extranjeros';
 
 interface Requisito {
     id: string;
@@ -238,9 +241,8 @@ const RequisitosMatrimonio = ({
                         </p>
                     </div>
                     <div className="flex items-center gap-2">
-                        <span className={`text-2xl sm:text-3xl font-bold ${
-                            progreso.porcentaje === 100 ? 'text-green-600' : 'text-blue-600'
-                        }`}>
+                        <span className={`text-2xl sm:text-3xl font-bold ${progreso.porcentaje === 100 ? 'text-green-600' : 'text-blue-600'
+                            }`}>
                             {progreso.porcentaje}%
                         </span>
                         {progreso.porcentaje === 100 && (
@@ -250,11 +252,10 @@ const RequisitosMatrimonio = ({
                 </div>
                 <div className="w-full bg-gray-200 rounded-full h-3 overflow-hidden">
                     <div
-                        className={`h-full rounded-full transition-all duration-500 ${
-                            progreso.porcentaje === 100
+                        className={`h-full rounded-full transition-all duration-500 ${progreso.porcentaje === 100
                                 ? 'bg-linear-to-r from-green-500 to-green-600'
                                 : 'bg-linear-to-r from-blue-500 to-purple-600'
-                        }`}
+                            }`}
                         style={{ width: `${progreso.porcentaje}%` }}
                     ></div>
                 </div>
@@ -286,14 +287,13 @@ const RequisitosMatrimonio = ({
                     <i className="fas fa-list-check text-blue-600"></i>
                     Lista de Requisitos
                 </h4>
-                
+
                 <div className="bg-white border border-gray-200 rounded-lg divide-y divide-gray-200">
                     {requisitos.map((requisito, index) => (
                         <div
                             key={requisito.id}
-                            className={`p-4 hover:bg-gray-50 transition-colors ${
-                                requisito.completado ? 'bg-green-50' : ''
-                            }`}
+                            className={`p-4 hover:bg-gray-50 transition-colors ${requisito.completado ? 'bg-green-50' : ''
+                                }`}
                         >
                             <div className="flex items-start gap-3">
                                 {/* Checkbox */}
@@ -314,11 +314,10 @@ const RequisitosMatrimonio = ({
                                         className="cursor-pointer"
                                     >
                                         <div className="flex items-start justify-between gap-2 mb-1">
-                                            <span className={`text-sm font-medium ${
-                                                requisito.completado
+                                            <span className={`text-sm font-medium ${requisito.completado
                                                     ? 'text-gray-500 line-through'
                                                     : 'text-gray-900'
-                                            }`}>
+                                                }`}>
                                                 {index + 1}. {requisito.titulo}
                                             </span>
                                             {requisito.obligatorio && (
@@ -332,9 +331,8 @@ const RequisitosMatrimonio = ({
                                                 </span>
                                             )}
                                         </div>
-                                        <p className={`text-xs ${
-                                            requisito.completado ? 'text-gray-400' : 'text-gray-600'
-                                        }`}>
+                                        <p className={`text-xs ${requisito.completado ? 'text-gray-400' : 'text-gray-600'
+                                            }`}>
                                             {requisito.descripcion}
                                         </p>
                                     </label>
@@ -351,6 +349,10 @@ const RequisitosMatrimonio = ({
                     ))}
                 </div>
             </div>
+
+            <Divorciado />
+            <Viudo />
+            <Extranjero />
 
             {/* Sección de Carga de Archivos (Opcional) */}
             <div className="space-y-3 mt-6">
@@ -373,15 +375,13 @@ const RequisitosMatrimonio = ({
                     onDragOver={handleDragOver}
                     onDragLeave={handleDragLeave}
                     onDrop={handleDrop}
-                    className={`border-2 border-dashed rounded-lg p-6 sm:p-8 text-center transition-all ${
-                        isDragging
+                    className={`border-2 border-dashed rounded-lg p-6 sm:p-8 text-center transition-all ${isDragging
                             ? 'border-purple-500 bg-purple-50'
                             : 'border-gray-300 bg-gray-50 hover:bg-gray-100'
-                    }`}
+                        }`}
                 >
-                    <i className={`fas fa-cloud-upload-alt text-4xl sm:text-5xl mb-3 ${
-                        isDragging ? 'text-purple-600' : 'text-gray-400'
-                    }`}></i>
+                    <i className={`fas fa-cloud-upload-alt text-4xl sm:text-5xl mb-3 ${isDragging ? 'text-purple-600' : 'text-gray-400'
+                        }`}></i>
                     <p className="text-sm sm:text-base font-medium text-gray-700 mb-2">
                         {isDragging ? 'Suelta los archivos aquí' : 'Arrastra archivos aquí o haz clic para seleccionar'}
                     </p>
@@ -444,7 +444,7 @@ const RequisitosMatrimonio = ({
                 <div className="text-xs sm:text-sm text-gray-700">
                     <p className="font-semibold mb-1">Importante:</p>
                     <ul className="list-disc list-inside space-y-1 text-gray-600">
-                        <li>LA PROGRAMACIÓN DE MATRIMINIO SE REALIZA CON UN MES DE ANTICIPACIÓN.</li>
+                        <li>LA PROGRAMACIÓN DE MATRIMONIO SE REALIZA CON UN MES DE ANTICIPACIÓN.</li>
                         <li>Los requisitos marcados como <strong>Obligatorios</strong> deben ser completados para proceder.</li>
                         <li>Los documentos adjuntos son opcionales pero recomendados para agilizar el proceso.</li>
                         <li>Asegúrese de que todos los documentos estén vigentes y sean legibles.</li>
