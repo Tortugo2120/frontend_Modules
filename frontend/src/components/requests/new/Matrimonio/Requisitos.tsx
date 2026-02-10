@@ -135,8 +135,8 @@ const RequisitosMatrimonio = ({
         const requisitosArray = requirements.map(req => {
             const reqId = typeof req.id === 'string' ? parseInt(req.id) : req.id;
             return {
-                requirementId: req.id, // Mantener el ID original (puede ser string o number)
-                delivered: requisitosEstados.get(reqId) ?? 0 // 0 = no entregado, 1 = entregado
+                requirementId: req.id,
+                delivered: requisitosEstados.get(reqId) ?? false
             };
         });
 
@@ -203,7 +203,6 @@ const RequisitosMatrimonio = ({
     // Manejar cambio de checkbox
     const handleCheckboxChange = useCallback((id: string | number) => {
         if (requirements.length > 0) {
-            // Usar requirements del hook
             const numId = typeof id === 'string' ? parseInt(id) : id;
 
             setRequisitosEstados(prev => {
@@ -211,7 +210,6 @@ const RequisitosMatrimonio = ({
                 const estadoActual = newMap.get(numId) ?? 0;
                 const nuevoEstado = estadoActual === 1 ? 0 : 1;
 
-                // Toggle entre true y false
                 newMap.set(numId, nuevoEstado);
 
                 console.log(`Checkbox ${numId}: ${estadoActual} -> ${nuevoEstado}`);
@@ -232,7 +230,6 @@ const RequisitosMatrimonio = ({
 
     const marcarTodosObligatorios = useCallback(() => {
         if (requirements.length > 0) {
-            // Marcar todos los requirements del hook como true
             setRequisitosEstados(prev => {
                 const newMap = new Map(prev);
                 requirements.forEach(req => {

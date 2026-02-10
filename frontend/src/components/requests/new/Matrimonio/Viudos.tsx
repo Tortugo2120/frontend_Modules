@@ -45,7 +45,7 @@ const Viudo = ({
 
 }: ViudoProps) => {
     const [requiViudo, setRequisitos] = useState<RequisitoViudo[]>(REQUISITOS_Viudo);
-    const [isDragging, setIsDragging] = useState(false);
+
 
     // Notificar cambios en requisitos
     useEffect(() => {
@@ -53,22 +53,6 @@ const Viudo = ({
             onRequisitosChange(requiViudo);
         }
     }, [requiViudo, onRequisitosChange]);
-
-
-
-    // Calcular progreso
-    const calcularProgreso = useCallback(() => {
-        const requisitosObligatorios = requiViudo.filter(r => r.obligatorio);
-        const completados = requisitosObligatorios.filter(r => r.completado).length;
-        const total = requisitosObligatorios.length;
-        return {
-            completados,
-            total,
-            porcentaje: total > 0 ? Math.round((completados / total) * 100) : 0
-        };
-    }, [requiViudo]);
-
-    const progreso = calcularProgreso();
 
     // Manejar cambio de checkbox
     const handleCheckboxChange = useCallback((id: string) => {
@@ -79,35 +63,6 @@ const Viudo = ({
                     : req
             )
         );
-    }, []);
-
-    // Marcar todos los obligatorios
-    const marcarTodosObligatorios = useCallback(() => {
-        setRequisitos(prev =>
-            prev.map(req =>
-                req.obligatorio
-                    ? { ...req, completado: true }
-                    : req
-            )
-        );
-    }, []);
-
-    // Drag and Drop handlers
-    const handleDragEnter = useCallback((e: React.DragEvent) => {
-        e.preventDefault();
-        e.stopPropagation();
-        setIsDragging(true);
-    }, []);
-
-    const handleDragLeave = useCallback((e: React.DragEvent) => {
-        e.preventDefault();
-        e.stopPropagation();
-        setIsDragging(false);
-    }, []);
-
-    const handleDragOver = useCallback((e: React.DragEvent) => {
-        e.preventDefault();
-        e.stopPropagation();
     }, []);
 
     return (

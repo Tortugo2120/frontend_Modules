@@ -32,13 +32,14 @@ const NavBar = ({ toggleSidebar, sidebarOpen }: NavBarProps) => {
         const fetchPhrase = async () => {
             try {
                 setLoading(true);
-                const data = await getPhrase();
-                setPhrase(data.phrase || "");
-                setAuthor(data.author || "");
+                const data = await getPhrase(); 
+
+                setPhrase(data.phrase || "La perseverancia es el camino al éxito");
+                setAuthor(data.author || "Anónimo");
             } catch (error) {
                 console.error("Failed to fetch phrase:", error);
-                setPhrase("La perseverancia es el camino al éxito");
-                setAuthor("Desconocido");
+                setPhrase("No dejes que lo que no puedes hacer interfiera con lo que puedes hacer.");
+                setAuthor("John Wooden");
             } finally {
                 setLoading(false);
             }
