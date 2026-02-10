@@ -79,12 +79,12 @@ const RequisitosMatrimonio = ({
     tipoSolicitudNombre,
     descriptionSolicitud,
     onRequisitosChange,
-    onArchivosChange
+  
 }: RequisitosMatrimonioProps) => {
     const [requisitos, setRequisitos] = useState<Requisito[]>(REQUISITOS_INICIALES);
-    const [archivos, setArchivos] = useState<ArchivoSubido[]>([]);
+
     const [archivosRequisitos, setArchivosRequisitos] = useState<Map<number, ArchivoSubido[]>>(new Map());
-    const [isDragging, setIsDragging] = useState(false);
+
     const [requisitosEstados, setRequisitosEstados] = useState<Map<number, boolean>>(new Map());
     const { formDataAplication, updateRequisitos } = useApplicationContext();
     const { requirements, fetchRequirements } = useGetRequirements();
@@ -126,12 +126,7 @@ const RequisitosMatrimonio = ({
         }
     }, [requisitos, onRequisitosChange]);
 
-    // Notificar cambios en archivos
-    useEffect(() => {
-        if (onArchivosChange) {
-            onArchivosChange(archivos);
-        }
-    }, [archivos, onArchivosChange]);
+    
 
     useEffect(() => {
         const obtenerCondiciones = () => {
@@ -310,62 +305,6 @@ const RequisitosMatrimonio = ({
         });
     }, []);
 
-    const handleFileChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
-        const files = e.target.files;
-        if (!files) return;
-
-        const nuevosArchivos: ArchivoSubido[] = Array.from(files).map(file => ({
-            id: crypto?.randomUUID?.() || `${Date.now()}-${Math.random()}`,
-            nombre: file.name,
-            tamaño: file.size,
-            tipo: file.type,
-            archivo: file
-        }));
-
-        setArchivos(prev => [...prev, ...nuevosArchivos]);
-        e.target.value = '';
-    }, []);
-
-    const handleEliminarArchivo = useCallback((id: string) => {
-        setArchivos(prev => prev.filter(a => a.id !== id));
-    }, []);
-
-    const handleDragEnter = useCallback((e: React.DragEvent) => {
-        e.preventDefault();
-        e.stopPropagation();
-        setIsDragging(true);
-    }, []);
-
-    const handleDragLeave = useCallback((e: React.DragEvent) => {
-        e.preventDefault();
-        e.stopPropagation();
-        setIsDragging(false);
-    }, []);
-
-    const handleDragOver = useCallback((e: React.DragEvent) => {
-        e.preventDefault();
-        e.stopPropagation();
-    }, []);
-
-    const handleDrop = useCallback((e: React.DragEvent) => {
-        e.preventDefault();
-        e.stopPropagation();
-        setIsDragging(false);
-
-        const files = e.dataTransfer.files;
-        if (!files || files.length === 0) return;
-
-        const nuevosArchivos: ArchivoSubido[] = Array.from(files).map(file => ({
-            id: crypto?.randomUUID?.() || `${Date.now()}-${Math.random()}`,
-            nombre: file.name,
-            tamaño: file.size,
-            tipo: file.type,
-            archivo: file
-        }));
-
-        setArchivos(prev => [...prev, ...nuevosArchivos]);
-    }, []);
-
     const getIconoArchivo = (tipo: string): string => {
         if (tipo.includes('pdf')) return 'fa-file-pdf text-red-500';
         if (tipo.includes('image')) return 'fa-file-image text-blue-500';
@@ -478,7 +417,7 @@ const RequisitosMatrimonio = ({
 
             {/* Lista de Requisitos por Condición */}
             <div className="space-y-6">
-                {Object.entries(grupos).map(([condicion, requisitosGrupo], groupIndex) => {
+                {Object.entries(grupos).map(([condicion, requisitosGrupo]) => {
                     const color = getColorCondicion(condicion);
 
                     return (

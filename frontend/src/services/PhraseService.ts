@@ -1,26 +1,30 @@
 import axios from "axios";
 
-interface PhraseResponse {
+interface PhraseData {
     phrase: string;
     author: string;
+    day: string;
 }
 
-const baseURL = import.meta.env.MODE === 'development'
+interface ApiResponse {
+    status: number;
+    req_date: string;
+    data: PhraseData;
+}
+
+const baseURL = import.meta.env.DEV
     ? '/api'
-    : 'https://frasedeldia.azurewebsites.net/api';
+    : 'https://frase-del-dia.jqz.lat';
 
 const phraseApi = axios.create({
     baseURL,
     timeout: 5000,
-    headers: {
-        "Content-Type": "application/json",
-    },
 });
 
-export const getPhrase = async (): Promise<PhraseResponse> => {
+export const getPhrase = async (): Promise<PhraseData> => {
     try {
-        const response = await phraseApi.get<PhraseResponse>("/phrase");
-        return response.data;
+        const response = await phraseApi.get<ApiResponse>("/");
+        return response.data.data; 
     } catch (error) {
         console.error("Error fetching phrase:", error);
         throw error;

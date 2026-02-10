@@ -211,6 +211,7 @@ export default function NewRequest() {
                                     tipoSolicitud={tipoSolicitud}
                                     tipoNombre={selectedRequestType?.nombre_solicitud}
                                     descriptionSolicitud={selectedRequestType?.descripcion}
+                                    precio={selectedRequestType?.precio}
                                     applicationData={formDataAplication}
                                     onConfirm={handleConfirmSubmit}
                                     isSubmitting={isSubmitting}
