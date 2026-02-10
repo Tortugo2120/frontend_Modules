@@ -172,6 +172,7 @@ export default function NewRequest() {
                                     {/* Datos del Solicitante */}
                                     <ApplicantForm
                                         tipoSolicitudNombre={selectedRequestType?.nombre_solicitud}
+                                        descriptionSolicitud={selectedRequestType?.descripcion}
                                     />
                                 </div>
                             </div>
@@ -180,35 +181,36 @@ export default function NewRequest() {
                         {/* Step 3: contrayente */}
                         {currentStep === 3 && (
                             <div className="p-6 lg:p-6">
-                                <Contrayente tipoSolicitudNombre={selectedRequestType?.nombre_solicitud} />
+                                <Contrayente 
+                                tipoSolicitudNombre={selectedRequestType?.nombre_solicitud}
+                                descriptionSolicitud={selectedRequestType?.descripcion} />
                             </div>
                         )}
                         {/* Step 4: testigo */}
                         {currentStep === 4 && (
                             <div className="p-6 lg:p-6">
-                                <Testigos tipoSolicitudNombre={selectedRequestType?.nombre_solicitud} />
+                                <Testigos 
+                                tipoSolicitudNombre={selectedRequestType?.nombre_solicitud} 
+                                descriptionSolicitud={selectedRequestType?.descripcion} />
                             </div>
                         )}
                         {/* Step 5: requisitos */}
                         {currentStep === 5 && (
                             <div className="p-6 lg:p-6">
-                                <Requisitos tipoSolicitudNombre={selectedRequestType?.nombre_solicitud} />
+                                <Requisitos 
+                                tipoSolicitudNombre={selectedRequestType?.nombre_solicitud}
+                                descriptionSolicitud={selectedRequestType?.descripcion}
+                                 />
                             </div>
                         )}
-                        {/* Step 6: resumen */}
-                        {/*currentStep === 6 && (
-                            <div className="p-6 lg:p-6">
-                                <ResumenSolicitud
-                                    tipoSolicitudNombre={selectedRequestType?.nombre_solicitud}
-                                />
-                            </div>
-                        )*\}
-                        {/* Step 7: confirmacion */}
-                        {currentStep === 6 && (
+                       
+                        {/* Step 6: confirmacion */}
+                        {currentStep === 6 && ( 
                             <div className="p-6 lg:p-6">
                                 <ConfirmationSummary
                                     tipoSolicitud={tipoSolicitud}
                                     tipoNombre={selectedRequestType?.nombre_solicitud}
+                                    descriptionSolicitud={selectedRequestType?.descripcion}
                                     applicationData={formDataAplication}
                                     onConfirm={handleConfirmSubmit}
                                     isSubmitting={isSubmitting}
@@ -218,7 +220,7 @@ export default function NewRequest() {
 
                         <NavigationButtons
                             currentStep={currentStep}
-                            totalSteps={7}
+                            totalSteps={6}
                             canProceed={currentStep === 1 ? !!tipoSolicitud : true}
                             onPrevious={prevStep}
                             onNext={nextStep}

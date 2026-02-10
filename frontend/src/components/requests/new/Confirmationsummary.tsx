@@ -3,6 +3,7 @@ import type {CreateApplicationPayload} from "../../../model/aplicationModel.ts";
 interface ConfirmationSummaryProps {
     tipoSolicitud: number | null;
     tipoNombre: string | undefined;
+    descriptionSolicitud: string | undefined;
     applicationData: CreateApplicationPayload;
     onConfirm: () => void;
     isSubmitting: boolean;
@@ -10,6 +11,7 @@ interface ConfirmationSummaryProps {
 
 export default function ConfirmationSummary({
     tipoNombre,
+    descriptionSolicitud,
     applicationData,
     onConfirm,
     isSubmitting
@@ -30,7 +32,11 @@ export default function ConfirmationSummary({
             <div className="bg-linear-to-br from-blue-50 to-indigo-50 rounded-xl p-6 space-y-4">
                 <div className="flex justify-between items-start border-b border-blue-200 pb-3">
                     <span className="text-gray-600 font-medium">Tipo de Solicitud:</span>
-                    <span className="font-bold text-gray-900">{tipoNombre}</span>
+                    <span className="font-bold text-gray-900">{tipoNombre}
+                        <span className="text-xs ml-1.5">
+                            {descriptionSolicitud}
+                        </span>
+                    </span>
                 </div>
 
                 {solicitante && (
