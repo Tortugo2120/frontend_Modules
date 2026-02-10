@@ -8,7 +8,8 @@ export type ParticipantRol = 'solicitante' | 'contrayente' | 'testigo';
 export type Gender = 'M' | 'F';
 
 export interface Participant {
-    dni: string;
+    cui: string;
+    documentTypeId: number;
     names: string;
     paternalSurname: string;
     maternalSurname: string;
@@ -19,7 +20,7 @@ export interface Participant {
     phone: string;
     ubigeoId: string;
     maritalStatus: string;
-    role: ParticipantRol; // Cambiado de roles[] a role (un solo rol)
+    rol: ParticipantRol; // Cambiado de roles[] a role (un solo rol)
 }
 
 export interface ApplicationData {
@@ -36,7 +37,7 @@ export interface RequisitoEstado {
 export interface CreateApplicationPayload {
     application: ApplicationData;
     participants: Participant[];
-    requisitos?: RequisitoEstado[];
+    requirements?: RequisitoEstado[];
 }
 
 export interface AplicationResponse {

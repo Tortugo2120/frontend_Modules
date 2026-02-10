@@ -3,7 +3,7 @@ import React, {createContext, type ReactNode, useCallback, useContext, useEffect
 
 interface ApplicationContextType {
     formDataAplication: CreateApplicationPayload;
-    addParticipant: (participant: Omit<Participant, 'role'> & { role: ParticipantRol }) => void;
+    addParticipant: (participant: Omit<Participant, 'rol'> & { rol: ParticipantRol }) => void;
     deleteParticipant: (dni: string) => void;
     updateApplicationData: (data: Partial<CreateApplicationPayload['application']>) => void;
     updateRequisitos: (requisitos: RequisitoEstado[]) => void;
@@ -18,7 +18,7 @@ export const ApplicationProvider: React.FC<{ children: React.ReactNode }> = ({ c
         return saved ? JSON.parse(saved) : {
             application: { userId: 0, applicationTypeId: 0, expedientNumber: "" },
             participants: [],
-            requisitos: []
+            requirements: []
         };
     });
 
@@ -26,11 +26,11 @@ export const ApplicationProvider: React.FC<{ children: React.ReactNode }> = ({ c
         localStorage.setItem('pending_application', JSON.stringify(formDataAplication));
     }, [formDataAplication]);
 
-    const addParticipant = useCallback((newParticipant: Omit<Participant, 'role'> & { role: ParticipantRol }) => {
+    const addParticipant = useCallback((newParticipant: Omit<Participant, 'rol'> & { rol: ParticipantRol }) => {
         console.log('Agregando participante:', newParticipant);
 
         setFormDataAplication(prev => {
-            const existingIndex = prev.participants.findIndex(p => p.dni === newParticipant.dni);
+            const existingIndex = prev.participants.findIndex(p => p.cui === newParticipant.cui);
 
             if (existingIndex >= 0) {
                 // Si ya existe, reemplazar con el nuevo rol
@@ -68,10 +68,10 @@ export const ApplicationProvider: React.FC<{ children: React.ReactNode }> = ({ c
         }));
     }, []);
 
-    const updateRequisitos = useCallback((requisitos: RequisitoEstado[]) => {
+    const updateRequisitos = useCallback((requirements: RequisitoEstado[]) => {
         setFormDataAplication(prev => ({
             ...prev,
-            requisitos
+            requirements
         }));
     }, []);
 
@@ -80,16 +80,16 @@ export const ApplicationProvider: React.FC<{ children: React.ReactNode }> = ({ c
         setFormDataAplication({
             application: {userId: 0, applicationTypeId: 0, expedientNumber: ""},
             participants: [],
-            requisitos: []
+            requirements: []
         });
     }, []);
 
-    const deleteParticipant = useCallback((dni: string) => {
+    const deleteParticipant = useCallback((cui: string) => {
         setFormDataAplication(prev => {
             // Eliminar completamente al participante por DNI
             return {
                 ...prev,
-                participants: prev.participants.filter(p => p.dni !== dni)
+                participants: prev.participants.filter(p => p.cui !== cui)
             };
         });
     }, []);

@@ -1,12 +1,9 @@
 import { z } from 'zod';
 
 export const testigoSchema = z.object({
-    dni: z
-        .string()
-        .min(1, 'El DNI es obligatorio')
-        .length(8, 'El DNI debe tener exactamente 8 dígitos')
-        .regex(/^\d{8}$/, 'El DNI debe contener solo números'),
-
+    documentTypeId: z.number().min(1).max(3),
+    cui: z
+        .string().min(1, 'El CUI es obligatorio'),
     names: z
         .string()
         .min(1, 'Los nombres son obligatorios')
@@ -67,6 +64,23 @@ export const testigoSchema = z.object({
             message: 'Debe seleccionar un estado civil válido'
         }),
 }).superRefine((values, ctx) => {
+    if(values.documentTypeId ===1){
+        if (!/^\d{8}$/.test(values.cui)) {
+            ctx.addIssue({
+                code: z.ZodIssueCode.custom,
+                message: "El DNI debe tener 8 dígitos numéricos",
+            });
+        }
+    }
+    else{
+        if (values.cui.length < 5 || values.cui.length > 25) {
+            ctx.addIssue({
+                code: z.ZodIssueCode.custom,
+                message: "El documento debe tener entre 5 y 25 caracteres",
+            });
+        }
+    }
+
     const birthDate = new Date(values.birthdate);
     const today = new Date();
 

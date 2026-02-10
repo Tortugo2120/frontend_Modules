@@ -83,9 +83,9 @@ const RequisitosMatrimonio = ({
 
     // Cargar requisitos guardados desde el contexto al iniciar
     useEffect(() => {
-        if (formDataAplication.requisitos && formDataAplication.requisitos.length > 0) {
+        if (formDataAplication.requirements && formDataAplication.requirements.length > 0) {
             const newMap = new Map(
-                formDataAplication.requisitos.map(r => {
+                formDataAplication.requirements.map(r => {
                     // Convertir ID a número si es string
                     const idNum = typeof r.requirementId === 'string' ? parseInt(r.requirementId) : r.requirementId;
                     return [idNum, r.delivered];
@@ -130,7 +130,7 @@ const RequisitosMatrimonio = ({
             const conds = new Set<string>(["GENERAL"]);
 
             formDataAplication.participants.forEach((p) => {
-                if (p.maritalStatus && p.maritalStatus !== "Single") {
+                if (p.maritalStatus && p.maritalStatus !== "Single" && p.rol !== "testigo") {
                     conds.add(p.maritalStatus.toUpperCase());
                 }
             });

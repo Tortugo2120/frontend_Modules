@@ -8,9 +8,9 @@ import useTipoSolici from "../../hooks/useTipoSolici.ts";
 import Contrayente from "../../components/requests/new/Matrimonio/Contrayente.tsx";
 import Testigos from "../../components/requests/new/Matrimonio/Testigos.tsx";
 import Requisitos from "../../components/requests/new/Matrimonio/Requisitos.tsx";
-import ResumenSolicitud from "../../components/requests/new/ResumenSolicitud.tsx";
 import {ApplicationHandler} from "../../context/ApplicationContext.tsx";
 import {Auth} from "../../context/AuthContext.tsx";
+import useCreateAplication from "../../hooks/useCreateAplication.ts";
 
 export default function NewRequest() {
     const [tipoSolicitud, setTipoSolicitud] = useState<number | null>(null);
@@ -18,6 +18,7 @@ export default function NewRequest() {
     const {updateApplicationData, formDataAplication} = ApplicationHandler();
     const {user} = Auth();
     const [isSubmitting, setIsSubmitting] = useState(false);
+    const {error,createSolicitud,success} = useCreateAplication();
 
     const handleSelectTipoSolicitud = (id: number) => {
         setTipoSolicitud(prev =>
@@ -47,14 +48,21 @@ export default function NewRequest() {
             setIsSubmitting(true);
 
             console.log('Preparando para enviar solicitud a la API:', formDataAplication);
-
-            // Por ahora solo muestra la data en consola
             console.log('✅ Data lista para enviar:', JSON.stringify(formDataAplication, null, 2));
-            alert('✅ Solicitud preparada. Conecta con tu API para enviar.');
+            const response = await createSolicitud(formDataAplication);
+
+            if (response && success) {
+                console.log('Solicitud creada exitosamente:', response);
+                alert('Solicitud creada exitosamente');
+                // navigate('/solicitudes');
+            } else if (error) {
+                console.error('Error al crear solicitud:', error);
+                alert(`Error: ${error}`);
+            }
 
         } catch (error) {
             console.error('Error al enviar la solicitud:', error);
-            alert(`Error: ${error instanceof Error ? error.message : 'Error desconocido'}`);
+            console.log(`Error: ${error instanceof Error ? error.message : 'Error desconocido'}`);
         } finally {
             setIsSubmitting(false);
         }
@@ -188,15 +196,15 @@ export default function NewRequest() {
                             </div>
                         )}
                         {/* Step 6: resumen */}
-                        {currentStep === 6 && (
+                        {/*currentStep === 6 && (
                             <div className="p-6 lg:p-6">
                                 <ResumenSolicitud
                                     tipoSolicitudNombre={selectedRequestType?.nombre_solicitud}
                                 />
                             </div>
-                        )}
+                        )*\}
                         {/* Step 7: confirmacion */}
-                        {currentStep === 7 && (
+                        {currentStep === 6 && (
                             <div className="p-6 lg:p-6">
                                 <ConfirmationSummary
                                     tipoSolicitud={tipoSolicitud}

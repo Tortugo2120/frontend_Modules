@@ -30,7 +30,7 @@ export const AuthProvider = ({ children }: { children: ReactNode })     => {
 
   const logout = useCallback(() => {
     setUser(null);
-    localStorage.removeItem('token');
+    localStorage.clear();
     navigate('/');
   }, [navigate]);
 

@@ -57,7 +57,8 @@ const Contrayente = (props: Solicitud) => {
     } = useForm<ContrayenteFormData>({
         resolver: zodResolver(contrayenteSchema),
         defaultValues: {
-            dni: '',
+            cui: '',
+            documentTypeId: 1,
             names: '',
             paternalSurname: '',
             maternalSurname: '',
@@ -81,7 +82,8 @@ const Contrayente = (props: Solicitud) => {
     } = useForm<ContrayenteFormData>({
         resolver: zodResolver(contrayenteSchema),
         defaultValues: {
-            dni: '',
+            cui: '',
+            documentTypeId: 1,
             names: '',
             paternalSurname: '',
             maternalSurname: '',
@@ -113,7 +115,7 @@ const Contrayente = (props: Solicitud) => {
     // Sincronizar con el estado global del contexto
     useEffect(() => {
         const contrayentes = formDataAplication.participants.filter((p: Participant) =>
-            p.role === 'contrayente'
+            p.rol === 'contrayente'
         );
         setContrayente1Added(contrayentes.length >= 1);
         setContrayente2Added(contrayentes.length >= 2);
@@ -156,7 +158,8 @@ const Contrayente = (props: Solicitud) => {
                 : undefined;
 
             // Llenar el formulario con los datos encontrados
-            setValueForm('dni', numDoc);
+            setValueForm('cui', numDoc);
+            setValueForm('documentTypeId',documentTypeNumber);
             setValueForm('names', personData.name || '');
             setValueForm('paternalSurname', personData.paternalSurname || '');
             setValueForm('maternalSurname', personData.maternalSurname || '');
@@ -195,11 +198,17 @@ const Contrayente = (props: Solicitud) => {
         const handleSubmit = contrayenteNum === 1 ? handleSubmitForm1 : handleSubmitForm2;
         const setAdded = contrayenteNum === 1 ? setContrayente1Added : setContrayente2Added;
         const setError = contrayenteNum === 1 ? setSearchError1 : setSearchError2;
+        const tipoDoc = contrayenteNum === 1 ? tipoDoc1 : tipoDoc2;
 
+        const documentTypeMapping: Record<string, number> = {
+            'dni': 1,
+            'pas': 2,
+            'ced': 3
+        };
         handleSubmit((data: ContrayenteFormData) => {
             // Verificar si ya existe como contrayente
             const isDuplicateContrayente = formDataAplication.participants.some((p: Participant) =>
-                p.dni === data.dni && p.role === 'contrayente'
+                p.cui === data.cui && p.rol === 'contrayente'
             );
 
             if (isDuplicateContrayente) {
@@ -208,16 +217,16 @@ const Contrayente = (props: Solicitud) => {
             }
 
             // Agregar como contrayente
-            addParticipant({ ...data, role: 'contrayente' });
+            addParticipant({ ...data, rol: 'contrayente',documentTypeId: documentTypeMapping[tipoDoc] || 1 });
             setAdded(true);
             setError('');
         })();
-    }, [handleSubmitForm1, handleSubmitForm2, addParticipant, formDataAplication.participants]);
+    }, [handleSubmitForm1, handleSubmitForm2, addParticipant, formDataAplication.participants,tipoDoc1,tipoDoc2]);
 
     // Función para eliminar contrayente
-    const handleDeleteContrayente = useCallback((dni: string, contrayenteNum: 1 | 2) => {
+    const handleDeleteContrayente = useCallback((cui: string, contrayenteNum: 1 | 2) => {
         // Eliminar el participante completamente
-        deleteParticipant(dni);
+        deleteParticipant(cui);
 
         const setAdded = contrayenteNum === 1 ? setContrayente1Added : setContrayente2Added;
         const resetForm = contrayenteNum === 1 ? resetForm1 : resetForm2;
@@ -353,17 +362,17 @@ const Contrayente = (props: Solicitud) => {
                     {/* DNI */}
                     <div className='mb-0'>
                         <label className="block text-sm font-medium text-gray-700 mb-2">
-                            DNI <span className="text-red-500">*</span>
+                            CUI <span className="text-red-500">*</span>
                         </label>
                         <input
                             type="text"
-                            {...registerForm('dni')}
+                            {...registerForm('cui')}
                             className="w-full px-3 sm:px-4 py-2 text-sm sm:text-base border border-gray-300 rounded-lg bg-white outline-0 transition-all focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                             placeholder="DNI"
                             maxLength={8}
                         />
-                        {errorsForm.dni && (
-                            <p className="text-red-500 text-xs mt-1">{errorsForm.dni.message}</p>
+                        {errorsForm.cui && (
+                            <p className="text-red-500 text-xs mt-1">{errorsForm.cui.message}</p>
                         )}
                     </div>
 
@@ -608,7 +617,7 @@ const Contrayente = (props: Solicitud) => {
             </div>
 
             {/* Tabla de contrayentes agregados */}
-            {formDataAplication.participants.filter((p: Participant) => p.role === 'contrayente').length > 0 && (
+            {formDataAplication.participants.filter((p: Participant) => p.rol === 'contrayente').length > 0 && (
                 <div className="mt-6">
                     <h4 className="text-lg font-semibold text-gray-800 mb-4 flex items-center gap-2">
                         <i className="fas fa-list text-blue-600"></i>
@@ -627,9 +636,9 @@ const Contrayente = (props: Solicitud) => {
                                 </tr>
                             </thead>
                             <tbody>
-                                {formDataAplication.participants.filter((p: Participant) => p.role === 'contrayente').map((contrayente: Participant, index: number) => (
-                                    <tr key={contrayente.dni} className="border-t border-gray-200">
-                                        <td className="px-4 py-2 text-sm text-gray-700">{contrayente.dni}</td>
+                                {formDataAplication.participants.filter((p: Participant) => p.rol === 'contrayente').map((contrayente: Participant, index: number) => (
+                                    <tr key={contrayente.cui} className="border-t border-gray-200">
+                                        <td className="px-4 py-2 text-sm text-gray-700">{contrayente.cui}</td>
                                         <td className="px-4 py-2 text-sm text-gray-700">
                                             {contrayente.names} {contrayente.paternalSurname} {contrayente.maternalSurname}
                                         </td>
@@ -639,13 +648,13 @@ const Contrayente = (props: Solicitud) => {
                                         <td className="px-4 py-2 text-sm text-gray-700">{contrayente.email}</td>
                                         <td className="px-4 py-2 text-sm text-gray-700">
                                             <span className="px-2 py-1 bg-blue-100 text-blue-800 text-xs rounded-full">
-                                                {contrayente.role}
+                                                {contrayente.rol}
                                             </span>
                                         </td>
                                         <td className="px-4 py-2 text-center">
                                             <button
                                                 type="button"
-                                                onClick={() => handleDeleteContrayente(contrayente.dni, (index + 1) as 1 | 2)}
+                                                onClick={() => handleDeleteContrayente(contrayente.cui, (index + 1) as 1 | 2)}
                                                 className="text-red-600 hover:text-red-800 transition-colors"
                                                 title="Eliminar rol de contrayente"
                                             >

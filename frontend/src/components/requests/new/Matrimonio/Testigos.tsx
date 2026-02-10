@@ -57,7 +57,8 @@ const Testigo = (props: Solicitud) => {
     } = useForm<TestigoFormData>({
         resolver: zodResolver(testigoSchema),
         defaultValues: {
-            dni: '',
+            cui: '',
+            documentTypeId: 1,
             names: '',
             paternalSurname: '',
             maternalSurname: '',
@@ -81,7 +82,8 @@ const Testigo = (props: Solicitud) => {
     } = useForm<TestigoFormData>({
         resolver: zodResolver(testigoSchema),
         defaultValues: {
-            dni: '',
+            cui: '',
+            documentTypeId: 1,
             names: '',
             paternalSurname: '',
             maternalSurname: '',
@@ -113,7 +115,7 @@ const Testigo = (props: Solicitud) => {
     // Sincronizar con el estado global del contexto
     useEffect(() => {
         const testigos = formDataAplication.participants.filter((p: Participant) =>
-            p.role === 'testigo'
+            p.rol === 'testigo'
         );
         setTestigo1Added(testigos.length >= 1);
         setTestigo2Added(testigos.length >= 2);
@@ -156,7 +158,8 @@ const Testigo = (props: Solicitud) => {
                 : undefined;
 
             // Llenar el formulario con los datos encontrados
-            setValueForm('dni', numDoc);
+            setValueForm('cui', numDoc);
+            setValueForm('documentTypeId', documentTypeNumber);
             setValueForm('names', personData.name || '');
             setValueForm('paternalSurname', personData.paternalSurname || '');
             setValueForm('maternalSurname', personData.maternalSurname || '');
@@ -195,11 +198,17 @@ const Testigo = (props: Solicitud) => {
         const handleSubmit = testigoNum === 1 ? handleSubmitForm1 : handleSubmitForm2;
         const setAdded = testigoNum === 1 ? setTestigo1Added : setTestigo2Added;
         const setError = testigoNum === 1 ? setSearchError1 : setSearchError2;
+        const tipoDoc = testigoNum === 1 ? tipoDoc1 : tipoDoc2;
 
+        const documentTypeMapping: Record<string, number> = {
+            'dni': 1,
+            'pas': 2,
+            'ced': 3
+        };
         handleSubmit((data: TestigoFormData) => {
             // Verificar si ya existe como testigo
             const isDuplicateTestigo = formDataAplication.participants.some((p: Participant) =>
-                p.dni === data.dni && p.role === 'testigo'
+                p.cui === data.cui && p.rol === 'testigo'
             );
 
             if (isDuplicateTestigo) {
@@ -208,16 +217,16 @@ const Testigo = (props: Solicitud) => {
             }
 
             // Agregar como testigo
-            addParticipant({ ...data, role: 'testigo' });
+            addParticipant({ ...data, rol: 'testigo',documentTypeId: documentTypeMapping[tipoDoc] || 1 });
             setAdded(true);
             setError('');
         })();
     }, [handleSubmitForm1, handleSubmitForm2, addParticipant, formDataAplication.participants]);
 
     // Función para eliminar testigo
-    const handleDeleteTestigo = useCallback((dni: string, testigoNum: 1 | 2) => {
+    const handleDeleteTestigo = useCallback((cui: string, testigoNum: 1 | 2) => {
         // Eliminar el participante completamente
-        deleteParticipant(dni);
+        deleteParticipant(cui);
 
         const setAdded = testigoNum === 1 ? setTestigo1Added : setTestigo2Added;
         const resetForm = testigoNum === 1 ? resetForm1 : resetForm2;
@@ -353,17 +362,17 @@ const Testigo = (props: Solicitud) => {
                     {/* DNI */}
                     <div className='mb-0'>
                         <label className="block text-sm font-medium text-gray-700 mb-2">
-                            DNI <span className="text-red-500">*</span>
+                            CUI <span className="text-red-500">*</span>
                         </label>
                         <input
                             type="text"
-                            {...registerForm('dni')}
+                            {...registerForm('cui')}
                             className="w-full px-3 sm:px-4 py-2 text-sm sm:text-base border border-gray-300 rounded-lg bg-white outline-0 transition-all focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                            placeholder="DNI"
+                            placeholder="CUI"
                             maxLength={8}
                         />
-                        {errorsForm.dni && (
-                            <p className="text-red-500 text-xs mt-1">{errorsForm.dni.message}</p>
+                        {errorsForm.cui && (
+                            <p className="text-red-500 text-xs mt-1">{errorsForm.cui.message}</p>
                         )}
                     </div>
 
@@ -608,7 +617,7 @@ const Testigo = (props: Solicitud) => {
             </div>
 
             {/* Tabla de testigos agregados */}
-            {formDataAplication.participants.filter((p: Participant) => p.role === 'testigo').length > 0 && (
+            {formDataAplication.participants.filter((p: Participant) => p.rol === 'testigo').length > 0 && (
                 <div className="mt-6">
                     <h4 className="text-lg font-semibold text-gray-800 mb-4 flex items-center gap-2">
                         <i className="fas fa-list text-green-600"></i>
@@ -627,9 +636,9 @@ const Testigo = (props: Solicitud) => {
                                 </tr>
                             </thead>
                             <tbody>
-                                {formDataAplication.participants.filter((p: Participant) => p.role === 'testigo').map((testigo: Participant, index: number) => (
-                                    <tr key={testigo.dni} className="border-t border-gray-200">
-                                        <td className="px-4 py-2 text-sm text-gray-700">{testigo.dni}</td>
+                                {formDataAplication.participants.filter((p: Participant) => p.rol === 'testigo').map((testigo: Participant, index: number) => (
+                                    <tr key={testigo.cui} className="border-t border-gray-200">
+                                        <td className="px-4 py-2 text-sm text-gray-700">{testigo.cui}</td>
                                         <td className="px-4 py-2 text-sm text-gray-700">
                                             {testigo.names} {testigo.paternalSurname} {testigo.maternalSurname}
                                         </td>
@@ -639,13 +648,13 @@ const Testigo = (props: Solicitud) => {
                                         <td className="px-4 py-2 text-sm text-gray-700">{testigo.email}</td>
                                         <td className="px-4 py-2 text-sm text-gray-700">
                                             <span className="px-2 py-1 bg-green-100 text-green-800 text-xs rounded-full">
-                                                {testigo.role}
+                                                {testigo.rol}
                                             </span>
                                         </td>
                                         <td className="px-4 py-2 text-center">
                                             <button
                                                 type="button"
-                                                onClick={() => handleDeleteTestigo(testigo.dni, (index + 1) as 1 | 2)}
+                                                onClick={() => handleDeleteTestigo(testigo.cui, (index + 1) as 1 | 2)}
                                                 className="text-red-600 hover:text-red-800 transition-colors"
                                                 title="Eliminar testigo"
                                             >
