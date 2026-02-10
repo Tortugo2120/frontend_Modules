@@ -189,6 +189,7 @@ export default function NewRequest() {
                                         formData={formData}
                                         onChange={handleInputChange}
                                         tipoSolicitudNombre={selectedRequestType?.nombre_solicitud}
+                                        descriptionSolicitud={selectedRequestType?.descripcion}
                                     />
 
                                     {/* Observaciones 
@@ -213,19 +214,25 @@ export default function NewRequest() {
                         {/* Step 3: contrayente */}
                         {currentStep === 3 && (
                             <div className="p-6 lg:p-6">
-                                <Contrayente tipoSolicitudNombre={selectedRequestType?.nombre_solicitud} />
+                                <Contrayente 
+                                tipoSolicitudNombre={selectedRequestType?.nombre_solicitud}
+                                descriptionSolicitud={selectedRequestType?.descripcion} />
                             </div>
                         )}
                         {/* Step 4: testigo */}
                         {currentStep === 4 && (
                             <div className="p-6 lg:p-6">
-                                <Testigos tipoSolicitudNombre={selectedRequestType?.nombre_solicitud} />
+                                <Testigos 
+                                tipoSolicitudNombre={selectedRequestType?.nombre_solicitud} 
+                                descriptionSolicitud={selectedRequestType?.descripcion} />
                             </div>
                         )}
                         {/* Step 5: requisitos */}
                         {currentStep === 5 && (
                             <div className="p-6 lg:p-6">
-                                <Requisitos tipoSolicitudNombre={selectedRequestType?.nombre_solicitud} />
+                                <Requisitos 
+                                tipoSolicitudNombre={selectedRequestType?.nombre_solicitud}
+                                descriptionSolicitud={selectedRequestType?.descripcion} />
                             </div>
                         )}
                         {/* Step 6: resumen */}
@@ -234,6 +241,7 @@ export default function NewRequest() {
                                 {currentStep === 6 && (
                                     <ResumenSolicitud
                                         tipoSolicitudNombre={selectedRequestType?.nombre_solicitud}
+                                        descriptionSolicitud={selectedRequestType?.descripcion}
                                         contrayentes={contrayentes}
                                         requisitos={requisitos}
                                         archivos={archivos}
@@ -249,6 +257,7 @@ export default function NewRequest() {
                                 <ConfirmationSummary
                                     tipoSolicitud={tipoSolicitud}
                                     tipoNombre={selectedRequestType?.nombre_solicitud}
+                                    descriptionSolicitud={selectedRequestType?.descripcion}
                                     formData={formData}
                                 />
                             </div>

@@ -34,6 +34,7 @@ interface ArchivoSubido {
 
 interface ResumenSolicitudProps {
     tipoSolicitudNombre?: string;
+    descriptionSolicitud?: string;
     contrayentes: Contrayente[];
     requisitos: Requisito[];
     archivos: ArchivoSubido[];
@@ -43,7 +44,8 @@ interface ResumenSolicitudProps {
 }
 
 const ResumenSolicitud = ({
-    tipoSolicitudNombre = 'Matrimonio Civil',
+    tipoSolicitudNombre,
+    descriptionSolicitud,
     contrayentes,
     requisitos,
     archivos,
@@ -127,7 +129,10 @@ const ResumenSolicitud = ({
                             Resumen de Solicitud
                         </h2>
                         <p className="text-blue-100 text-sm sm:text-base">
-                            {tipoSolicitudNombre}
+                            {tipoSolicitudNombre}   
+                            <span className='text-xs font-normal text-center ml-1.5'>
+                                {descriptionSolicitud}
+                            </span>
                         </p>
                     </div>
                     {solicitudCompleta ? (
@@ -214,8 +219,8 @@ const ResumenSolicitud = ({
                                     <div
                                         key={contrayente.id}
                                         className={`border-2 rounded-lg p-4 ${index === 0
-                                                ? 'border-blue-200 bg-blue-50'
-                                                : 'border-pink-200 bg-pink-50'
+                                            ? 'border-blue-200 bg-blue-50'
+                                            : 'border-pink-200 bg-pink-50'
                                             }`}
                                     >
                                         <div className="flex items-center gap-3 mb-4 pb-3 border-b border-current/20">
@@ -343,8 +348,8 @@ const ResumenSolicitud = ({
                                         <div
                                             key={req.id}
                                             className={`flex items-start gap-2 p-3 rounded-lg border ${req.completado
-                                                    ? 'bg-green-50 border-green-200'
-                                                    : 'bg-gray-50 border-gray-200'
+                                                ? 'bg-green-50 border-green-200'
+                                                : 'bg-gray-50 border-gray-200'
                                                 }`}
                                         >
                                             <i className={`fas ${req.completado ? 'fa-check-circle text-green-600' : 'fa-circle text-gray-300'
@@ -372,8 +377,8 @@ const ResumenSolicitud = ({
                                         <div
                                             key={req.id}
                                             className={`flex items-start gap-2 p-3 rounded-lg border ${req.completado
-                                                    ? 'bg-green-50 border-green-200'
-                                                    : 'bg-gray-50 border-gray-200'
+                                                ? 'bg-green-50 border-green-200'
+                                                : 'bg-gray-50 border-gray-200'
                                                 }`}
                                         >
                                             <i className={`fas ${req.completado ? 'fa-check-circle text-green-600' : 'fa-circle text-gray-300'
@@ -511,8 +516,8 @@ const ResumenSolicitud = ({
                         onClick={onConfirmar}
                         disabled={!solicitudCompleta}
                         className={`w-full sm:w-auto px-8 py-3 text-sm font-semibold rounded-lg transition-colors flex items-center justify-center gap-2 ${solicitudCompleta
-                                ? 'bg-linear-to-r from-blue-600 to-purple-600 text-white hover:from-blue-700 hover:to-purple-700 shadow-lg'
-                                : 'bg-gray-300 text-gray-500 cursor-not-allowed'
+                            ? 'bg-linear-to-r from-blue-600 to-purple-600 text-white hover:from-blue-700 hover:to-purple-700 shadow-lg'
+                            : 'bg-gray-300 text-gray-500 cursor-not-allowed'
                             }`}
                     >
                         <i className="fas fa-check-circle"></i>

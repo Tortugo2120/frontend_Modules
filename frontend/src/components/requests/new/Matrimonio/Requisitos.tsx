@@ -21,6 +21,7 @@ interface ArchivoSubido {
 
 interface RequisitosMatrimonioProps {
     tipoSolicitudNombre?: string;
+    descriptionSolicitud?: string;
     onRequisitosChange?: (requisitos: Requisito[]) => void;
     onArchivosChange?: (archivos: ArchivoSubido[]) => void;
 }
@@ -72,6 +73,7 @@ const REQUISITOS_INICIALES: Requisito[] = [
 
 const RequisitosMatrimonio = ({
     tipoSolicitudNombre,
+    descriptionSolicitud,
     onRequisitosChange,
     onArchivosChange
 }: RequisitosMatrimonioProps) => {
@@ -222,9 +224,14 @@ const RequisitosMatrimonio = ({
                     <span>Requisitos para el Matrimonio</span>
                 </h3>
                 {tipoSolicitudNombre && (
-                    <span className="bg-blue-100 text-blue-800 text-xs sm:text-sm font-medium px-3 sm:px-4 py-1.5 sm:py-2 rounded-lg inline-flex items-center w-fit">
-                        <i className="fas fa-file-alt mr-2"></i>
-                        {tipoSolicitudNombre.toUpperCase()}
+                    <span className="bg-blue-100 text-blue-800 text-xs sm:text-sm font-medium px-3 sm:px-4 py-1.5 sm:py-2 rounded-lg flex flex-col items-center w-fit">
+                        <div>
+                            <i className="fas fa-file-alt mr-2"></i>
+                            {tipoSolicitudNombre.toUpperCase()}
+                        </div>
+                        <span className='text-xs font-normal text-center'>
+                            {descriptionSolicitud}
+                        </span>
                     </span>
                 )}
             </div>
@@ -253,8 +260,8 @@ const RequisitosMatrimonio = ({
                 <div className="w-full bg-gray-200 rounded-full h-3 overflow-hidden">
                     <div
                         className={`h-full rounded-full transition-all duration-500 ${progreso.porcentaje === 100
-                                ? 'bg-linear-to-r from-green-500 to-green-600'
-                                : 'bg-linear-to-r from-blue-500 to-purple-600'
+                            ? 'bg-linear-to-r from-green-500 to-green-600'
+                            : 'bg-linear-to-r from-blue-500 to-purple-600'
                             }`}
                         style={{ width: `${progreso.porcentaje}%` }}
                     ></div>
@@ -315,8 +322,8 @@ const RequisitosMatrimonio = ({
                                     >
                                         <div className="flex items-start justify-between gap-2 mb-1">
                                             <span className={`text-sm font-medium ${requisito.completado
-                                                    ? 'text-gray-500 line-through'
-                                                    : 'text-gray-900'
+                                                ? 'text-gray-500 line-through'
+                                                : 'text-gray-900'
                                                 }`}>
                                                 {index + 1}. {requisito.titulo}
                                             </span>
@@ -335,6 +342,19 @@ const RequisitosMatrimonio = ({
                                             }`}>
                                             {requisito.descripcion}
                                         </p>
+                                        <label className="inline-block">
+                                            <input
+                                                type="file"
+                                                multiple
+                                                onChange={handleFileChange}
+                                                className="hidden"
+                                                accept=".pdf,.doc,.docx,.xls,.xlsx,.jpg,.jpeg,.png"
+                                            />
+                                            <span className="cursor-pointer inline-flex items-center gap-2 px-4 sm:px-6 py-2 sm:py-2.5 bg-purple-600 text-white text-sm font-medium rounded-lg hover:bg-purple-700 transition-colors">
+                                                <i className="fas fa-folder-open"></i>
+                                                Seleccionar Archivos
+                                            </span>
+                                        </label>
                                     </label>
                                 </div>
 
@@ -376,8 +396,8 @@ const RequisitosMatrimonio = ({
                     onDragLeave={handleDragLeave}
                     onDrop={handleDrop}
                     className={`border-2 border-dashed rounded-lg p-6 sm:p-8 text-center transition-all ${isDragging
-                            ? 'border-purple-500 bg-purple-50'
-                            : 'border-gray-300 bg-gray-50 hover:bg-gray-100'
+                        ? 'border-purple-500 bg-purple-50'
+                        : 'border-gray-300 bg-gray-50 hover:bg-gray-100'
                         }`}
                 >
                     <i className={`fas fa-cloud-upload-alt text-4xl sm:text-5xl mb-3 ${isDragging ? 'text-purple-600' : 'text-gray-400'
@@ -394,7 +414,7 @@ const RequisitosMatrimonio = ({
                             multiple
                             onChange={handleFileChange}
                             className="hidden"
-                            accept=".pdf,.doc,.docx,.xls,.xlsx,.jpg,.jpeg,.png,.gif"
+                            accept=".pdf,.doc,.docx,.xls,.xlsx,.jpg,.jpeg,.png"
                         />
                         <span className="cursor-pointer inline-flex items-center gap-2 px-4 sm:px-6 py-2 sm:py-2.5 bg-purple-600 text-white text-sm font-medium rounded-lg hover:bg-purple-700 transition-colors">
                             <i className="fas fa-folder-open"></i>

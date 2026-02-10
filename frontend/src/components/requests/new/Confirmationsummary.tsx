@@ -2,6 +2,7 @@
 interface ConfirmationSummaryProps {
     tipoSolicitud: number | null;
     tipoNombre: string | undefined;
+    descriptionSolicitud: string | undefined;
     formData: {
         nombresSolicitante: string;
         apellidoPaternoSolicitante: string;
@@ -25,7 +26,7 @@ interface ConfirmationSummaryProps {
     };
 }
 
-export default function ConfirmationSummary({tipoNombre, formData }: ConfirmationSummaryProps) {
+export default function ConfirmationSummary({ tipoNombre, descriptionSolicitud, formData }: ConfirmationSummaryProps) {
     return (
         <div className="animate-fadeIn">
             <div className="text-center mb-8">
@@ -39,7 +40,11 @@ export default function ConfirmationSummary({tipoNombre, formData }: Confirmatio
             <div className="bg-linear-to-br from-blue-50 to-indigo-50 rounded-xl p-6 space-y-4">
                 <div className="flex justify-between items-start border-b border-blue-200 pb-3">
                     <span className="text-gray-600 font-medium">Tipo de Solicitud:</span>
-                    <span className="font-bold text-gray-900">{tipoNombre}</span>
+                    <span className="font-bold text-gray-900">{tipoNombre}
+                        <span className="text-xs font-semibold ml-1.5">
+                            {descriptionSolicitud}
+                        </span>
+                    </span>
                 </div>
                 <div className="flex justify-between items-start border-b border-blue-200 pb-3">
                     <span className="text-gray-600 font-medium">Solicitante:</span>

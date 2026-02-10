@@ -10,13 +10,14 @@ import type { Participant } from "../../../../model/aplicationModel.ts";
 
 interface Solicitud {
     tipoSolicitudNombre?: string;
+    descriptionSolicitud?: string;
     onContrayentesChange?: (contrayentes: Participant[]) => void;
 }
 
 type inputSearch = z.infer<typeof searchTypeDocument>;
 
 const Contrayente = (props: Solicitud) => {
-    const { tipoSolicitudNombre, onContrayentesChange } = props;
+    const { tipoSolicitudNombre, descriptionSolicitud, onContrayentesChange } = props;
     const { addParticipant, deleteParticipant, formDataAplication } = useApplicationContext();
 
     // Estados para búsqueda de Contrayente 1
@@ -284,13 +285,12 @@ const Contrayente = (props: Solicitud) => {
                                 type="text"
                                 onKeyDown={(e) => handleKeyDown(e, contrayenteNum)}
                                 onInput={(e) => handleDocumentInput(e, tipoDoc)}
-                                className={`w-full pl-9 sm:pl-11 pr-20 sm:pr-24 py-2 sm:py-2.5 text-sm sm:text-base border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-0 transition-all ${
-                                    searchSuccess
+                                className={`w-full pl-9 sm:pl-11 pr-20 sm:pr-24 py-2 sm:py-2.5 text-sm sm:text-base border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-0 transition-all ${searchSuccess
                                         ? 'border-green-500 bg-green-50'
                                         : searchError
                                             ? 'border-red-300 bg-red-50'
                                             : 'border-gray-300'
-                                }`}
+                                    }`}
                                 {...registerSearch('documentNumber')}
                                 placeholder={tipoDoc === 'dni' ? "8 dígitos" : tipoDoc === 'pas' ? "Pasaporte" : "Cédula"}
                                 maxLength={tipoDoc === 'dni' ? 8 : tipoDoc === 'ced' ? 10 : 20}
@@ -560,9 +560,14 @@ const Contrayente = (props: Solicitud) => {
                     <span>Datos de los Contrayentes</span>
                 </h3>
                 {tipoSolicitudNombre && (
-                    <span className="bg-blue-100 text-blue-800 text-xs sm:text-sm font-medium px-3 sm:px-4 py-1.5 sm:py-2 rounded-lg inline-flex items-center w-fit">
-                        <i className="fas fa-file-alt mr-2"></i>
-                        {tipoSolicitudNombre.toUpperCase()}
+                    <span className="bg-blue-100 text-blue-800 text-xs sm:text-sm font-medium px-3 sm:px-4 py-1.5 sm:py-2 rounded-lg flex flex-col items-center w-fit">
+                        <div>
+                            <i className="fas fa-file-alt mr-2"></i>
+                            {tipoSolicitudNombre.toUpperCase()}
+                        </div>
+                        <span className='text-xs font-normal text-center'>
+                            {descriptionSolicitud}
+                        </span>
                     </span>
                 )}
             </div>
