@@ -15,7 +15,7 @@ export default function ConfirmationSummary({
     isSubmitting
 }: ConfirmationSummaryProps) {
     // Extraer datos del solicitante principal (participante con role 'solicitante')
-    const solicitante = applicationData.participants.find(p => p.role === 'solicitante');
+    const solicitante = applicationData.participants.find(p => p.rol === 'solicitante');
 
     return (
         <div className="animate-fadeIn">
@@ -43,7 +43,7 @@ export default function ConfirmationSummary({
                         </div>
                         <div className="flex justify-between items-start border-b border-blue-200 pb-3">
                             <span className="text-gray-600 font-medium">DNI:</span>
-                            <span className="font-semibold text-gray-900">{solicitante.dni}</span>
+                            <span className="font-semibold text-gray-900">{solicitante.cui}</span>
                         </div>
                         <div className="flex justify-between items-start border-b border-blue-200 pb-3">
                             <span className="text-gray-600 font-medium">Teléfono:</span>
@@ -75,11 +75,11 @@ export default function ConfirmationSummary({
                 )}
 
                 {/* Mostrar requisitos si existen */}
-                {applicationData.requisitos && applicationData.requisitos.length > 0 && (
+                {applicationData.requirements && applicationData.requirements.length > 0 && (
                     <div className="flex justify-between items-start">
                         <span className="text-gray-600 font-medium">Requisitos:</span>
                         <span className="font-semibold text-gray-900">
-                            {applicationData.requisitos.filter(r => r.delivered).length} de {applicationData.requisitos.length} completados
+                            {applicationData.requirements.filter(r => r.delivered).length} de {applicationData.requirements.length} completados
                         </span>
                     </div>
                 )}
