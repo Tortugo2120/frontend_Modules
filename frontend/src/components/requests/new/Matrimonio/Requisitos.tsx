@@ -77,7 +77,7 @@ const RequisitosMatrimonio = ({
     const [requisitos, setRequisitos] = useState<Requisito[]>(REQUISITOS_INICIALES);
     const [archivos, setArchivos] = useState<ArchivoSubido[]>([]);
     const [isDragging, setIsDragging] = useState(false);
-    const [requisitosEstados, setRequisitosEstados] = useState<Map<number, boolean>>(new Map());
+    const [requisitosEstados, setRequisitosEstados] = useState<Map<number, number>>(new Map());
     const {formDataAplication, updateRequisitos} = useApplicationContext();
     const {requirements,fetchRequirements} = useGetRequirements();
 
@@ -88,7 +88,7 @@ const RequisitosMatrimonio = ({
                 formDataAplication.requirements.map(r => {
                     // Convertir ID a número si es string
                     const idNum = typeof r.requirementId === 'string' ? parseInt(r.requirementId) : r.requirementId;
-                    return [idNum, r.delivered];
+                    return [idNum, r.delivered]; // Ya es number (0 o 1)
                 })
             );
             setRequisitosEstados(newMap);
@@ -101,7 +101,7 @@ const RequisitosMatrimonio = ({
             const reqId = typeof req.id === 'string' ? parseInt(req.id) : req.id;
             return {
                 requirementId: req.id, // Mantener el ID original (puede ser string o number)
-                delivered: requisitosEstados.get(reqId) ?? false
+                delivered: requisitosEstados.get(reqId) ?? 0 // 0 = no entregado, 1 = entregado
             };
         });
 
@@ -134,6 +134,7 @@ const RequisitosMatrimonio = ({
                     conds.add(p.maritalStatus.toUpperCase());
                 }
             });
+            console.log("condiciones: ",conds);
             return Array.from(conds).join(',');
         }
 
@@ -152,7 +153,7 @@ const RequisitosMatrimonio = ({
         const listaRequisitos = requirements.length > 0 ? requirements : requisitos;
         const total = listaRequisitos.length;
         const completados = requirements.length > 0
-            ? Array.from(requisitosEstados.values()).filter(estado => estado).length
+            ? Array.from(requisitosEstados.values()).filter(estado => estado === 1).length
             : requisitos.filter(r => r.completado).length;
 
         return {
@@ -167,16 +168,13 @@ const RequisitosMatrimonio = ({
     // Manejar cambio de checkbox
     const handleCheckboxChange = useCallback((id: string | number) => {
         if (requirements.length > 0) {
-            // Usar requirements del hook
             const numId = typeof id === 'string' ? parseInt(id) : id;
 
             setRequisitosEstados(prev => {
                 const newMap = new Map(prev);
-                // Obtener el estado actual, si no existe, usar false
-                const estadoActual = newMap.get(numId) ?? false;
-                const nuevoEstado = !estadoActual;
+                const estadoActual = newMap.get(numId) ?? 0;
+                const nuevoEstado = estadoActual === 1 ? 0 : 1;
 
-                // Toggle entre true y false
                 newMap.set(numId, nuevoEstado);
 
                 console.log(`Checkbox ${numId}: ${estadoActual} -> ${nuevoEstado}`);
@@ -184,7 +182,6 @@ const RequisitosMatrimonio = ({
                 return newMap;
             });
         } else {
-            // Usar requisitos locales
             setRequisitos(prev =>
                 prev.map(req =>
                     req.id === id
@@ -202,7 +199,7 @@ const RequisitosMatrimonio = ({
                 const newMap = new Map(prev);
                 requirements.forEach(req => {
                     const reqId = typeof req.id === 'string' ? parseInt(req.id) : req.id;
-                    newMap.set(reqId, true);
+                    newMap.set(reqId, 1); // 1 = entregado
                 });
                 return newMap;
             });
@@ -225,7 +222,7 @@ const RequisitosMatrimonio = ({
                 requirements.forEach(req => {
 
                     const reqId = typeof req.id === 'string' ? parseInt(req.id) : req.id;
-                    newMap.set(reqId, false);
+                    newMap.set(reqId, 0); // 0 = no entregado
                 });
                 return newMap;
             });
@@ -260,7 +257,6 @@ const RequisitosMatrimonio = ({
         setArchivos(prev => [...prev, ...nuevosArchivos]);
         e.target.value = ''; // Resetear input
     }, []);
-
     const handleEliminarArchivo = useCallback((id: string) => {
         setArchivos(prev => prev.filter(a => a.id !== id));
     }, []);
@@ -390,7 +386,7 @@ const RequisitosMatrimonio = ({
 
                         const estadoEnMap = requisitosEstados.get(requistoIdNum);
                         const isCompleted = requirements.length > 0
-                            ? Boolean(estadoEnMap)
+                            ? estadoEnMap === 1
                             : false;
 
                         return (

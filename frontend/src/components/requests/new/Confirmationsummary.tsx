@@ -79,7 +79,7 @@ export default function ConfirmationSummary({
                     <div className="flex justify-between items-start">
                         <span className="text-gray-600 font-medium">Requisitos:</span>
                         <span className="font-semibold text-gray-900">
-                            {applicationData.requirements.filter(r => r.delivered).length} de {applicationData.requirements.length} completados
+                            {applicationData.requirements.filter(r => r.delivered === 1).length} de {applicationData.requirements.length} completados
                         </span>
                     </div>
                 )}

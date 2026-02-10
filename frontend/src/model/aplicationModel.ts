@@ -30,8 +30,8 @@ export interface ApplicationData {
 }
 
 export interface RequisitoEstado {
-    requirementId: number | string; // Aceptar ambos tipos porque el backend puede enviar strings
-    delivered: boolean;
+    requirementId: number | string;
+    delivered: number;
 }
 
 export interface CreateApplicationPayload {
