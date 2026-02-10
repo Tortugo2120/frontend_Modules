@@ -160,7 +160,7 @@ const Contrayente = (props: Solicitud) => {
 
             // Llenar el formulario con los datos encontrados
             setValueForm('cui', numDoc);
-            setValueForm('documentTypeId',documentTypeNumber);
+            setValueForm('documentTypeId', documentTypeNumber);
             setValueForm('names', personData.name || '');
             setValueForm('paternalSurname', personData.paternalSurname || '');
             setValueForm('maternalSurname', personData.maternalSurname || '');
@@ -218,11 +218,11 @@ const Contrayente = (props: Solicitud) => {
             }
 
             // Agregar como contrayente
-            addParticipant({ ...data, rol: 'contrayente',documentTypeId: documentTypeMapping[tipoDoc] || 1 });
+            addParticipant({ ...data, rol: 'contrayente', documentTypeId: documentTypeMapping[tipoDoc] || 1 });
             setAdded(true);
             setError('');
         })();
-    }, [handleSubmitForm1, handleSubmitForm2, addParticipant, formDataAplication.participants,tipoDoc1,tipoDoc2]);
+    }, [handleSubmitForm1, handleSubmitForm2, addParticipant, formDataAplication.participants, tipoDoc1, tipoDoc2]);
 
     // Función para eliminar contrayente
     const handleDeleteContrayente = useCallback((cui: string, contrayenteNum: 1 | 2) => {
@@ -295,10 +295,10 @@ const Contrayente = (props: Solicitud) => {
                                 onKeyDown={(e) => handleKeyDown(e, contrayenteNum)}
                                 onInput={(e) => handleDocumentInput(e, tipoDoc)}
                                 className={`w-full pl-9 sm:pl-11 pr-20 sm:pr-24 py-2 sm:py-2.5 text-sm sm:text-base border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-0 transition-all ${searchSuccess
-                                        ? 'border-green-500 bg-green-50'
-                                        : searchError
-                                            ? 'border-red-300 bg-red-50'
-                                            : 'border-gray-300'
+                                    ? 'border-green-500 bg-green-50'
+                                    : searchError
+                                        ? 'border-red-300 bg-red-50'
+                                        : 'border-gray-300'
                                     }`}
                                 {...registerSearch('documentNumber')}
                                 placeholder={tipoDoc === 'dni' ? "8 dígitos" : tipoDoc === 'pas' ? "Pasaporte" : "Cédula"}
@@ -635,6 +635,7 @@ const Contrayente = (props: Solicitud) => {
                                     <th className="px-4 py-2 text-left text-sm font-semibold text-gray-700">DNI</th>
                                     <th className="px-4 py-2 text-left text-sm font-semibold text-gray-700">Nombres Completos</th>
                                     <th className="px-4 py-2 text-left text-sm font-semibold text-gray-700">Sexo</th>
+                                    <th className="px-4 py-2 text-left text-sm font-semibold text-gray-700">Estado Civil</th>
                                     <th className="px-4 py-2 text-left text-sm font-semibold text-gray-700">Email</th>
                                     <th className="px-4 py-2 text-left text-sm font-semibold text-gray-700">Rol</th>
                                     <th className="px-4 py-2 text-center text-sm font-semibold text-gray-700">Acciones</th>
@@ -650,6 +651,7 @@ const Contrayente = (props: Solicitud) => {
                                         <td className="px-4 py-2 text-sm text-gray-700">
                                             {contrayente.gender === 'M' ? 'Masculino' : 'Femenino'}
                                         </td>
+                                        <td className="px-4 py-2 text-sm text-gray-700">{contrayente.maritalStatus}</td>
                                         <td className="px-4 py-2 text-sm text-gray-700">{contrayente.email}</td>
                                         <td className="px-4 py-2 text-sm text-gray-700">
                                             <span className="px-2 py-1 bg-blue-100 text-blue-800 text-xs rounded-full">

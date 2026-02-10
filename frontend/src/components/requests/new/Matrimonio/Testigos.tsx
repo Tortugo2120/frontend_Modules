@@ -635,6 +635,7 @@ const Testigo = (props: Solicitud) => {
                                     <th className="px-4 py-2 text-left text-sm font-semibold text-gray-700">DNI</th>
                                     <th className="px-4 py-2 text-left text-sm font-semibold text-gray-700">Nombres Completos</th>
                                     <th className="px-4 py-2 text-left text-sm font-semibold text-gray-700">Sexo</th>
+                                    <th className="px-4 py-2 text-left text-sm font-semibold text-gray-700">Estado Civil</th>
                                     <th className="px-4 py-2 text-left text-sm font-semibold text-gray-700">Email</th>
                                     <th className="px-4 py-2 text-left text-sm font-semibold text-gray-700">Rol</th>
                                     <th className="px-4 py-2 text-center text-sm font-semibold text-gray-700">Acciones</th>
@@ -650,6 +651,7 @@ const Testigo = (props: Solicitud) => {
                                         <td className="px-4 py-2 text-sm text-gray-700">
                                             {testigo.gender === 'M' ? 'Masculino' : 'Femenino'}
                                         </td>
+                                        <td className="px-4 py-2 text-sm text-gray-700">{testigo.maritalStatus}</td>
                                         <td className="px-4 py-2 text-sm text-gray-700">{testigo.email}</td>
                                         <td className="px-4 py-2 text-sm text-gray-700">
                                             <span className="px-2 py-1 bg-green-100 text-green-800 text-xs rounded-full">
