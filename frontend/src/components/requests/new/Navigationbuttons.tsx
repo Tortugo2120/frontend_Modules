@@ -31,7 +31,7 @@ export default function NavigationButtons({
                 Anterior
             </button>
 
-            {!isLastStep ? (
+            {!isLastStep &&
                 <button
                     type="button"
                     onClick={onNext}
@@ -44,15 +44,7 @@ export default function NavigationButtons({
                     Siguiente
                     <i className="fas fa-arrow-right"></i>
                 </button>
-            ) : (
-                <button
-                    type="submit"
-                    className="flex items-center gap-2 px-8 py-3 bg-linear-to-r from-green-600 to-emerald-600 text-white rounded-lg font-semibold hover:shadow-lg hover:scale-105 transition-all cursor-pointer"
-                >
-                    <i className="fas fa-check-circle"></i>
-                    Confirmar Solicitud
-                </button>
-            )}
+            }
         </div>
     );
 }

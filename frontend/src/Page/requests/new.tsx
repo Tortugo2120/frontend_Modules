@@ -8,44 +8,17 @@ import useTipoSolici from "../../hooks/useTipoSolici.ts";
 import Contrayente from "../../components/requests/new/Matrimonio/Contrayente.tsx";
 import Testigos from "../../components/requests/new/Matrimonio/Testigos.tsx";
 import Requisitos from "../../components/requests/new/Matrimonio/Requisitos.tsx";
-import ResumenSolicitud from "../../components/requests/new/ResumenSolicitud.tsx";
 import {ApplicationHandler} from "../../context/ApplicationContext.tsx";
 import {Auth} from "../../context/AuthContext.tsx";
+import useCreateAplication from "../../hooks/useCreateAplication.ts";
 
 export default function NewRequest() {
     const [tipoSolicitud, setTipoSolicitud] = useState<number | null>(null);
     const [searchTerm, setSearchTerm] = useState("");
-    const [contrayentes, setContrayentes] = useState<any[]>([]);
-    const [requisitos, setRequisitos] = useState<any[]>([]);
-    const [archivos, setArchivos] = useState<any[]>([]);
-    const {updateApplicationData,formDataAplication} = ApplicationHandler();
+    const {updateApplicationData, formDataAplication} = ApplicationHandler();
     const {user} = Auth();
-    const [formData, setFormData] = useState({
-        // Datos del solicitante
-        nombresSolicitante: '',
-        apellidoPaternoSolicitante: '',
-        apellidoMaternoSolicitante: '',
-        dniSolicitante: '',
-        fechaNacimientoSolicitante: '',
-        sexoSolicitante: '',
-        direccionSolicitante: '',
-        correoSolicitante: '',
-        telefonoSolicitante: '',
-        ubigeoSolicitante: 0,
-        estadoCivilSolicitante: '',
-
-        // Datos específicos según tipo
-        nombreCompleto1: '',
-        dniPersona1: '',
-        nombreCompleto2: '',
-        dniPersona2: '',
-        fechaEvento: '',
-        lugarEvento: '',
-
-        // Documentos y observaciones
-        documentosAdjuntos: '',
-        observaciones: ''
-    });
+    const [isSubmitting, setIsSubmitting] = useState(false);
+    const {error,createSolicitud,success} = useCreateAplication();
 
     const handleSelectTipoSolicitud = (id: number) => {
         setTipoSolicitud(prev =>
@@ -69,17 +42,30 @@ export default function NewRequest() {
     const { tiposolicitud } = useTipoSolici();
     const [currentStep, setCurrentStep] = useState(1);
 
-    const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>) => {
-        setFormData({
-            ...formData,
-            [e.target.name]: e.target.value
-        });
-    };
+    // Función para enviar la solicitud a la API
+    const handleConfirmSubmit = async () => {
+        try {
+            setIsSubmitting(true);
 
-    const handleSubmit = (e: React.FormEvent) => {
-        e.preventDefault();
-        console.log('Solicitud enviada:', formData);
-        // Aquí iría la lógica para enviar al backend
+            console.log('Preparando para enviar solicitud a la API:', formDataAplication);
+            console.log('✅ Data lista para enviar:', JSON.stringify(formDataAplication, null, 2));
+            const response = await createSolicitud(formDataAplication);
+
+            if (response && success) {
+                console.log('Solicitud creada exitosamente:', response);
+                alert('Solicitud creada exitosamente');
+                // navigate('/solicitudes');
+            } else if (error) {
+                console.error('Error al crear solicitud:', error);
+                alert(`Error: ${error}`);
+            }
+
+        } catch (error) {
+            console.error('Error al enviar la solicitud:', error);
+            console.log(`Error: ${error instanceof Error ? error.message : 'Error desconocido'}`);
+        } finally {
+            setIsSubmitting(false);
+        }
     };
 
     const nextStep = () => {
@@ -114,7 +100,7 @@ export default function NewRequest() {
             {/* Form Container */}
             <div className="mx-auto">
                 <div className="bg-white rounded-lg shadow-xl overflow-hidden">
-                    <form onSubmit={handleSubmit}>
+                    <div>
                         {/* Step 1: Tipo de Solicitud */}
                         {currentStep === 1 && (
                             <div className="p-6 lg:p-6 animate-fadeIn">
@@ -182,31 +168,12 @@ export default function NewRequest() {
                         {/* Step 2: Formulario de Datos */}
                         {currentStep === 2 && (
                             <div className="p-6 lg:p-6 animate-fadeIn">
-
                                 <div className="space-y-8">
                                     {/* Datos del Solicitante */}
                                     <ApplicantForm
-                                        formData={formData}
-                                        onChange={handleInputChange}
                                         tipoSolicitudNombre={selectedRequestType?.nombre_solicitud}
                                         descriptionSolicitud={selectedRequestType?.descripcion}
                                     />
-
-                                    {/* Observaciones 
-                                    <div>
-                                        <label className="block text-sm font-medium text-gray-700 mb-2">
-                                            Observaciones Adicionales
-                                        </label>
-                                        <textarea
-                                            name="observaciones"
-                                            value={formData.observaciones}
-                                            onChange={handleInputChange}
-                                            rows={4}
-                                            className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-0 transition-all resize-none"
-                                            placeholder="Agregue cualquier información adicional relevante..."
-                                        ></textarea>
-                                    </div>
-                                    */}
                                 </div>
                             </div>
                         )}
@@ -214,51 +181,38 @@ export default function NewRequest() {
                         {/* Step 3: contrayente */}
                         {currentStep === 3 && (
                             <div className="p-6 lg:p-6">
-                                <Contrayente 
-                                tipoSolicitudNombre={selectedRequestType?.nombre_solicitud}
-                                descriptionSolicitud={selectedRequestType?.descripcion} />
+                                <Contrayente tipoSolicitudNombre={selectedRequestType?.nombre_solicitud} />
                             </div>
                         )}
                         {/* Step 4: testigo */}
                         {currentStep === 4 && (
                             <div className="p-6 lg:p-6">
-                                <Testigos 
-                                tipoSolicitudNombre={selectedRequestType?.nombre_solicitud} 
-                                descriptionSolicitud={selectedRequestType?.descripcion} />
+                                <Testigos tipoSolicitudNombre={selectedRequestType?.nombre_solicitud} />
                             </div>
                         )}
                         {/* Step 5: requisitos */}
                         {currentStep === 5 && (
                             <div className="p-6 lg:p-6">
-                                <Requisitos 
-                                tipoSolicitudNombre={selectedRequestType?.nombre_solicitud}
-                                descriptionSolicitud={selectedRequestType?.descripcion} />
+                                <Requisitos tipoSolicitudNombre={selectedRequestType?.nombre_solicitud} />
                             </div>
                         )}
                         {/* Step 6: resumen */}
-                        {currentStep === 6 && (
+                        {/*currentStep === 6 && (
                             <div className="p-6 lg:p-6">
-                                {currentStep === 6 && (
-                                    <ResumenSolicitud
-                                        tipoSolicitudNombre={selectedRequestType?.nombre_solicitud}
-                                        descriptionSolicitud={selectedRequestType?.descripcion}
-                                        contrayentes={contrayentes}
-                                        requisitos={requisitos}
-                                        archivos={archivos}
-                                    />
-                                )}
-
-
+                                <ResumenSolicitud
+                                    tipoSolicitudNombre={selectedRequestType?.nombre_solicitud}
+                                />
                             </div>
-                        )}
-                        {/* Step 6: confirmacion */}
-                        {currentStep === 7 && (
+                        )*\}
+                        {/* Step 7: confirmacion */}
+                        {currentStep === 6 && (
                             <div className="p-6 lg:p-6">
                                 <ConfirmationSummary
                                     tipoSolicitud={tipoSolicitud}
                                     tipoNombre={selectedRequestType?.nombre_solicitud}
-                                    descriptionSolicitud={selectedRequestType?.descripcion}
-                                    formData={formData}
+                                    applicationData={formDataAplication}
+                                    onConfirm={handleConfirmSubmit}
+                                    isSubmitting={isSubmitting}
                                 />
                             </div>
                         )}
@@ -270,7 +224,7 @@ export default function NewRequest() {
                             onPrevious={prevStep}
                             onNext={nextStep}
                         />
-                    </form>
+                    </div>
                 </div>
             </div>
         </div>

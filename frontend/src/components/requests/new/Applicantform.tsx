@@ -7,7 +7,7 @@ import { ApplicationHandler } from "../../../context/ApplicationContext.tsx";
 import type { Participant } from "../../../model/aplicationModel.ts";
 
 interface ApplicantFormProps {
-    onChange: (
+    onChange?: (
         e: React.ChangeEvent<
             HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement
         >
@@ -18,10 +18,10 @@ interface ApplicantFormProps {
 }
 
 export default function ApplicantForm({
-    onChange: _onChange,
+    onChange,
     onSolicitantesChange,
     tipoSolicitudNombre,
-    descriptionSolicitud
+    descriptionSolicitud,
 }: ApplicantFormProps) {
     const { addParticipant, deleteParticipant, formDataAplication, updateApplicationData } = ApplicationHandler();
 
@@ -45,7 +45,7 @@ export default function ApplicantForm({
             if (!pendingApp) return [];
 
             const parsed = JSON.parse(pendingApp);
-            const solicitante = parsed?.participants?.find((p: Participant) => p.roles?.includes('solicitante'));
+            const solicitante = parsed?.participants?.find((p: Participant) => p.rol === 'solicitante');
 
             return solicitante ? [solicitante] : [];
         } catch (error) {
@@ -244,7 +244,7 @@ export default function ApplicantForm({
         // Verificar duplicados
         const data = getValues();
         console.log('Data recibida: ', data)
-        const isDuplicate = solicitantesAgregados.some(s => s.dni === data.dni);
+        const isDuplicate = solicitantesAgregados.some(s => s.cui === data.dni);
         if (isDuplicate) {
             console.log('esta dni ya fue registrado')
             setSearchError('Este DNI ya ha sido agregado a la solicitud');
@@ -252,7 +252,7 @@ export default function ApplicantForm({
         }
         console.log('Agregando solicitante: ', data);
         addParticipant({ ...data, rol: 'solicitante' });
-        setSolicitantesAgregados(prev => [...prev, { ...data, roles: ['solicitante'] }]);
+        setSolicitantesAgregados(prev => [...prev, { ...data, rol: 'solicitante' }]);
         console.log('List soicitantes: ', solicitantesAgregados)
         handleClearSearch();
 
@@ -265,7 +265,7 @@ export default function ApplicantForm({
     const handleRemoveSolicitante = useCallback((id: string) => {
         deleteParticipant(id);
 
-        setSolicitantesAgregados(prev => prev.filter(s => s.dni !== id));
+        setSolicitantesAgregados(prev => prev.filter(s => s.cui !== id));
     }, [deleteParticipant]);
 
     // Formatear fecha para mostrar (DD/MM/YYYY)
@@ -290,15 +290,15 @@ export default function ApplicantForm({
                     <span>Datos del Solicitante</span>
                 </h3>
                 {tipoSolicitudNombre && (
-                    <span className="bg-blue-100 text-blue-800 text-xs sm:text-sm font-medium px-3 sm:px-4 py-1.5 sm:py-2 rounded-lg flex flex-col items-center w-fit">
-                        <div>
+                    <div className='flex flex-col'>
+                        <span className="bg-blue-100 text-blue-800 text-xs sm:text-sm font-medium px-3 sm:px-4 py-1.5 sm:py-2 rounded-lg inline-flex items-center w-fit">
                             <i className="fas fa-file-alt mr-2"></i>
                             {tipoSolicitudNombre.toUpperCase()}
-                        </div>
-                        <span className='text-xs font-normal text-center'>
+                        </span>
+                        <span className='text-xs font-medium'>
                             {descriptionSolicitud}
                         </span>
-                    </span>
+                    </div>
                 )}
             </div>
 
@@ -698,11 +698,11 @@ export default function ApplicantForm({
                                         <tbody className="bg-white divide-y divide-gray-200">
                                             {solicitantesAgregados.map((solicitante) => (
                                                 <tr
-                                                    key={solicitante.dni}
+                                                    key={solicitante.cui}
                                                     className="hover:bg-gray-50 transition-colors"
                                                 >
                                                     <td className="px-4 lg:px-6 py-3 lg:py-4 whitespace-nowrap text-sm font-medium text-gray-900">
-                                                        {solicitante.dni}
+                                                        {solicitante.cui}
                                                     </td>
                                                     <td className="px-4 lg:px-6 py-3 lg:py-4 text-sm text-gray-700">
                                                         {solicitante.names} {solicitante.paternalSurname} {solicitante.maternalSurname}
@@ -719,7 +719,7 @@ export default function ApplicantForm({
                                                     <td className="px-4 lg:px-6 py-3 lg:py-4 whitespace-nowrap text-center text-sm font-medium">
                                                         <button
                                                             type="button"
-                                                            onClick={() => handleRemoveSolicitante(solicitante.dni)}
+                                                            onClick={() => handleRemoveSolicitante(solicitante.cui)}
                                                             className="text-red-600 hover:text-red-800 transition-colors p-2 hover:bg-red-50 rounded-lg"
                                                             title="Eliminar solicitante"
                                                             aria-label={`Eliminar a ${solicitante.names} ${solicitante.paternalSurname}`}
@@ -738,7 +738,7 @@ export default function ApplicantForm({
                             <div className="md:hidden space-y-3">
                                 {solicitantesAgregados.map((solicitante) => (
                                     <div
-                                        key={solicitante.dni}
+                                        key={solicitante.cui}
                                         className="bg-white border border-gray-200 rounded-lg p-4 shadow-sm"
                                     >
                                         <div className="flex justify-between items-start mb-3">
@@ -747,12 +747,12 @@ export default function ApplicantForm({
                                                     {solicitante.names} {solicitante.paternalSurname} {solicitante.maternalSurname}
                                                 </h5>
                                                 <p className="text-xs text-gray-600">
-                                                    DNI: {solicitante.dni}
+                                                    DNI: {solicitante.cui}
                                                 </p>
                                             </div>
                                             <button
                                                 type="button"
-                                                onClick={() => handleRemoveSolicitante(solicitante.dni)}
+                                                onClick={() => handleRemoveSolicitante(solicitante.cui)}
                                                 className="text-red-600 hover:text-red-800 transition-colors p-2 hover:bg-red-50 rounded-lg ml-2"
                                                 title="Eliminar solicitante"
                                                 aria-label={`Eliminar a ${solicitante.names} ${solicitante.paternalSurname}`}

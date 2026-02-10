@@ -1,7 +1,6 @@
 import { useState, useCallback, useEffect } from 'react';
-import Divorciado from './Divorciado';
-import Viudo from './Viudos';
-import Extranjero from './Extranjeros';
+import {useGetRequirements} from "../../../../hooks/useGetRequeriments.ts";
+import {useApplicationContext} from "../../../../context/ApplicationContext.tsx";
 
 interface Requisito {
     id: string;
@@ -21,7 +20,6 @@ interface ArchivoSubido {
 
 interface RequisitosMatrimonioProps {
     tipoSolicitudNombre?: string;
-    descriptionSolicitud?: string;
     onRequisitosChange?: (requisitos: Requisito[]) => void;
     onArchivosChange?: (archivos: ArchivoSubido[]) => void;
 }
@@ -73,13 +71,45 @@ const REQUISITOS_INICIALES: Requisito[] = [
 
 const RequisitosMatrimonio = ({
     tipoSolicitudNombre,
-    descriptionSolicitud,
     onRequisitosChange,
     onArchivosChange
 }: RequisitosMatrimonioProps) => {
     const [requisitos, setRequisitos] = useState<Requisito[]>(REQUISITOS_INICIALES);
     const [archivos, setArchivos] = useState<ArchivoSubido[]>([]);
     const [isDragging, setIsDragging] = useState(false);
+    const [requisitosEstados, setRequisitosEstados] = useState<Map<number, boolean>>(new Map());
+    const {formDataAplication, updateRequisitos} = useApplicationContext();
+    const {requirements,fetchRequirements} = useGetRequirements();
+
+    // Cargar requisitos guardados desde el contexto al iniciar
+    useEffect(() => {
+        if (formDataAplication.requirements && formDataAplication.requirements.length > 0) {
+            const newMap = new Map(
+                formDataAplication.requirements.map(r => {
+                    // Convertir ID a número si es string
+                    const idNum = typeof r.requirementId === 'string' ? parseInt(r.requirementId) : r.requirementId;
+                    return [idNum, r.delivered];
+                })
+            );
+            setRequisitosEstados(newMap);
+        }
+    }, []);
+
+    useEffect(() => {
+        if (requirements.length === 0) return;
+        const requisitosArray = requirements.map(req => {
+            const reqId = typeof req.id === 'string' ? parseInt(req.id) : req.id;
+            return {
+                requirementId: req.id, // Mantener el ID original (puede ser string o number)
+                delivered: requisitosEstados.get(reqId) ?? false
+            };
+        });
+
+        console.log('Sincronizando requisitos:', requisitosArray);
+        updateRequisitos(requisitosArray);
+
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [requisitosEstados, requirements]);
 
     // Notificar cambios en requisitos
     useEffect(() => {
@@ -95,50 +125,118 @@ const RequisitosMatrimonio = ({
         }
     }, [archivos, onArchivosChange]);
 
-    // Calcular progreso
+    useEffect(() => {
+        const obtenerCondiciones = () => {
+            const conds = new Set<string>(["GENERAL"]);
+
+            formDataAplication.participants.forEach((p) => {
+                if (p.maritalStatus && p.maritalStatus !== "Single" && p.rol !== "testigo") {
+                    conds.add(p.maritalStatus.toUpperCase());
+                }
+            });
+            return Array.from(conds).join(',');
+        }
+
+        const cargarRequeriments = async ()=>{
+            const applicationTypeId = formDataAplication.application.applicationTypeId;
+            const condition = obtenerCondiciones();
+            console.log("Llamando a requisitos con:", { applicationTypeId, condition });
+            await fetchRequirements(applicationTypeId, condition);
+        }
+        if (formDataAplication.application.applicationTypeId > 0) {
+            cargarRequeriments();
+        }
+    }, [formDataAplication.application.applicationTypeId]);
+
     const calcularProgreso = useCallback(() => {
-        const requisitosObligatorios = requisitos.filter(r => r.obligatorio);
-        const completados = requisitosObligatorios.filter(r => r.completado).length;
-        const total = requisitosObligatorios.length;
+        const listaRequisitos = requirements.length > 0 ? requirements : requisitos;
+        const total = listaRequisitos.length;
+        const completados = requirements.length > 0
+            ? Array.from(requisitosEstados.values()).filter(estado => estado).length
+            : requisitos.filter(r => r.completado).length;
+
         return {
             completados,
             total,
             porcentaje: total > 0 ? Math.round((completados / total) * 100) : 0
         };
-    }, [requisitos]);
+    }, [requisitos, requirements, requisitosEstados]);
 
     const progreso = calcularProgreso();
 
     // Manejar cambio de checkbox
-    const handleCheckboxChange = useCallback((id: string) => {
-        setRequisitos(prev =>
-            prev.map(req =>
-                req.id === id
-                    ? { ...req, completado: !req.completado }
-                    : req
-            )
-        );
-    }, []);
+    const handleCheckboxChange = useCallback((id: string | number) => {
+        if (requirements.length > 0) {
+            // Usar requirements del hook
+            const numId = typeof id === 'string' ? parseInt(id) : id;
 
-    // Marcar todos los obligatorios
+            setRequisitosEstados(prev => {
+                const newMap = new Map(prev);
+                // Obtener el estado actual, si no existe, usar false
+                const estadoActual = newMap.get(numId) ?? false;
+                const nuevoEstado = !estadoActual;
+
+                // Toggle entre true y false
+                newMap.set(numId, nuevoEstado);
+
+                console.log(`Checkbox ${numId}: ${estadoActual} -> ${nuevoEstado}`);
+
+                return newMap;
+            });
+        } else {
+            // Usar requisitos locales
+            setRequisitos(prev =>
+                prev.map(req =>
+                    req.id === id
+                        ? { ...req, completado: !req.completado }
+                        : req
+                )
+            );
+        }
+    }, [requirements]);
+
     const marcarTodosObligatorios = useCallback(() => {
-        setRequisitos(prev =>
-            prev.map(req =>
-                req.obligatorio
-                    ? { ...req, completado: true }
-                    : req
-            )
-        );
-    }, []);
+        if (requirements.length > 0) {
+            // Marcar todos los requirements del hook como true
+            setRequisitosEstados(prev => {
+                const newMap = new Map(prev);
+                requirements.forEach(req => {
+                    const reqId = typeof req.id === 'string' ? parseInt(req.id) : req.id;
+                    newMap.set(reqId, true);
+                });
+                return newMap;
+            });
+        } else {
+            setRequisitos(prev =>
+                prev.map(req =>
+                    req.obligatorio
+                        ? { ...req, completado: true }
+                        : req
+                )
+            );
+        }
+    }, [requirements]);
 
     // Desmarcar todos
     const desmarcarTodos = useCallback(() => {
-        setRequisitos(prev =>
-            prev.map(req => ({ ...req, completado: false }))
-        );
-    }, []);
+        if (requirements.length > 0) {
+            setRequisitosEstados(prev => {
+                const newMap = new Map(prev);
+                requirements.forEach(req => {
 
-    // Formatear tamaño de archivo
+                    const reqId = typeof req.id === 'string' ? parseInt(req.id) : req.id;
+                    newMap.set(reqId, false);
+                });
+                return newMap;
+            });
+        } else {
+
+            setRequisitos(prev =>
+                prev.map(req => ({ ...req, completado: false }))
+            );
+        }
+    }, [requirements]);
+
     const formatearTamaño = (bytes: number): string => {
         if (bytes === 0) return '0 Bytes';
         const k = 1024;
@@ -147,7 +245,6 @@ const RequisitosMatrimonio = ({
         return Math.round(bytes / Math.pow(k, i) * 100) / 100 + ' ' + sizes[i];
     };
 
-    // Manejar carga de archivos
     const handleFileChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
         const files = e.target.files;
         if (!files) return;
@@ -164,12 +261,10 @@ const RequisitosMatrimonio = ({
         e.target.value = ''; // Resetear input
     }, []);
 
-    // Eliminar archivo
     const handleEliminarArchivo = useCallback((id: string) => {
         setArchivos(prev => prev.filter(a => a.id !== id));
     }, []);
 
-    // Drag and Drop handlers
     const handleDragEnter = useCallback((e: React.DragEvent) => {
         e.preventDefault();
         e.stopPropagation();
@@ -206,7 +301,6 @@ const RequisitosMatrimonio = ({
         setArchivos(prev => [...prev, ...nuevosArchivos]);
     }, []);
 
-    // Obtener ícono según tipo de archivo
     const getIconoArchivo = (tipo: string): string => {
         if (tipo.includes('pdf')) return 'fa-file-pdf text-red-500';
         if (tipo.includes('image')) return 'fa-file-image text-blue-500';
@@ -224,14 +318,9 @@ const RequisitosMatrimonio = ({
                     <span>Requisitos para el Matrimonio</span>
                 </h3>
                 {tipoSolicitudNombre && (
-                    <span className="bg-blue-100 text-blue-800 text-xs sm:text-sm font-medium px-3 sm:px-4 py-1.5 sm:py-2 rounded-lg flex flex-col items-center w-fit">
-                        <div>
-                            <i className="fas fa-file-alt mr-2"></i>
-                            {tipoSolicitudNombre.toUpperCase()}
-                        </div>
-                        <span className='text-xs font-normal text-center'>
-                            {descriptionSolicitud}
-                        </span>
+                    <span className="bg-blue-100 text-blue-800 text-xs sm:text-sm font-medium px-3 sm:px-4 py-1.5 sm:py-2 rounded-lg inline-flex items-center w-fit">
+                        <i className="fas fa-file-alt mr-2"></i>
+                        {tipoSolicitudNombre.toUpperCase()}
                     </span>
                 )}
             </div>
@@ -260,8 +349,8 @@ const RequisitosMatrimonio = ({
                 <div className="w-full bg-gray-200 rounded-full h-3 overflow-hidden">
                     <div
                         className={`h-full rounded-full transition-all duration-500 ${progreso.porcentaje === 100
-                            ? 'bg-linear-to-r from-green-500 to-green-600'
-                            : 'bg-linear-to-r from-blue-500 to-purple-600'
+                                ? 'bg-linear-to-r from-green-500 to-green-600'
+                                : 'bg-linear-to-r from-blue-500 to-purple-600'
                             }`}
                         style={{ width: `${progreso.porcentaje}%` }}
                     ></div>
@@ -276,7 +365,7 @@ const RequisitosMatrimonio = ({
                     className="w-full sm:w-auto px-4 py-2 text-sm bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors flex items-center justify-center gap-2"
                 >
                     <i className="fas fa-check-double"></i>
-                    <span>Marcar Obligatorios</span>
+                    <span>Marcar Todos</span>
                 </button>
                 <button
                     type="button"
@@ -296,83 +385,74 @@ const RequisitosMatrimonio = ({
                 </h4>
 
                 <div className="bg-white border border-gray-200 rounded-lg divide-y divide-gray-200">
-                    {requisitos.map((requisito, index) => (
-                        <div
-                            key={requisito.id}
-                            className={`p-4 hover:bg-gray-50 transition-colors ${requisito.completado ? 'bg-green-50' : ''
+                    {requirements.map((requisito, index) => {
+                        const requistoIdNum = typeof requisito.id === 'string' ? parseInt(requisito.id) : requisito.id;
+
+                        const estadoEnMap = requisitosEstados.get(requistoIdNum);
+                        const isCompleted = requirements.length > 0
+                            ? Boolean(estadoEnMap)
+                            : false;
+
+                        return (
+                            <div
+                                key={requisito.id}
+                                className={`p-4 hover:bg-gray-50 transition-colors ${
+                                    isCompleted ? 'bg-green-50' : ''
                                 }`}
-                        >
-                            <div className="flex items-start gap-3">
-                                {/* Checkbox */}
-                                <div className="flex items-center h-5 mt-0.5">
-                                    <input
-                                        type="checkbox"
-                                        id={`requisito-${requisito.id}`}
-                                        checked={requisito.completado}
-                                        onChange={() => handleCheckboxChange(requisito.id)}
-                                        className="w-5 h-5 text-blue-600 bg-white border-gray-300 rounded focus:ring-blue-500 focus:ring-2 cursor-pointer"
-                                    />
-                                </div>
-
-                                {/* Contenido */}
-                                <div className="flex-1 min-w-0">
-                                    <label
-                                        htmlFor={`requisito-${requisito.id}`}
-                                        className="cursor-pointer"
-                                    >
-                                        <div className="flex items-start justify-between gap-2 mb-1">
-                                            <span className={`text-sm font-medium ${requisito.completado
-                                                ? 'text-gray-500 line-through'
-                                                : 'text-gray-900'
-                                                }`}>
-                                                {index + 1}. {requisito.titulo}
-                                            </span>
-                                            {requisito.obligatorio && (
-                                                <span className="shrink-0 bg-red-100 text-red-800 text-xs font-semibold px-2 py-0.5 rounded">
-                                                    Obligatorio
-                                                </span>
-                                            )}
-                                            {!requisito.obligatorio && (
-                                                <span className="shrink-0 bg-gray-100 text-gray-600 text-xs font-semibold px-2 py-0.5 rounded">
-                                                    Opcional
-                                                </span>
-                                            )}
-                                        </div>
-                                        <p className={`text-xs ${requisito.completado ? 'text-gray-400' : 'text-gray-600'
-                                            }`}>
-                                            {requisito.descripcion}
-                                        </p>
-                                        <label className="inline-block">
-                                            <input
-                                                type="file"
-                                                multiple
-                                                onChange={handleFileChange}
-                                                className="hidden"
-                                                accept=".pdf,.doc,.docx,.xls,.xlsx,.jpg,.jpeg,.png"
-                                            />
-                                            <span className="cursor-pointer inline-flex items-center gap-2 px-4 sm:px-6 py-2 sm:py-2.5 bg-purple-600 text-white text-sm font-medium rounded-lg hover:bg-purple-700 transition-colors">
-                                                <i className="fas fa-folder-open"></i>
-                                                Seleccionar Archivos
-                                            </span>
-                                        </label>
-                                    </label>
-                                </div>
-
-                                {/* Estado */}
-                                {requisito.completado && (
-                                    <div className="shrink-0">
-                                        <i className="fas fa-check-circle text-green-600 text-xl"></i>
+                            >
+                                <div className="flex items-start gap-3">
+                                    {/* Checkbox */}
+                                    <div className="flex items-center h-5 mt-0.5">
+                                        <input
+                                            type="checkbox"
+                                            id={`requisito-${requisito.id}`}
+                                            checked={isCompleted}
+                                            onChange={() => handleCheckboxChange(requisito.id)}
+                                            className="w-5 h-5 text-blue-600 bg-white border-gray-300 rounded focus:ring-blue-500 focus:ring-2 cursor-pointer"
+                                        />
                                     </div>
-                                )}
+
+                                    {/* Contenido */}
+                                    <div className="flex-1 min-w-0">
+                                        <label
+                                            htmlFor={`requisito-${requisito.id}`}
+                                            className="cursor-pointer"
+                                        >
+                                            <div className="flex items-start justify-between gap-2 mb-1">
+                                                <span className={`text-sm font-medium ${
+                                                    isCompleted
+                                                        ? 'text-gray-500 line-through'
+                                                        : 'text-gray-900'
+                                                }`}>
+                                                    {index + 1}. {requisito.nombre_requisito}
+                                                </span>
+                                                {/* Para requirements del hook, todos son obligatorios */}
+                                                {requirements.length &&
+                                                    <span className="shrink-0 bg-red-100 text-red-800 text-xs font-semibold px-2 py-0.5 rounded">
+                                                        {requisito.condicion === 'GENERAL' ? 'Requisito General' : requisito.condicion === 'DIVORCED' ? 'Requisito para Divorciados' : requisito.condicion === 'WIDOWED' ? 'Requisito para Viudos' : 'Requisito Obligatorio'}
+                                                    </span>
+                                                }
+                                            </div>
+                                            <p className={`text-xs ${
+                                                isCompleted ? 'text-gray-400' : 'text-gray-600'
+                                            }`}>
+                                                {requisito.descripcion}
+                                            </p>
+                                        </label>
+                                    </div>
+
+                                    {/* Estado */}
+                                    {isCompleted && (
+                                        <div className="shrink-0">
+                                            <i className="fas fa-check-circle text-green-600 text-xl"></i>
+                                        </div>
+                                    )}
+                                </div>
                             </div>
-                        </div>
-                    ))}
+                        );
+                    })}
                 </div>
             </div>
-
-            <Divorciado />
-            <Viudo />
-            <Extranjero />
 
             {/* Sección de Carga de Archivos (Opcional) */}
             <div className="space-y-3 mt-6">
@@ -396,8 +476,8 @@ const RequisitosMatrimonio = ({
                     onDragLeave={handleDragLeave}
                     onDrop={handleDrop}
                     className={`border-2 border-dashed rounded-lg p-6 sm:p-8 text-center transition-all ${isDragging
-                        ? 'border-purple-500 bg-purple-50'
-                        : 'border-gray-300 bg-gray-50 hover:bg-gray-100'
+                            ? 'border-purple-500 bg-purple-50'
+                            : 'border-gray-300 bg-gray-50 hover:bg-gray-100'
                         }`}
                 >
                     <i className={`fas fa-cloud-upload-alt text-4xl sm:text-5xl mb-3 ${isDragging ? 'text-purple-600' : 'text-gray-400'
@@ -414,7 +494,7 @@ const RequisitosMatrimonio = ({
                             multiple
                             onChange={handleFileChange}
                             className="hidden"
-                            accept=".pdf,.doc,.docx,.xls,.xlsx,.jpg,.jpeg,.png"
+                            accept=".pdf,.doc,.docx,.xls,.xlsx,.jpg,.jpeg,.png,.gif"
                         />
                         <span className="cursor-pointer inline-flex items-center gap-2 px-4 sm:px-6 py-2 sm:py-2.5 bg-purple-600 text-white text-sm font-medium rounded-lg hover:bg-purple-700 transition-colors">
                             <i className="fas fa-folder-open"></i>

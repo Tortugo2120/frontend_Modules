@@ -1,32 +1,22 @@
+import type {CreateApplicationPayload} from "../../../model/aplicationModel.ts";
 
 interface ConfirmationSummaryProps {
     tipoSolicitud: number | null;
     tipoNombre: string | undefined;
-    descriptionSolicitud: string | undefined;
-    formData: {
-        nombresSolicitante: string;
-        apellidoPaternoSolicitante: string;
-        apellidoMaternoSolicitante: string;
-        dniSolicitante: string;
-        fechaNacimientoSolicitante?: string;
-        sexoSolicitante?: string;
-        direccionSolicitante?: string;
-        correoSolicitante?: string;
-        telefonoSolicitante?: string;
-        ubigeoSolicitante?: number;
-        estadoCivilSolicitante?: string;
-        nombreCompleto1?: string;
-        dniPersona1?: string;
-        nombreCompleto2?: string;
-        dniPersona2?: string;
-        fechaEvento?: string;
-        lugarEvento?: string;
-        documentosAdjuntos?: string;
-        observaciones?: string;
-    };
+    applicationData: CreateApplicationPayload;
+    onConfirm: () => void;
+    isSubmitting: boolean;
 }
 
-export default function ConfirmationSummary({ tipoNombre, descriptionSolicitud, formData }: ConfirmationSummaryProps) {
+export default function ConfirmationSummary({
+    tipoNombre,
+    applicationData,
+    onConfirm,
+    isSubmitting
+}: ConfirmationSummaryProps) {
+    // Extraer datos del solicitante principal (participante con role 'solicitante')
+    const solicitante = applicationData.participants.find(p => p.rol === 'solicitante');
+
     return (
         <div className="animate-fadeIn">
             <div className="text-center mb-8">
@@ -40,43 +30,56 @@ export default function ConfirmationSummary({ tipoNombre, descriptionSolicitud, 
             <div className="bg-linear-to-br from-blue-50 to-indigo-50 rounded-xl p-6 space-y-4">
                 <div className="flex justify-between items-start border-b border-blue-200 pb-3">
                     <span className="text-gray-600 font-medium">Tipo de Solicitud:</span>
-                    <span className="font-bold text-gray-900">{tipoNombre}
-                        <span className="text-xs font-semibold ml-1.5">
-                            {descriptionSolicitud}
-                        </span>
-                    </span>
+                    <span className="font-bold text-gray-900">{tipoNombre}</span>
                 </div>
-                <div className="flex justify-between items-start border-b border-blue-200 pb-3">
-                    <span className="text-gray-600 font-medium">Solicitante:</span>
-                    <span className="font-semibold text-gray-900">
-                        {formData.nombresSolicitante} {formData.apellidoPaternoSolicitante} {formData.apellidoMaternoSolicitante}
-                    </span>
-                </div>
-                <div className="flex justify-between items-start border-b border-blue-200 pb-3">
-                    <span className="text-gray-600 font-medium">DNI:</span>
-                    <span className="font-semibold text-gray-900">{formData.dniSolicitante}</span>
-                </div>
-                <div className="flex justify-between items-start border-b border-blue-200 pb-3">
-                    <span className="text-gray-600 font-medium">Teléfono:</span>
-                    <span className="font-semibold text-gray-900">{formData.telefonoSolicitante}</span>
-                </div>
-                {formData.correoSolicitante && (
+
+                {solicitante && (
+                    <>
+                        <div className="flex justify-between items-start border-b border-blue-200 pb-3">
+                            <span className="text-gray-600 font-medium">Solicitante:</span>
+                            <span className="font-semibold text-gray-900">
+                                {solicitante.names} {solicitante.paternalSurname} {solicitante.maternalSurname}
+                            </span>
+                        </div>
+                        <div className="flex justify-between items-start border-b border-blue-200 pb-3">
+                            <span className="text-gray-600 font-medium">DNI:</span>
+                            <span className="font-semibold text-gray-900">{solicitante.cui}</span>
+                        </div>
+                        <div className="flex justify-between items-start border-b border-blue-200 pb-3">
+                            <span className="text-gray-600 font-medium">Teléfono:</span>
+                            <span className="font-semibold text-gray-900">{solicitante.phone}</span>
+                        </div>
+                        {solicitante.email && (
+                            <div className="flex justify-between items-start border-b border-blue-200 pb-3">
+                                <span className="text-gray-600 font-medium">Email:</span>
+                                <span className="font-semibold text-gray-900">{solicitante.email}</span>
+                            </div>
+                        )}
+                    </>
+                )}
+
+                {/* Mostrar número de expediente si existe */}
+                {applicationData.application.expedientNumber && (
                     <div className="flex justify-between items-start border-b border-blue-200 pb-3">
-                        <span className="text-gray-600 font-medium">Email:</span>
-                        <span className="font-semibold text-gray-900">{formData.correoSolicitante}</span>
+                        <span className="text-gray-600 font-medium">N° Expediente:</span>
+                        <span className="font-semibold text-blue-600">{applicationData.application.expedientNumber}</span>
                     </div>
                 )}
-                {formData.nombreCompleto1 && (
+
+                {/* Mostrar participantes adicionales */}
+                {applicationData.participants.length > 1 && (
                     <div className="flex justify-between items-start border-b border-blue-200 pb-3">
-                        <span className="text-gray-600 font-medium">Persona 1:</span>
-                        <span className="font-semibold text-gray-900">{formData.nombreCompleto1}</span>
+                        <span className="text-gray-600 font-medium">Participantes:</span>
+                        <span className="font-semibold text-gray-900">{applicationData.participants.length} persona(s)</span>
                     </div>
                 )}
-                {formData.fechaEvento && (
+
+                {/* Mostrar requisitos si existen */}
+                {applicationData.requirements && applicationData.requirements.length > 0 && (
                     <div className="flex justify-between items-start">
-                        <span className="text-gray-600 font-medium">Fecha del Evento:</span>
+                        <span className="text-gray-600 font-medium">Requisitos:</span>
                         <span className="font-semibold text-gray-900">
-                            {new Date(formData.fechaEvento).toLocaleDateString('es-PE')}
+                            {applicationData.requirements.filter(r => r.delivered).length} de {applicationData.requirements.length} completados
                         </span>
                     </div>
                 )}
@@ -87,10 +90,39 @@ export default function ConfirmationSummary({ tipoNombre, descriptionSolicitud, 
                 <div className="text-sm text-amber-800">
                     <p className="font-semibold mb-1">Importante:</p>
                     <p>
-                        Al confirmar esta solicitud, se generará un número de expediente. Puede hacer seguimiento del
+                        Al confirmar esta solicitud, se enviará al sistema para su procesamiento. Puede hacer seguimiento del
                         trámite desde el panel principal.
                     </p>
                 </div>
+            </div>
+
+            {/* Botón de confirmación */}
+            <div className="mt-6 flex justify-center">
+                <button
+                    type="button"
+                    onClick={onConfirm}
+                    disabled={isSubmitting}
+                    className={`
+                        px-8 py-3 rounded-lg font-semibold text-white
+                        transition-all duration-300 transform
+                        ${isSubmitting 
+                            ? 'bg-gray-400 cursor-not-allowed' 
+                            : 'bg-blue-600 hover:bg-blue-700 hover:scale-105 shadow-lg hover:shadow-xl'
+                        }
+                    `}
+                >
+                    {isSubmitting ? (
+                        <span className="flex items-center gap-2">
+                            <i className="fas fa-spinner fa-spin"></i>
+                            Enviando...
+                        </span>
+                    ) : (
+                        <span className="flex items-center gap-2">
+                            <i className="fas fa-check-circle"></i>
+                            Confirmar y Enviar Solicitud
+                        </span>
+                    )}
+                </button>
             </div>
         </div>
     );

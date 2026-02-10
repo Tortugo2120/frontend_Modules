@@ -4,21 +4,28 @@ import {CreateAplication} from "../services/AplicationServices.ts";
 
 export default function useCreateAplication() {
     const [loading, setLoading] = useState(false);
-    const [error, setError] = useState(null);
+    const [error, setError] = useState<string | null>(null);
+    const [success, setSuccess] = useState(false);
 
     const createSolicitud = async (dataForm:CreateApplicationPayload) => {
       setLoading(true);
       setError(null);
-
+      setSuccess(false);
       try {
-          return await CreateAplication(dataForm);
-      }catch (error:any){
-            const errorResponse = error.response;
-            console.log(errorResponse);
+          const response = await CreateAplication(dataForm);
+          setSuccess(true);
+          return response;
+      }catch (error:unknown){
+          const errorMessage = error instanceof Error
+              ? error.message
+              : 'Error al crear la solicitud';
+          setError(errorMessage);
+          console.error(error.response);
+          return null;
       }finally {
           setLoading(false);
       }
     }
 
-    return {loading,error,createSolicitud};
+    return {loading,error,createSolicitud,success};
 }
