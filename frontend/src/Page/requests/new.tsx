@@ -7,11 +7,15 @@ import NavigationButtons from "../../components/requests/new/Navigationbuttons";
 import useTipoSolici from "../../hooks/useTipoSolici.ts";
 import Contrayente from "../../components/requests/new/Matrimonio/Contrayente.tsx";
 import Testigos from "../../components/requests/new/Matrimonio/Testigos.tsx";
-import Requisitos from "../../components/requests/new/Matrimonio/Requisitos.tsx";
+import Requisitos, {
+    limpiarIndexedDB,
+    obtenerArchivosDeIndexedDB
+} from "../../components/requests/new/Matrimonio/Requisitos.tsx";
 import {ApplicationHandler} from "../../context/ApplicationContext.tsx";
 import {Auth} from "../../context/AuthContext.tsx";
 import useCreateAplication from "../../hooks/useCreateAplication.ts";
-
+import { useUploadDocuments } from "../../hooks/useUploadDocuments.ts";
+import {useNavigate} from "react-router-dom";
 export default function NewRequest() {
     const [tipoSolicitud, setTipoSolicitud] = useState<number | null>(null);
     const [searchTerm, setSearchTerm] = useState("");
@@ -19,6 +23,8 @@ export default function NewRequest() {
     const {user} = Auth();
     const [isSubmitting, setIsSubmitting] = useState(false);
     const {error,createSolicitud,success} = useCreateAplication();
+    const { uploadMultipleDocuments, isUploading: isUploadingDocs, uploadProgress } = useUploadDocuments();
+    const navigate = useNavigate();
 
     const handleSelectTipoSolicitud = (id: number) => {
         setTipoSolicitud(prev =>
@@ -42,27 +48,72 @@ export default function NewRequest() {
     const { tiposolicitud } = useTipoSolici();
     const [currentStep, setCurrentStep] = useState(1);
 
-    // Función para enviar la solicitud a la API
     const handleConfirmSubmit = async () => {
         try {
             setIsSubmitting(true);
 
-            console.log('Preparando para enviar solicitud a la API:', formDataAplication);
-            console.log('✅ Data lista para enviar:', JSON.stringify(formDataAplication, null, 2));
+            console.log('📤 Preparando para enviar solicitud a la API:', formDataAplication);
+
             const response = await createSolicitud(formDataAplication);
 
             if (response && success) {
                 console.log('Solicitud creada exitosamente:', response);
-                alert('Solicitud creada exitosamente');
-                // navigate('/solicitudes');
+
+                const applicationId = response?.data?.applicationId;
+
+                if (!applicationId) {
+                    throw new Error('No se obtuvo el ID de la solicitud creada');
+                }
+
+                console.log('ID de solicitud:', applicationId);
+
+                const documentosGuardados = await obtenerArchivosDeIndexedDB();
+                console.log(`Documentos recuperados de IndexedDB: ${documentosGuardados.length}`);
+
+                if (documentosGuardados.length > 0) {
+                    console.log('Iniciando subida de documentos...');
+
+                    const documentosParaSubir = documentosGuardados
+                        .filter(doc => doc.file !== null)
+                        .map(doc => ({
+                            applicationId: Number(applicationId),
+                            requirementId: Number(doc.requirementId),
+                            file: doc.file as File
+                        }));
+
+                    console.log(`Total de documentos a subir: ${documentosParaSubir.length}`);
+
+                    const uploadResult = await uploadMultipleDocuments(documentosParaSubir);
+
+                    if (uploadResult.success) {
+                        console.log('Todos los documentos subidos exitosamente');
+
+                        await limpiarIndexedDB();
+                        console.log('IndexedDB limpiado');
+
+                        alert(`Solicitud creada exitosamente con ${documentosParaSubir.length} documento(s) adjunto(s)`);
+                    } else {
+                        console.warn('Algunos documentos fallaron:', uploadResult.message);
+                        alert(
+                            `Solicitud creada pero algunos documentos fallaron:\n\n` +
+                            `${uploadResult.message}\n\n` +
+                            `Los documentos permanecen guardados localmente para reintentarlo más tarde.`
+                        );
+                    }
+                } else {
+                    console.log('ℹNo hay documentos para subir');
+                    alert('Solicitud creada exitosamente (sin documentos adjuntos)');
+                }
+                //navigate('/solicitud/history');
             } else if (error) {
                 console.error('Error al crear solicitud:', error);
-                alert(`Error: ${error}`);
+                alert(`Error al crear solicitud: ${error}`);
             }
 
         } catch (error) {
-            console.error('Error al enviar la solicitud:', error);
-            console.log(`Error: ${error instanceof Error ? error.message : 'Error desconocido'}`);
+            console.error('❌ Error en el proceso:', error);
+            const errorMessage = error instanceof Error ? error.message : 'Error desconocido';
+            alert(`Error: ${errorMessage}`);
         } finally {
             setIsSubmitting(false);
         }
@@ -207,13 +258,36 @@ export default function NewRequest() {
                         {/* Step 6: confirmacion */}
                         {currentStep === 6 && ( 
                             <div className="p-6 lg:p-6">
+                                {/* Barra de progreso de subida de documentos */}
+                                {isUploadingDocs && (
+                                    <div className="mb-6 bg-blue-50 border border-blue-200 rounded-lg p-4">
+                                        <div className="flex items-center gap-3 mb-2">
+                                            <i className="fas fa-cloud-upload-alt text-blue-600 animate-pulse"></i>
+                                            <span className="text-sm font-medium text-gray-900">
+                                                Subiendo documentos...
+                                            </span>
+                                        </div>
+                                        <div className="w-full bg-gray-200 rounded-full h-2.5">
+                                            <div
+                                                className="bg-blue-600 h-2.5 rounded-full transition-all duration-300"
+                                                style={{
+                                                    width: `${uploadProgress.total > 0 ? (uploadProgress.current / uploadProgress.total) * 100 : 0}%`
+                                                }}
+                                            ></div>
+                                        </div>
+                                        <p className="text-xs text-gray-600 mt-2">
+                                            {uploadProgress.current} de {uploadProgress.total} archivo(s)
+                                        </p>
+                                    </div>
+                                )}
+
                                 <ConfirmationSummary
                                     tipoSolicitud={tipoSolicitud}
                                     tipoNombre={selectedRequestType?.nombre_solicitud}
                                     descriptionSolicitud={selectedRequestType?.descripcion}
                                     applicationData={formDataAplication}
                                     onConfirm={handleConfirmSubmit}
-                                    isSubmitting={isSubmitting}
+                                    isSubmitting={isSubmitting || isUploadingDocs}
                                 />
                             </div>
                         )}

@@ -44,7 +44,7 @@ export interface AplicationResponse {
     status:boolean;
     code:number;
     data:{
-        id: number;
+        applicationId: number;
         id_usuario: number;
         id_tipo_solicitud: number;
         numero_expediente: string;

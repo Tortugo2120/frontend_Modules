@@ -1,6 +1,7 @@
 import { useState, useCallback, useEffect } from 'react';
 import {useGetRequirements} from "../../../../hooks/useGetRequeriments.ts";
 import {useApplicationContext} from "../../../../context/ApplicationContext.tsx";
+import {db} from "../../../../model/documentModel.ts";
 
 interface Requisito {
     id: string;
@@ -16,11 +17,6 @@ interface ArchivoSubido {
     tamaño: number;
     tipo: string;
     archivo: File;
-}
-
-interface ArchivoRequisito {
-    requisitoId: number;
-    archivos: ArchivoSubido[];
 }
 
 interface RequisitosMatrimonioProps {
@@ -82,9 +78,8 @@ const RequisitosMatrimonio = ({
     onArchivosChange
 }: RequisitosMatrimonioProps) => {
     const [requisitos, setRequisitos] = useState<Requisito[]>(REQUISITOS_INICIALES);
-    const [archivos, setArchivos] = useState<ArchivoSubido[]>([]);
+    const [archivos] = useState<ArchivoSubido[]>([]);
     const [archivosRequisitos, setArchivosRequisitos] = useState<Map<number, ArchivoSubido[]>>(new Map());
-    const [isDragging, setIsDragging] = useState(false);
     const [requisitosEstados, setRequisitosEstados] = useState<Map<number, number>>(new Map());
     const {formDataAplication, updateRequisitos} = useApplicationContext();
     const {requirements,fetchRequirements} = useGetRequirements();
@@ -101,6 +96,38 @@ const RequisitosMatrimonio = ({
             );
             setRequisitosEstados(newMap);
         }
+    }, []);
+
+    // Cargar archivos guardados desde IndexedDB al iniciar
+    useEffect(() => {
+        const cargarArchivosGuardados = async () => {
+            try {
+                const todosLosDocumentos = await db.documents.toArray();
+                const newMap = new Map<number, ArchivoSubido[]>();
+
+                todosLosDocumentos.forEach(doc => {
+                    if (doc.file) {
+                        const archivo: ArchivoSubido = {
+                            id: `${doc.requirementId}-${doc.file.name}`,
+                            nombre: doc.nombreArchivo || doc.file.name,
+                            tamaño: doc.file.size,
+                            tipo: doc.file.type,
+                            archivo: doc.file
+                        };
+
+                        const archivosExistentes = newMap.get(doc.requirementId) || [];
+                        newMap.set(doc.requirementId, [...archivosExistentes, archivo]);
+                    }
+                });
+
+                setArchivosRequisitos(newMap);
+                console.log('Archivos cargados desde IndexedDB:', newMap);
+            } catch (error) {
+                console.error('Error al cargar archivos desde IndexedDB:', error);
+            }
+        };
+
+        cargarArchivosGuardados();
     }, []);
 
     useEffect(() => {
@@ -161,7 +188,7 @@ const RequisitosMatrimonio = ({
         const listaRequisitos = requirements.length > 0 ? requirements : requisitos;
         const total = listaRequisitos.length;
         const completados = requirements.length > 0
-            ? Array.from(requisitosEstados.values()).filter(estado => estado).length
+            ? Array.from(requisitosEstados.values()).filter(estado => estado === 1).length
             : requisitos.filter(r => r.completado).length;
 
         return {
@@ -226,17 +253,26 @@ const RequisitosMatrimonio = ({
     }, [requirements]);
 
     // Desmarcar todos
-    const desmarcarTodos = useCallback(() => {
+    const desmarcarTodos = useCallback(async () => {
         if (requirements.length > 0) {
             setRequisitosEstados(prev => {
                 const newMap = new Map(prev);
                 requirements.forEach(req => {
 
                     const reqId = typeof req.id === 'string' ? parseInt(req.id) : req.id;
-                    newMap.set(reqId, false);
+                    newMap.set(reqId, 0);
                 });
                 return newMap;
             });
+
+            // Limpiar todos los archivos de IndexedDB
+            try {
+                await db.documents.clear();
+                console.log('Todos los archivos eliminados de IndexedDB');
+            } catch (error) {
+                console.error('Error al limpiar IndexedDB:', error);
+            }
+
             // Limpiar todos los archivos de requisitos
             setArchivosRequisitos(new Map());
         } else {
@@ -256,7 +292,7 @@ const RequisitosMatrimonio = ({
     };
 
     // Manejar archivos específicos de requisito
-    const handleRequisitoFileChange = useCallback((requisitoId: number, e: React.ChangeEvent<HTMLInputElement>) => {
+    const handleRequisitoFileChange = useCallback(async (requisitoId: number, e: React.ChangeEvent<HTMLInputElement>) => {
         const files = e.target.files;
         if (!files) return;
 
@@ -268,6 +304,20 @@ const RequisitosMatrimonio = ({
             archivo: file
         }));
 
+        // Guardar cada archivo en IndexedDB
+        try {
+            for (const archivo of nuevosArchivos) {
+                await db.documents.put({
+                    requirementId: requisitoId,
+                    file: archivo.archivo,
+                    nombreArchivo: archivo.nombre
+                });
+                console.log(`Archivo guardado en IndexedDB: ${archivo.nombre} para requisito ${requisitoId}`);
+            }
+        } catch (error) {
+            console.error('Error al guardar archivos en IndexedDB:', error);
+        }
+
         setArchivosRequisitos(prev => {
             const newMap = new Map(prev);
             const archivosExistentes = newMap.get(requisitoId) || [];
@@ -278,7 +328,30 @@ const RequisitosMatrimonio = ({
         e.target.value = '';
     }, []);
 
-    const handleEliminarArchivoRequisito = useCallback((requisitoId: number, archivoId: string) => {
+    const handleEliminarArchivoRequisito = useCallback(async (requisitoId: number, archivoId: string) => {
+        // Primero obtener el archivo a eliminar
+        const archivosActuales = archivosRequisitos.get(requisitoId) || [];
+        const archivoAEliminar = archivosActuales.find(a => a.id === archivoId);
+
+        // Eliminar de IndexedDB
+        if (archivoAEliminar) {
+            try {
+                // Obtener todos los documentos del requisito
+                const documentos = await db.documents.where('requirementId').equals(requisitoId).toArray();
+
+                // Buscar el documento que coincida con el nombre del archivo
+                const docAEliminar = documentos.find(doc => doc.nombreArchivo === archivoAEliminar.nombre);
+
+                if (docAEliminar && docAEliminar.id) {
+                    await db.documents.delete(docAEliminar.id);
+                    console.log(`Archivo eliminado de IndexedDB: ${archivoAEliminar.nombre}`);
+                }
+            } catch (error) {
+                console.error('Error al eliminar archivo de IndexedDB:', error);
+            }
+        }
+
+        // Actualizar el estado local
         setArchivosRequisitos(prev => {
             const newMap = new Map(prev);
             const archivos = newMap.get(requisitoId) || [];
@@ -292,63 +365,7 @@ const RequisitosMatrimonio = ({
 
             return newMap;
         });
-    }, []);
-
-    const handleFileChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
-        const files = e.target.files;
-        if (!files) return;
-
-        const nuevosArchivos: ArchivoSubido[] = Array.from(files).map(file => ({
-            id: crypto?.randomUUID?.() || `${Date.now()}-${Math.random()}`,
-            nombre: file.name,
-            tamaño: file.size,
-            tipo: file.type,
-            archivo: file
-        }));
-
-        setArchivos(prev => [...prev, ...nuevosArchivos]);
-        e.target.value = ''; // Resetear input
-    }, []);
-
-    const handleEliminarArchivo = useCallback((id: string) => {
-        setArchivos(prev => prev.filter(a => a.id !== id));
-    }, []);
-
-    const handleDragEnter = useCallback((e: React.DragEvent) => {
-        e.preventDefault();
-        e.stopPropagation();
-        setIsDragging(true);
-    }, []);
-
-    const handleDragLeave = useCallback((e: React.DragEvent) => {
-        e.preventDefault();
-        e.stopPropagation();
-        setIsDragging(false);
-    }, []);
-
-    const handleDragOver = useCallback((e: React.DragEvent) => {
-        e.preventDefault();
-        e.stopPropagation();
-    }, []);
-
-    const handleDrop = useCallback((e: React.DragEvent) => {
-        e.preventDefault();
-        e.stopPropagation();
-        setIsDragging(false);
-
-        const files = e.dataTransfer.files;
-        if (!files || files.length === 0) return;
-
-        const nuevosArchivos: ArchivoSubido[] = Array.from(files).map(file => ({
-            id: crypto?.randomUUID?.() || `${Date.now()}-${Math.random()}`,
-            nombre: file.name,
-            tamaño: file.size,
-            tipo: file.type,
-            archivo: file
-        }));
-
-        setArchivos(prev => [...prev, ...nuevosArchivos]);
-    }, []);
+    }, [archivosRequisitos]);
 
     const getIconoArchivo = (tipo: string): string => {
         if (tipo.includes('pdf')) return 'fa-file-pdf text-red-500';
@@ -383,6 +400,21 @@ const RequisitosMatrimonio = ({
             'WIDOWED': 'purple'
         };
         return colores[condicion] || 'gray';
+    };
+
+    // Agrupar requisitos por condición
+    const requisitosAgrupados = () => {
+        const grupos: { [key: string]: typeof requirements } = {};
+
+        requirements.forEach(req => {
+            const condicion = req.condicion || 'GENERAL';
+            if (!grupos[condicion]) {
+                grupos[condicion] = [];
+            }
+            grupos[condicion].push(req);
+        });
+
+        return grupos;
     };
 
     const grupos = requisitosAgrupados();
@@ -462,7 +494,7 @@ const RequisitosMatrimonio = ({
 
             {/* Lista de Requisitos por Condición */}
             <div className="space-y-6">
-                {Object.entries(grupos).map(([condicion, requisitosGrupo], groupIndex) => {
+                {Object.entries(grupos).map(([condicion, requisitosGrupo]) => {
                     const color = getColorCondicion(condicion);
 
                     return (
@@ -478,20 +510,12 @@ const RequisitosMatrimonio = ({
                                 </span>
                             </div>
 
-                <div className="bg-white border border-gray-200 rounded-lg divide-y divide-gray-200">
-                    {requirements.map((requisito, index) => {
-                        const requistoIdNum = typeof requisito.id === 'string' ? parseInt(requisito.id) : requisito.id;
-
-                        const estadoEnMap = requisitosEstados.get(requistoIdNum);
-                        const isCompleted = requirements.length > 0
-                            ? estadoEnMap === 1
-                            : false;
                             {/* Requisitos del Grupo */}
                             <div className="bg-white border border-gray-300 rounded-lg divide-y divide-gray-200">
                                 {requisitosGrupo.map((requisito, index) => {
                                     const requistoIdNum = typeof requisito.id === 'string' ? parseInt(requisito.id) : requisito.id;
                                     const estadoEnMap = requisitosEstados.get(requistoIdNum);
-                                    const isCompleted = Boolean(estadoEnMap);
+                                    const isCompleted = estadoEnMap === 1;
                                     const archivosRequisito = archivosRequisitos.get(requistoIdNum) || [];
 
                                     return (
@@ -628,6 +652,29 @@ const RequisitosMatrimonio = ({
             </div>
         </div>
     );
+};
+
+// Funciones helper exportadas para uso externo
+export const obtenerArchivosDeIndexedDB = async () => {
+    try {
+        const documentos = await db.documents.toArray();
+        console.log('Archivos en IndexedDB:', documentos);
+        return documentos;
+    } catch (error) {
+        console.error('Error al obtener archivos de IndexedDB:', error);
+        return [];
+    }
+};
+
+export const limpiarIndexedDB = async () => {
+    try {
+        await db.documents.clear();
+        console.log('IndexedDB limpiado exitosamente');
+        return true;
+    } catch (error) {
+        console.error('Error al limpiar IndexedDB:', error);
+        return false;
+    }
 };
 
 export default RequisitosMatrimonio;
