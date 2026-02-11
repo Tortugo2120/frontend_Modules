@@ -1,6 +1,7 @@
 import { useState, useCallback, useEffect } from 'react';
-import { useGetRequirements } from "../../../../hooks/useGetRequeriments.ts";
-import { useApplicationContext } from "../../../../context/ApplicationContext.tsx";
+import {useGetRequirements} from "../../../../hooks/useGetRequeriments.ts";
+import {useApplicationContext} from "../../../../context/ApplicationContext.tsx";
+import {db} from "../../../../model/documentModel.ts";
 
 interface Requisito {
     id: string;
@@ -16,11 +17,6 @@ interface ArchivoSubido {
     tamaño: number;
     tipo: string;
     archivo: File;
-}
-
-interface ArchivoRequisito {
-    requisitoId: number;
-    archivos: ArchivoSubido[];
 }
 
 interface RequisitosMatrimonioProps {
@@ -79,15 +75,14 @@ const RequisitosMatrimonio = ({
     tipoSolicitudNombre,
     descriptionSolicitud,
     onRequisitosChange,
-  
+    onArchivosChange
 }: RequisitosMatrimonioProps) => {
     const [requisitos, setRequisitos] = useState<Requisito[]>(REQUISITOS_INICIALES);
-
+    const [archivos] = useState<ArchivoSubido[]>([]);
     const [archivosRequisitos, setArchivosRequisitos] = useState<Map<number, ArchivoSubido[]>>(new Map());
-
-    const [requisitosEstados, setRequisitosEstados] = useState<Map<number, boolean>>(new Map());
-    const { formDataAplication, updateRequisitos } = useApplicationContext();
-    const { requirements, fetchRequirements } = useGetRequirements();
+    const [requisitosEstados, setRequisitosEstados] = useState<Map<number, number>>(new Map());
+    const {formDataAplication, updateRequisitos} = useApplicationContext();
+    const {requirements,fetchRequirements} = useGetRequirements();
 
     // Cargar requisitos guardados desde el contexto al iniciar
     useEffect(() => {
@@ -101,6 +96,38 @@ const RequisitosMatrimonio = ({
             );
             setRequisitosEstados(newMap);
         }
+    }, []);
+
+    // Cargar archivos guardados desde IndexedDB al iniciar
+    useEffect(() => {
+        const cargarArchivosGuardados = async () => {
+            try {
+                const todosLosDocumentos = await db.documents.toArray();
+                const newMap = new Map<number, ArchivoSubido[]>();
+
+                todosLosDocumentos.forEach(doc => {
+                    if (doc.file) {
+                        const archivo: ArchivoSubido = {
+                            id: `${doc.requirementId}-${doc.file.name}`,
+                            nombre: doc.nombreArchivo || doc.file.name,
+                            tamaño: doc.file.size,
+                            tipo: doc.file.type,
+                            archivo: doc.file
+                        };
+
+                        const archivosExistentes = newMap.get(doc.requirementId) || [];
+                        newMap.set(doc.requirementId, [...archivosExistentes, archivo]);
+                    }
+                });
+
+                setArchivosRequisitos(newMap);
+                console.log('Archivos cargados desde IndexedDB:', newMap);
+            } catch (error) {
+                console.error('Error al cargar archivos desde IndexedDB:', error);
+            }
+        };
+
+        cargarArchivosGuardados();
     }, []);
 
     useEffect(() => {
@@ -126,7 +153,12 @@ const RequisitosMatrimonio = ({
         }
     }, [requisitos, onRequisitosChange]);
 
-    
+    // Notificar cambios en archivos
+    useEffect(() => {
+        if (onArchivosChange) {
+            onArchivosChange(archivos);
+        }
+    }, [archivos, onArchivosChange]);
 
     useEffect(() => {
         const obtenerCondiciones = () => {
@@ -137,10 +169,11 @@ const RequisitosMatrimonio = ({
                     conds.add(p.maritalStatus.toUpperCase());
                 }
             });
+            console.log("condiciones: ",conds);
             return Array.from(conds).join(',');
         }
 
-        const cargarRequeriments = async () => {
+        const cargarRequeriments = async ()=>{
             const applicationTypeId = formDataAplication.application.applicationTypeId;
             const condition = obtenerCondiciones();
             console.log("Llamando a requisitos con:", { applicationTypeId, condition });
@@ -151,26 +184,11 @@ const RequisitosMatrimonio = ({
         }
     }, [formDataAplication.application.applicationTypeId]);
 
-    // Agrupar requisitos por condición
-    const requisitosAgrupados = useCallback(() => {
-        const grupos: { [key: string]: typeof requirements } = {};
-
-        requirements.forEach(req => {
-            const condicion = req.condicion || 'GENERAL';
-            if (!grupos[condicion]) {
-                grupos[condicion] = [];
-            }
-            grupos[condicion].push(req);
-        });
-
-        return grupos;
-    }, [requirements]);
-
     const calcularProgreso = useCallback(() => {
         const listaRequisitos = requirements.length > 0 ? requirements : requisitos;
         const total = listaRequisitos.length;
         const completados = requirements.length > 0
-            ? Array.from(requisitosEstados.values()).filter(estado => estado).length
+            ? Array.from(requisitosEstados.values()).filter(estado => estado === 1).length
             : requisitos.filter(r => r.completado).length;
 
         return {
@@ -189,25 +207,17 @@ const RequisitosMatrimonio = ({
 
             setRequisitosEstados(prev => {
                 const newMap = new Map(prev);
-                const estadoActual = newMap.get(numId) ?? false;
-                const nuevoEstado = !estadoActual;
+                const estadoActual = newMap.get(numId) ?? 0;
+                const nuevoEstado = estadoActual === 1 ? 0 : 1;
 
                 newMap.set(numId, nuevoEstado);
-
-                // Si se desmarca, eliminar archivos asociados
-                if (!nuevoEstado) {
-                    setArchivosRequisitos(prevArchivos => {
-                        const newArchivos = new Map(prevArchivos);
-                        newArchivos.delete(numId);
-                        return newArchivos;
-                    });
-                }
 
                 console.log(`Checkbox ${numId}: ${estadoActual} -> ${nuevoEstado}`);
 
                 return newMap;
             });
         } else {
+            // Usar requisitos locales
             setRequisitos(prev =>
                 prev.map(req =>
                     req.id === id
@@ -224,7 +234,7 @@ const RequisitosMatrimonio = ({
                 const newMap = new Map(prev);
                 requirements.forEach(req => {
                     const reqId = typeof req.id === 'string' ? parseInt(req.id) : req.id;
-                    newMap.set(reqId, true);
+                    newMap.set(reqId, 1); // 1 = entregado
                 });
                 return newMap;
             });
@@ -239,19 +249,31 @@ const RequisitosMatrimonio = ({
         }
     }, [requirements]);
 
-    const desmarcarTodos = useCallback(() => {
+    // Desmarcar todos
+    const desmarcarTodos = useCallback(async () => {
         if (requirements.length > 0) {
             setRequisitosEstados(prev => {
                 const newMap = new Map(prev);
                 requirements.forEach(req => {
+
                     const reqId = typeof req.id === 'string' ? parseInt(req.id) : req.id;
-                    newMap.set(reqId, false);
+                    newMap.set(reqId, 0);
                 });
                 return newMap;
             });
+
+            // Limpiar todos los archivos de IndexedDB
+            try {
+                await db.documents.clear();
+                console.log('Todos los archivos eliminados de IndexedDB');
+            } catch (error) {
+                console.error('Error al limpiar IndexedDB:', error);
+            }
+
             // Limpiar todos los archivos de requisitos
             setArchivosRequisitos(new Map());
         } else {
+
             setRequisitos(prev =>
                 prev.map(req => ({ ...req, completado: false }))
             );
@@ -267,7 +289,7 @@ const RequisitosMatrimonio = ({
     };
 
     // Manejar archivos específicos de requisito
-    const handleRequisitoFileChange = useCallback((requisitoId: number, e: React.ChangeEvent<HTMLInputElement>) => {
+    const handleRequisitoFileChange = useCallback(async (requisitoId: number, e: React.ChangeEvent<HTMLInputElement>) => {
         const files = e.target.files;
         if (!files) return;
 
@@ -279,6 +301,20 @@ const RequisitosMatrimonio = ({
             archivo: file
         }));
 
+        // Guardar cada archivo en IndexedDB
+        try {
+            for (const archivo of nuevosArchivos) {
+                await db.documents.put({
+                    requirementId: requisitoId,
+                    file: archivo.archivo,
+                    nombreArchivo: archivo.nombre
+                });
+                console.log(`Archivo guardado en IndexedDB: ${archivo.nombre} para requisito ${requisitoId}`);
+            }
+        } catch (error) {
+            console.error('Error al guardar archivos en IndexedDB:', error);
+        }
+
         setArchivosRequisitos(prev => {
             const newMap = new Map(prev);
             const archivosExistentes = newMap.get(requisitoId) || [];
@@ -289,7 +325,30 @@ const RequisitosMatrimonio = ({
         e.target.value = '';
     }, []);
 
-    const handleEliminarArchivoRequisito = useCallback((requisitoId: number, archivoId: string) => {
+    const handleEliminarArchivoRequisito = useCallback(async (requisitoId: number, archivoId: string) => {
+        // Primero obtener el archivo a eliminar
+        const archivosActuales = archivosRequisitos.get(requisitoId) || [];
+        const archivoAEliminar = archivosActuales.find(a => a.id === archivoId);
+
+        // Eliminar de IndexedDB
+        if (archivoAEliminar) {
+            try {
+                // Obtener todos los documentos del requisito
+                const documentos = await db.documents.where('requirementId').equals(requisitoId).toArray();
+
+                // Buscar el documento que coincida con el nombre del archivo
+                const docAEliminar = documentos.find(doc => doc.nombreArchivo === archivoAEliminar.nombre);
+
+                if (docAEliminar && docAEliminar.id) {
+                    await db.documents.delete(docAEliminar.id);
+                    console.log(`Archivo eliminado de IndexedDB: ${archivoAEliminar.nombre}`);
+                }
+            } catch (error) {
+                console.error('Error al eliminar archivo de IndexedDB:', error);
+            }
+        }
+
+        // Actualizar el estado local
         setArchivosRequisitos(prev => {
             const newMap = new Map(prev);
             const archivos = newMap.get(requisitoId) || [];
@@ -303,7 +362,7 @@ const RequisitosMatrimonio = ({
 
             return newMap;
         });
-    }, []);
+    }, [archivosRequisitos]);
 
     const getIconoArchivo = (tipo: string): string => {
         if (tipo.includes('pdf')) return 'fa-file-pdf text-red-500';
@@ -338,6 +397,21 @@ const RequisitosMatrimonio = ({
             'WIDOWED': 'purple'
         };
         return colores[condicion] || 'gray';
+    };
+
+    // Agrupar requisitos por condición
+    const requisitosAgrupados = () => {
+        const grupos: { [key: string]: typeof requirements } = {};
+
+        requirements.forEach(req => {
+            const condicion = req.condicion || 'GENERAL';
+            if (!grupos[condicion]) {
+                grupos[condicion] = [];
+            }
+            grupos[condicion].push(req);
+        });
+
+        return grupos;
     };
 
     const grupos = requisitosAgrupados();
@@ -438,7 +512,7 @@ const RequisitosMatrimonio = ({
                                 {requisitosGrupo.map((requisito, index) => {
                                     const requistoIdNum = typeof requisito.id === 'string' ? parseInt(requisito.id) : requisito.id;
                                     const estadoEnMap = requisitosEstados.get(requistoIdNum);
-                                    const isCompleted = Boolean(estadoEnMap);
+                                    const isCompleted = estadoEnMap === 1;
                                     const archivosRequisito = archivosRequisitos.get(requistoIdNum) || [];
 
                                     return (
@@ -575,6 +649,29 @@ const RequisitosMatrimonio = ({
             </div>
         </div>
     );
+};
+
+// Funciones helper exportadas para uso externo
+export const obtenerArchivosDeIndexedDB = async () => {
+    try {
+        const documentos = await db.documents.toArray();
+        console.log('Archivos en IndexedDB:', documentos);
+        return documentos;
+    } catch (error) {
+        console.error('Error al obtener archivos de IndexedDB:', error);
+        return [];
+    }
+};
+
+export const limpiarIndexedDB = async () => {
+    try {
+        await db.documents.clear();
+        console.log('IndexedDB limpiado exitosamente');
+        return true;
+    } catch (error) {
+        console.error('Error al limpiar IndexedDB:', error);
+        return false;
+    }
 };
 
 export default RequisitosMatrimonio;

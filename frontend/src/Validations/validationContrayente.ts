@@ -61,7 +61,7 @@ export const contrayenteSchema = z.object({
         .regex(/^\d{6}$/, 'El ubigeo debe contener solo números'),
 
     maritalStatus: z
-        .enum(['Single', 'CASADO', 'Divorced', 'VIUDO'], {
+        .enum(['Single', 'CASADO', 'Divorced', 'Widowed'], {
             message: 'Debe seleccionar un estado civil válido'
         }),
 }).superRefine((values, ctx) => {

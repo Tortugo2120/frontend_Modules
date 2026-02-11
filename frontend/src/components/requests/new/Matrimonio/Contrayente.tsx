@@ -536,7 +536,7 @@ const Contrayente = (props: Solicitud) => {
                             <option value="Single">Soltero(a)</option>
                             <option value="CASADO">Casado(a)</option>
                             <option value="Divorced">Divorciado(a)</option>
-                            <option value="VIUDO">Viudo(a)</option>
+                            <option value="Widowed">Viudo(a)</option>
                         </select>
                         {errorsForm.maritalStatus && (
                             <p className="text-red-500 text-xs mt-1">{errorsForm.maritalStatus.message}</p>
