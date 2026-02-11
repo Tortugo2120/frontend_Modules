@@ -1,9 +1,8 @@
 import { useApplicationHistory } from "../../hooks/useApplicationHistory";
 
-// Función para obtener las clases de estado
+// Funciones helper (mantén las que ya tienes)
 const getEstadoClasses = (estado: string): string => {
     const estadoNormalizado = estado.toLowerCase();
-
     const clases: Record<string, string> = {
         "pendiente": "bg-yellow-100 text-yellow-800",
         "en proceso": "bg-blue-100 text-blue-800",
@@ -12,47 +11,26 @@ const getEstadoClasses = (estado: string): string => {
         "cancelado": "bg-red-100 text-red-800",
         "anulada": "bg-red-100 text-red-800"
     };
-
     return clases[estadoNormalizado] || "bg-gray-100 text-gray-800";
 };
 
-// Función para obtener el icono del rol
 const getRolIcon = (rol: string): string => {
     const rolNormalizado = rol.toLowerCase();
-
     if (rolNormalizado.includes('contrayente')) return 'fa-rings-wedding';
     if (rolNormalizado.includes('testigo')) return 'fa-user-check';
     if (rolNormalizado.includes('solicitante')) return 'fa-user';
-
     return 'fa-user-circle';
 };
 
-// Función para obtener el color del rol
 const getRolColor = (rol: string): string => {
     const rolNormalizado = rol.toLowerCase();
-
     if (rolNormalizado.includes('contrayente')) return 'text-pink-600';
     if (rolNormalizado.includes('testigo')) return 'text-blue-600';
     if (rolNormalizado.includes('solicitante')) return 'text-indigo-600';
-
     return 'text-gray-600';
 };
 
-// Función para formatear fecha
-const formatearFecha = (fecha: string): string => {
-    try {
-        const date = new Date(fecha);
-        return date.toLocaleDateString('es-PE', {
-            year: 'numeric',
-            month: '2-digit',
-            day: '2-digit'
-        });
-    } catch {
-        return fecha;
-    }
-};
 
-// Función para formatear fecha y hora
 const formatearFechaHora = (fecha: string): string => {
     try {
         const date = new Date(fecha);
@@ -68,7 +46,6 @@ const formatearFechaHora = (fecha: string): string => {
     }
 };
 
-// Función para formatear precio
 const formatearPrecio = (precio: number): string => {
     return new Intl.NumberFormat('es-PE', {
         style: 'currency',
@@ -86,11 +63,11 @@ export default function History() {
         paginaActual,
         totalPaginas,
         totalRegistros,
-        registrosPorPagina,
         vistaDetalle,
         setVistaDetalle,
         limpiarFiltros,
         tiposUnicos,
+        estadosUnicos,
         cambiarPagina
     } = useApplicationHistory();
 
@@ -117,7 +94,7 @@ export default function History() {
                         <p className="text-gray-600 text-center">{error}</p>
                         <button
                             onClick={() => window.location.reload()}
-                            className="btn bg-indigo-600 text-white"
+                            className="btn bg-indigo-600 text-white hover:bg-indigo-700"
                         >
                             <i className="fas fa-redo mr-2"></i>
                             Reintentar
@@ -129,7 +106,7 @@ export default function History() {
     }
 
     return (
-        <div className="min-h-screen bg-linear-to-br from-slate-50 via-blue-50 to-indigo-50 p-4 sm:p-6 lg:p-10">
+        <div className="min-h-screen bg-linear-to-br from-slate-50 via-blue-50 to-indigo-50 p-4 sm:p-6 lg:p-8">
             {/* Header */}
             <div className="max-w-7xl mx-auto mb-8">
                 <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-6">
@@ -140,79 +117,133 @@ export default function History() {
                         <div>
                             <h1 className="text-3xl font-bold text-gray-900">Historial de Solicitudes</h1>
                             <p className="text-gray-600 text-sm mt-1">
-                                {totalRegistros} solicitud{totalRegistros !== 1 ? 'es' : ''} en total
+                                {totalRegistros} solicitud{totalRegistros !== 1 ? 'es' : ''} encontrada{totalRegistros !== 1 ? 's' : ''}
                             </p>
                         </div>
                     </div>
                 </div>
 
                 {/* Filtros */}
-                <div className="bg-white rounded-2xl shadow-xl p-6 mb-6 border border-white/60">
+                <div className="bg-white rounded-xl shadow-xl p-6 mb-6 border border-gray-100">
                     <div className="flex items-center justify-between mb-4">
                         <h3 className="font-semibold text-gray-900 flex items-center gap-2">
                             <i className="fas fa-filter text-indigo-600"></i>
                             Filtros de Búsqueda
                         </h3>
-                        <button
-                            onClick={limpiarFiltros}
-                            className="text-sm text-indigo-600 hover:text-indigo-700 font-medium flex items-center gap-1 transition-colors"
-                        >
-                            <i className="fas fa-times-circle"></i> Limpiar filtros
-                        </button>
+                        {(filtros.busqueda || filtros.tipo || filtros.estado) && (
+                            <button
+                                onClick={limpiarFiltros}
+                                className="text-sm text-indigo-600 hover:text-indigo-700 font-medium flex items-center gap-1 transition-colors"
+                            >
+                                <i className="fas fa-times-circle"></i> Limpiar filtros
+                            </button>
+                        )}
                     </div>
 
                     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+                        {/* Búsqueda por Expediente, Encargado o Participante */}
                         <div className="lg:col-span-2">
                             <div className="relative">
                                 <input
                                     type="text"
                                     value={filtros.busqueda}
-                                    onChange={(e) => {
-                                        setFiltros({ ...filtros, busqueda: e.target.value });
-                                        cambiarPagina(1);
-                                    }}
-                                    className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-all"
+                                    onChange={(e) => setFiltros({ busqueda: e.target.value })}
+                                    className="w-full pl-10 pr-10 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 outline-none transition-all"
                                     placeholder="Buscar por expediente, encargado o participante..."
                                 />
                                 <i className="fas fa-search absolute left-3 top-1/2 -translate-y-1/2 text-gray-400"></i>
+                                {filtros.busqueda && (
+                                    <button
+                                        onClick={() => setFiltros({ busqueda: "" })}
+                                        className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600 transition-colors"
+                                        title="Limpiar búsqueda"
+                                    >
+                                        <i className="fas fa-times"></i>
+                                    </button>
+                                )}
                             </div>
                         </div>
-                        <select
-                            value={filtros.tipo}
-                            onChange={(e) => {
-                                setFiltros({ ...filtros, tipo: e.target.value });
-                                cambiarPagina(1);
-                            }}
-                            className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-all"
-                        >
-                            <option value="">Todos los tipos</option>
-                            {tiposUnicos.map(tipo => (
-                                <option key={tipo} value={tipo}>{tipo}</option>
-                            ))}
-                        </select>
-                        <select
-                            value={filtros.estado}
-                            onChange={(e) => {
-                                setFiltros({ ...filtros, estado: e.target.value });
-                                cambiarPagina(1);
-                            }}
-                            className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-all"
-                        >
-                            <option value="">Todos los estados</option>
-                            <option value="PENDIENTE">Pendiente</option>
-                            <option value="En Proceso">En Proceso</option>
-                            <option value="Completado">Completado</option>
-                            <option value="Observado">Observado</option>
-                            <option value="Cancelado">Cancelado</option>
-                            <option value="Anulada">Anulada</option>
-                        </select>
+
+                        {/* Filtro por Tipo de Solicitud */}
+                        <div>
+                            <select
+                                value={filtros.tipo}
+                                onChange={(e) => setFiltros({ tipo: e.target.value })}
+                                className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 outline-none transition-all"
+                            >
+                                <option value="">Todos los tipos</option>
+                                {tiposUnicos.map(tipo => (
+                                    <option key={tipo} value={tipo}>{tipo}</option>
+                                ))}
+                            </select>
+                        </div>
+
+                        {/* Filtro por Estado */}
+                        <div>
+                            <select
+                                value={filtros.estado}
+                                onChange={(e) => setFiltros({ estado: e.target.value })}
+                                className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 outline-none transition-all"
+                            >
+                                <option value="">Todos los estados</option>
+                                {estadosUnicos.map(estado => (
+                                    <option key={estado} value={estado}>{estado}</option>
+                                ))}
+                            </select>
+                        </div>
                     </div>
+
+                    {/* Indicadores de filtros activos */}
+                    {(filtros.busqueda || filtros.tipo || filtros.estado) && (
+                        <div className="mt-4 flex flex-wrap items-center gap-2">
+                            <span className="text-sm text-gray-600 font-medium">Filtros activos:</span>
+                            {filtros.busqueda && (
+                                <span className="inline-flex items-center gap-2 px-3 py-1 bg-indigo-100 text-indigo-700 rounded-full text-sm font-medium">
+                                    <i className="fas fa-search text-xs"></i>
+                                    "{filtros.busqueda}"
+                                    <button
+                                        onClick={() => setFiltros({ busqueda: "" })}
+                                        className="hover:text-indigo-900 transition-colors"
+                                        title="Quitar filtro"
+                                    >
+                                        <i className="fas fa-times"></i>
+                                    </button>
+                                </span>
+                            )}
+                            {filtros.tipo && (
+                                <span className="inline-flex items-center gap-2 px-3 py-1 bg-blue-100 text-blue-700 rounded-full text-sm font-medium">
+                                    <i className="fas fa-file-alt text-xs"></i>
+                                    {filtros.tipo}
+                                    <button
+                                        onClick={() => setFiltros({ tipo: "" })}
+                                        className="hover:text-blue-900 transition-colors"
+                                        title="Quitar filtro"
+                                    >
+                                        <i className="fas fa-times"></i>
+                                    </button>
+                                </span>
+                            )}
+                            {filtros.estado && (
+                                <span className="inline-flex items-center gap-2 px-3 py-1 bg-green-100 text-green-700 rounded-full text-sm font-medium">
+                                    <i className="fas fa-info-circle text-xs"></i>
+                                    {filtros.estado}
+                                    <button
+                                        onClick={() => setFiltros({ estado: "" })}
+                                        className="hover:text-green-900 transition-colors"
+                                        title="Quitar filtro"
+                                    >
+                                        <i className="fas fa-times"></i>
+                                    </button>
+                                </span>
+                            )}
+                        </div>
+                    )}
                 </div>
             </div>
 
             {/* Tabla */}
             <div className="max-w-7xl mx-auto">
-                <div className="bg-white rounded-2xl shadow-xl overflow-hidden border border-gray-100">
+                <div className="bg-white rounded-xl shadow-xl overflow-hidden border border-gray-100">
                     {solicitudes.length === 0 ? (
                         <div className="p-12 text-center">
                             <div className="w-20 h-20 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-4">
@@ -221,11 +252,20 @@ export default function History() {
                             <h3 className="text-xl font-semibold text-gray-700 mb-2">
                                 No se encontraron solicitudes
                             </h3>
-                            <p className="text-gray-500">
+                            <p className="text-gray-500 mb-4">
                                 {filtros.busqueda || filtros.tipo || filtros.estado
-                                    ? 'Intenta ajustar los filtros de búsqueda'
+                                    ? 'No hay resultados con los filtros aplicados'
                                     : 'Aún no hay solicitudes registradas'}
                             </p>
+                            {(filtros.busqueda || filtros.tipo || filtros.estado) && (
+                                <button
+                                    onClick={limpiarFiltros}
+                                    className="btn bg-indigo-600 text-white hover:bg-indigo-700"
+                                >
+                                    <i className="fas fa-times-circle mr-2"></i>
+                                    Limpiar filtros
+                                </button>
+                            )}
                         </div>
                     ) : (
                         <div className="overflow-x-auto">
@@ -277,6 +317,20 @@ export default function History() {
                                                     >
                                                         <i className="fas fa-eye"></i>
                                                     </button>
+                                                    <button
+                                                        onClick={() => console.log("Editar solicitud", solicitud.id)}
+                                                        className="btn btn-sm btn-circle btn-ghost text-amber-600 hover:bg-amber-100 transition-colors"
+                                                        title="Editar solicitud"
+                                                    >
+                                                        <i className="fas fa-pen-to-square"></i>
+                                                    </button>
+                                                    <button
+                                                        onClick={() => console.log("Descargar solicitud", solicitud.id)}
+                                                        className="btn btn-sm btn-circle btn-ghost text-green-600 hover:bg-green-100 transition-colors"
+                                                        title="Descargar solicitud"
+                                                    >
+                                                        <i className="fas fa-download"></i>
+                                                    </button>
                                                 </div>
                                             </td>
                                         </tr>
@@ -297,7 +351,7 @@ export default function History() {
                             <button
                                 onClick={() => cambiarPagina(1)}
                                 disabled={paginaActual === 1}
-                                className="btn btn-sm bg-white border-gray-300 disabled:opacity-50 disabled:cursor-not-allowed"
+                                className="btn btn-sm bg-white border-gray-300 disabled:opacity-50 disabled:cursor-not-allowed hover:bg-gray-50"
                                 title="Primera página"
                             >
                                 <i className="fas fa-angle-double-left"></i>
@@ -305,12 +359,11 @@ export default function History() {
                             <button
                                 onClick={() => cambiarPagina(paginaActual - 1)}
                                 disabled={paginaActual === 1}
-                                className="btn btn-sm bg-white border-gray-300 disabled:opacity-50 disabled:cursor-not-allowed"
+                                className="btn btn-sm bg-white border-gray-300 disabled:opacity-50 disabled:cursor-not-allowed hover:bg-gray-50"
                             >
                                 <i className="fas fa-chevron-left"></i>
                             </button>
 
-                            {/* Números de página */}
                             <div className="flex gap-1">
                                 {Array.from({ length: Math.min(5, totalPaginas) }, (_, i) => {
                                     let pageNum;
@@ -328,10 +381,11 @@ export default function History() {
                                         <button
                                             key={pageNum}
                                             onClick={() => cambiarPagina(pageNum)}
-                                            className={`btn btn-sm ${paginaActual === pageNum
-                                                ? 'bg-indigo-600 text-white'
-                                                : 'bg-white border-gray-300'
-                                                }`}
+                                            className={`btn btn-sm ${
+                                                paginaActual === pageNum
+                                                    ? 'bg-indigo-600 text-white hover:bg-indigo-700'
+                                                    : 'bg-white border-gray-300 hover:bg-gray-50'
+                                            }`}
                                         >
                                             {pageNum}
                                         </button>
@@ -342,14 +396,14 @@ export default function History() {
                             <button
                                 onClick={() => cambiarPagina(paginaActual + 1)}
                                 disabled={paginaActual === totalPaginas}
-                                className="btn btn-sm bg-white border-gray-300 disabled:opacity-50 disabled:cursor-not-allowed"
+                                className="btn btn-sm bg-white border-gray-300 disabled:opacity-50 disabled:cursor-not-allowed hover:bg-gray-50"
                             >
                                 <i className="fas fa-chevron-right"></i>
                             </button>
                             <button
                                 onClick={() => cambiarPagina(totalPaginas)}
                                 disabled={paginaActual === totalPaginas}
-                                className="btn btn-sm bg-white border-gray-300 disabled:opacity-50 disabled:cursor-not-allowed"
+                                className="btn btn-sm bg-white border-gray-300 disabled:opacity-50 disabled:cursor-not-allowed hover:bg-gray-50"
                                 title="Última página"
                             >
                                 <i className="fas fa-angle-double-right"></i>
@@ -359,7 +413,7 @@ export default function History() {
                 )}
             </div>
 
-            {/* Modal de Detalle */}
+            {/* Modal permanece igual */}
             {vistaDetalle && (
                 <div className="fixed inset-0 bg-slate-900/60 backdrop-blur-sm flex items-center justify-center p-4 z-50">
                     <div className="bg-white rounded-2xl max-w-3xl w-full shadow-2xl animate-fadeIn max-h-[90vh] overflow-y-auto">
@@ -376,7 +430,7 @@ export default function History() {
                             </button>
                         </div>
                         <div className="p-6 space-y-6">
-                            {/* Información Principal */}
+                            {/* Resto del modal igual... */}
                             <div className="grid grid-cols-2 gap-4">
                                 <div className="col-span-2 bg-indigo-50 p-4 rounded-lg">
                                     <p className="text-xs text-indigo-600 uppercase font-bold mb-1">Número de Expediente</p>
@@ -404,7 +458,6 @@ export default function History() {
                                 <div>
                                     <p className="text-xs text-gray-400 uppercase font-bold mb-1">Precio</p>
                                     <p className="flex items-center gap-2 text-lg font-bold text-green-600">
-
                                         {formatearPrecio(vistaDetalle.precio)}
                                     </p>
                                 </div>
