@@ -7,25 +7,24 @@ import NavigationButtons from "../../components/requests/new/Navigationbuttons";
 import useTipoSolici from "../../hooks/useTipoSolici.ts";
 import Contrayente from "../../components/requests/new/Matrimonio/Contrayente.tsx";
 import Testigos from "../../components/requests/new/Matrimonio/Testigos.tsx";
-import Requisitos, {
-    limpiarIndexedDB,
-    obtenerArchivosDeIndexedDB
-} from "../../components/requests/new/Matrimonio/Requisitos.tsx";
+import Requisitos from "../../components/requests/new/Matrimonio/Requisitos.tsx";
 import {ApplicationHandler} from "../../context/ApplicationContext.tsx";
 import {Auth} from "../../context/AuthContext.tsx";
 import useCreateAplication from "../../hooks/useCreateAplication.ts";
 import { useUploadDocuments } from "../../hooks/useUploadDocuments.ts";
 import {useNavigate} from "react-router-dom";
+import {useDocument} from "../../hooks/useDocument.ts";
+import {db} from "../../model/documentModel.ts";
 export default function NewRequest() {
     const [tipoSolicitud, setTipoSolicitud] = useState<number | null>(null);
     const [searchTerm, setSearchTerm] = useState("");
-    const {updateApplicationData, formDataAplication} = ApplicationHandler();
+    const {updateApplicationData, formDataAplication,resetForm} = ApplicationHandler();
     const {user} = Auth();
     const [isSubmitting, setIsSubmitting] = useState(false);
-    const {error,createSolicitud,success} = useCreateAplication();
+    const {error,createSolicitud} = useCreateAplication();
     const { uploadMultipleDocuments, isUploading: isUploadingDocs, uploadProgress } = useUploadDocuments();
     const navigate = useNavigate();
-
+    const {deleteDocuments} = useDocument();
     const handleSelectTipoSolicitud = (id: number) => {
         setTipoSolicitud(prev =>
             prev === id ? null : id
@@ -51,29 +50,25 @@ export default function NewRequest() {
     const handleConfirmSubmit = async () => {
         try {
             setIsSubmitting(true);
-
-            console.log('📤 Preparando para enviar solicitud a la API:', formDataAplication);
+            const documents = await db.obtenerDocuments();
+            console.log(`Documentos recuperados de IndexedDB: ${documents.length}`);
+            console.log('Preparando para enviar solicitud a la API:', formDataAplication);
 
             const response = await createSolicitud(formDataAplication);
 
-            if (response && success) {
+            if (response?.status) {
                 console.log('Solicitud creada exitosamente:', response);
-
+                resetForm();
                 const applicationId = response?.data?.applicationId;
 
                 if (!applicationId) {
                     throw new Error('No se obtuvo el ID de la solicitud creada');
                 }
 
-                console.log('ID de solicitud:', applicationId);
-
-                const documentosGuardados = await obtenerArchivosDeIndexedDB();
-                console.log(`Documentos recuperados de IndexedDB: ${documentosGuardados.length}`);
-
-                if (documentosGuardados.length > 0) {
+                if (documents.length > 0) {
                     console.log('Iniciando subida de documentos...');
 
-                    const documentosParaSubir = documentosGuardados
+                    const documentosParaSubir = documents
                         .filter(doc => doc.file !== null)
                         .map(doc => ({
                             applicationId: Number(applicationId),
@@ -88,7 +83,7 @@ export default function NewRequest() {
                     if (uploadResult.success) {
                         console.log('Todos los documentos subidos exitosamente');
 
-                        await limpiarIndexedDB();
+                        await deleteDocuments();
                         console.log('IndexedDB limpiado');
 
                         alert(`Solicitud creada exitosamente con ${documentosParaSubir.length} documento(s) adjunto(s)`);
@@ -99,21 +94,22 @@ export default function NewRequest() {
                             `${uploadResult.message}\n\n` +
                             `Los documentos permanecen guardados localmente para reintentarlo más tarde.`
                         );
+                        return;
                     }
                 } else {
                     console.log('ℹNo hay documentos para subir');
                     alert('Solicitud creada exitosamente (sin documentos adjuntos)');
                 }
-                //navigate('/solicitud/history');
+                navigate('/dashboard/solicitud/history');
             } else if (error) {
                 console.error('Error al crear solicitud:', error);
                 alert(`Error al crear solicitud: ${error}`);
             }
 
         } catch (error) {
-            console.error('❌ Error en el proceso:', error);
+            console.error('Error en el proceso:', error);
             const errorMessage = error instanceof Error ? error.message : 'Error desconocido';
-            alert(`Error: ${errorMessage}`);
+            console.log(errorMessage);
         } finally {
             setIsSubmitting(false);
         }
