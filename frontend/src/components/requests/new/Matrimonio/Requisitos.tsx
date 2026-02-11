@@ -134,9 +134,11 @@ const RequisitosMatrimonio = ({
         if (requirements.length === 0) return;
         const requisitosArray = requirements.map(req => {
             const reqId = typeof req.id === 'string' ? parseInt(req.id) : req.id;
+            const estadoEntregado = requisitosEstados.get(reqId) ?? 0; // ✅ Devuelve number
+
             return {
-                requirementId: req.id,
-                delivered: requisitosEstados.get(reqId) ?? false
+                requirementId: reqId,
+                delivered: estadoEntregado
             };
         });
 
