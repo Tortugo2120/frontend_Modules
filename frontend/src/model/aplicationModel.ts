@@ -20,7 +20,7 @@ export interface Participant {
     phone: string;
     ubigeoId: string;
     maritalStatus: string;
-    rol: ParticipantRol; // Cambiado de roles[] a role (un solo rol)
+    rol: ParticipantRol; 
 }
 
 export interface ApplicationData {
@@ -30,7 +30,7 @@ export interface ApplicationData {
 }
 
 export interface RequisitoEstado {
-    requirementId: number | string; // Aceptar ambos tipos porque el backend puede enviar strings
+    requirementId: number | string; 
     delivered: boolean;
 }
 
