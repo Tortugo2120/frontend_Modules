@@ -1,4 +1,3 @@
-// frontend/src/hooks/useUploadDocuments.ts
 import { useState } from 'react';
 import { uploadDocument as uploadDocumentService } from '../services/DocumentService';
 
