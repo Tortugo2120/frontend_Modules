@@ -12,6 +12,8 @@ interface Solicitud {
     tipoSolicitudNombre?: string;
     descriptionSolicitud?: string;
     onContrayentesChange?: (contrayentes: Participant[]) => void;
+    onValidationChange?: (isValid: boolean) => void;
+
 }
 
 type inputSearch = z.infer<typeof searchTypeDocument>;

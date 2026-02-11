@@ -25,12 +25,15 @@ export default function NewRequest() {
     const { uploadMultipleDocuments, isUploading: isUploadingDocs, uploadProgress } = useUploadDocuments();
     const navigate = useNavigate();
     const {deleteDocuments} = useDocument();
+   /*
     const handleSelectTipoSolicitud = (id: number) => {
+
         setTipoSolicitud(prev =>
             prev === id ? null : id
         );
+        if (id) setIsValid(true);
     };
-
+    */
     useEffect(() => {
         if (user) {
             updateApplicationData({ userId: user.user_id });
@@ -129,6 +132,31 @@ export default function NewRequest() {
     const filteredSolicitudes = tiposolicitud.filter(tipo =>
         tipo.nombre_solicitud.toLowerCase().includes(searchTerm.toLowerCase())
     );
+
+    const [stepsValidation, setStepsValidation] = useState<{[key: number]: boolean}>({
+        1: false,
+        2: false,
+        3: false,
+        4: false,
+        5: false,
+        6: false
+    });
+
+    const updateStepValidation = (step: number, isValid: boolean) => {
+        setStepsValidation(prev => ({
+            ...prev,
+            [step]: isValid
+        }));
+    };
+
+    const handleSelectTipoSolicitud = (id: number) => {
+        setTipoSolicitud(prev => prev === id ? null : id);
+        if (id) {
+            updateStepValidation(1, true);
+        } else {
+            updateStepValidation(1, false);
+        }
+    };
     return (
         <div className="min-h-screen bg-blue-300/40 from-slate-50 via-blue-50 to-indigo-50 p-4 sm:p-6 lg:p-6">
             <div className="mb-4">
@@ -230,7 +258,8 @@ export default function NewRequest() {
                             <div className="p-6 lg:p-6">
                                 <Contrayente 
                                 tipoSolicitudNombre={selectedRequestType?.nombre_solicitud}
-                                descriptionSolicitud={selectedRequestType?.descripcion} />
+                                descriptionSolicitud={selectedRequestType?.descripcion}
+                                onValidationChange={(isValid) => updateStepValidation(3, isValid)} />
                             </div>
                         )}
                         {/* Step 4: testigo */}
