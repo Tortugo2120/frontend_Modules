@@ -30,13 +30,10 @@ export interface ApplicationData {
 }
 
 export interface RequisitoEstado {
-<<<<<<< HEAD
-    requirementId: number | string; 
-    delivered: boolean;
-=======
+
     requirementId: number | string;
     delivered: number;
->>>>>>> fee5d2f5bc3bbf7c95d725ce4e9417c4779bd9ab
+
 }
 
 export interface CreateApplicationPayload {
