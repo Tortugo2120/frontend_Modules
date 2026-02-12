@@ -9,7 +9,6 @@ import type {
     Pager
 } from "../model/aplicationModel.ts";
 
-// Función helper para transformar los datos del backend al formato del frontend
 const transformApplicationData = (backendData: ApplicationBackendItem): ApplicationItem => {
     return {
         id: parseInt(backendData.id),
@@ -22,7 +21,7 @@ const transformApplicationData = (backendData: ApplicationBackendItem): Applicat
         fechaActualizacion: backendData.fecha_actualizacion,
         fechaFin: backendData.fecha_fin,
         encargado: backendData.encargado,
-        participantes: backendData.participantes,
+        participantes: backendData.participantes || [],
     };
 };
 
@@ -41,20 +40,11 @@ interface ListApplicationsResult {
     pager: Pager;
 }
 
-export const ListApplications = async (
-    page: number = 1,
-    searchTerm?: string,
-    tipo?: string,
-    estado?: string
-): Promise<ListApplicationsResult> => {
-    // Construir parámetros de búsqueda
-    const params: any = { page };
-    
-    if (searchTerm) params.search = searchTerm;
-    if (tipo) params.tipo = tipo;
-    if (estado) params.estado = estado;
-    
-    const response = await apiAxios.get<ListApplicationsResponse>("/api/v1/application", { params });
+// Simplificado - solo carga todas las solicitudes
+export const ListApplications = async (page: number = 1): Promise<ListApplicationsResult> => {
+    const response = await apiAxios.get<ListApplicationsResponse>("/api/v1/application", {
+        params: { page }
+    });
     
     return {
         applications: response.data.data.map(transformApplicationData),
@@ -62,7 +52,9 @@ export const ListApplications = async (
     };
 }
 
-export const CreateAplication = async (aplication: CreateApplicationPayload): Promise<AplicationResponse> => {
+export const CreateAplication = async (
+    aplication: CreateApplicationPayload
+): Promise<AplicationResponse> => {
     const response = await apiAxios.post("/api/v1/application", aplication);
     return response.data;
 }

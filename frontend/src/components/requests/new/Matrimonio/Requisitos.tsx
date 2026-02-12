@@ -1,8 +1,8 @@
 import { useState, useCallback, useEffect } from 'react';
-import {useGetRequirements} from "../../../../hooks/useGetRequeriments.ts";
-import {useApplicationContext} from "../../../../context/ApplicationContext.tsx";
-import {db} from "../../../../model/documentModel.ts";
-import {useDocument} from "../../../../hooks/useDocument.ts";
+import { useGetRequirements } from "../../../../hooks/useGetRequeriments.ts";
+import { useApplicationContext } from "../../../../context/ApplicationContext.tsx";
+import { db } from "../../../../model/documentModel.ts";
+import { useDocument } from "../../../../hooks/useDocument.ts";
 
 interface Requisito {
     id: string;
@@ -25,66 +25,27 @@ interface RequisitosMatrimonioProps {
     descriptionSolicitud?: string;
     onRequisitosChange?: (requisitos: Requisito[]) => void;
     onArchivosChange?: (archivos: ArchivoSubido[]) => void;
+    onValidationChange?: (isValid: boolean) => void;
 }
 
 const REQUISITOS_INICIALES: Requisito[] = [
-    {
-        id: '1',
-        titulo: 'Partidas de Nacimiento de los Contrayentes.',
-        descripcion: 'Original y copia certificada de la partida de nacimiento de ambos contrayentes (vigencia de 3 meses)',
-        obligatorio: true,
-        completado: false
-    },
-    {
-        id: '2',
-        titulo: 'Copias ampliadas al 150% y fedateadas de los contrayentes.',
-        descripcion: 'Documento Nacional de Identidad vigente de ambos contrayentes (original y copia)',
-        obligatorio: true,
-        completado: false
-    },
-    {
-        id: '3',
-        titulo: 'Copias ampliadas al 150% y fedateadas de los Testigos.',
-        descripcion: 'Estos deben declarar que conocen a los contrayentes como máximo 3 años',
-        obligatorio: true,
-        completado: false
-    },
-    {
-        id: '4',
-        titulo: 'Certificado de Soltería',
-        descripcion: 'Expedida por la municipalidad donde nació o RENIEC',
-        obligatorio: true,
-        completado: false
-    },
-    {
-        id: '5',
-        titulo: 'Análisis Clínico',
-        descripcion: 'Certificando el Grupo sanguineo y prueba de VIH',
-        obligatorio: true,
-        completado: false
-    },
-    {
-        id: '6',
-        titulo: 'Publicación de edicto Matrimonial',
-        descripcion: 'La publicación debe realizarse 15 días antes de la fecha.',
-        obligatorio: true,
-        completado: false
-    },
+
 ];
 
 const RequisitosMatrimonio = ({
     tipoSolicitudNombre,
     descriptionSolicitud,
     onRequisitosChange,
-    onArchivosChange
+    onArchivosChange,
+    onValidationChange,
 }: RequisitosMatrimonioProps) => {
     const [requisitos, setRequisitos] = useState<Requisito[]>(REQUISITOS_INICIALES);
     const [archivos] = useState<ArchivoSubido[]>([]);
     const [archivosRequisitos, setArchivosRequisitos] = useState<Map<number, ArchivoSubido[]>>(new Map());
     const [requisitosEstados, setRequisitosEstados] = useState<Map<number, number>>(new Map());
-    const {formDataAplication, updateRequisitos} = useApplicationContext();
-    const {requirements,fetchRequirements} = useGetRequirements();
-    const {addDocument,deleteDocument} = useDocument();
+    const { formDataAplication, updateRequisitos } = useApplicationContext();
+    const { requirements, fetchRequirements } = useGetRequirements();
+    const { addDocument, deleteDocument } = useDocument();
 
     // Cargar requisitos guardados desde el contexto al iniciar
     useEffect(() => {
@@ -173,11 +134,11 @@ const RequisitosMatrimonio = ({
                     conds.add(p.maritalStatus.toUpperCase());
                 }
             });
-            console.log("condiciones: ",conds);
+            console.log("condiciones: ", conds);
             return Array.from(conds).join(',');
         }
 
-        const cargarRequeriments = async ()=>{
+        const cargarRequeriments = async () => {
             const applicationTypeId = formDataAplication.application.applicationTypeId;
             const condition = obtenerCondiciones();
             console.log("Llamando a requisitos con:", { applicationTypeId, condition });
@@ -284,6 +245,15 @@ const RequisitosMatrimonio = ({
         }
     }, [requirements]);
 
+    //Validar avanzar con al menos un requisito
+    useEffect(() => {
+        if (onValidationChange) {
+            // Evaluamos si el número de completados es mayor a 0
+            const isStepValid = progreso.completados > 0;
+            onValidationChange(isStepValid);
+        }
+    }, [progreso.completados, onValidationChange]);
+
     const formatearTamaño = (bytes: number): string => {
         if (bytes === 0) return '0 Bytes';
         const k = 1024;
@@ -308,8 +278,8 @@ const RequisitosMatrimonio = ({
             await db.documents.where('requirementId').equals(requisitoId).delete();
             const docGuardado = await addDocument(
                 {
-                    requirementId:requisitoId,
-                    file:nuevoArchivo.archivo,
+                    requirementId: requisitoId,
+                    file: nuevoArchivo.archivo,
                     nombreArchivo: nuevoArchivo.nombre
                 }
             );
@@ -334,7 +304,7 @@ const RequisitosMatrimonio = ({
         } catch (error) {
             console.error('Error al eliminar archivo de IndexedDB:', error);
         }
-        
+
         setArchivosRequisitos(prev => {
             const newMap = new Map(prev);
             newMap.delete(requisitoId);

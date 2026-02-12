@@ -8,8 +8,8 @@ import useTipoSolici from "../../hooks/useTipoSolici.ts";
 import Contrayente from "../../components/requests/new/Matrimonio/Contrayente.tsx";
 import Testigos from "../../components/requests/new/Matrimonio/Testigos.tsx";
 import Requisitos from "../../components/requests/new/Matrimonio/Requisitos.tsx";
-import {ApplicationHandler} from "../../context/ApplicationContext.tsx";
-import {Auth} from "../../context/AuthContext.tsx";
+import { ApplicationHandler } from "../../context/ApplicationContext.tsx";
+import { Auth } from "../../context/AuthContext.tsx";
 import useCreateAplication from "../../hooks/useCreateAplication.ts";
 import { useUploadDocuments } from "../../hooks/useUploadDocuments.ts";
 import {useNavigate} from "react-router-dom";
@@ -19,10 +19,10 @@ import Alert from "../../components/Alert.tsx";
 export default function NewRequest() {
     const [tipoSolicitud, setTipoSolicitud] = useState<number | null>(null);
     const [searchTerm, setSearchTerm] = useState("");
-    const {updateApplicationData, formDataAplication,resetForm} = ApplicationHandler();
-    const {user} = Auth();
+    const { updateApplicationData, formDataAplication, resetForm } = ApplicationHandler();
+    const { user } = Auth();
     const [isSubmitting, setIsSubmitting] = useState(false);
-    const {error,createSolicitud} = useCreateAplication();
+    const { error, createSolicitud } = useCreateAplication();
     const { uploadMultipleDocuments, isUploading: isUploadingDocs, uploadProgress } = useUploadDocuments();
     const navigate = useNavigate();
     const {deleteDocuments} = useDocument();
@@ -151,7 +151,7 @@ export default function NewRequest() {
         tipo.nombre_solicitud.toLowerCase().includes(searchTerm.toLowerCase())
     );
 
-    const [stepsValidation, setStepsValidation] = useState<{[key: number]: boolean}>({
+    const [stepsValidation, setStepsValidation] = useState<{ [key: number]: boolean }>({
         1: false,
         2: false,
         3: false,
@@ -266,6 +266,7 @@ export default function NewRequest() {
                                     <ApplicantForm
                                         tipoSolicitudNombre={selectedRequestType?.nombre_solicitud}
                                         descriptionSolicitud={selectedRequestType?.descripcion}
+                                        onValidationChange={(isValid) => updateStepValidation(2, isValid)}
                                     />
                                 </div>
                             </div>
@@ -274,32 +275,33 @@ export default function NewRequest() {
                         {/* Step 3: contrayente */}
                         {currentStep === 3 && (
                             <div className="p-6 lg:p-6">
-                                <Contrayente 
-                                tipoSolicitudNombre={selectedRequestType?.nombre_solicitud}
-                                descriptionSolicitud={selectedRequestType?.descripcion}
-                                onValidationChange={(isValid) => updateStepValidation(3, isValid)} />
+                                <Contrayente
+                                    tipoSolicitudNombre={selectedRequestType?.nombre_solicitud}
+                                    descriptionSolicitud={selectedRequestType?.descripcion}
+                                    onValidationChange={(isValid) => updateStepValidation(3, isValid)} />
                             </div>
                         )}
                         {/* Step 4: testigo */}
                         {currentStep === 4 && (
                             <div className="p-6 lg:p-6">
-                                <Testigos 
-                                tipoSolicitudNombre={selectedRequestType?.nombre_solicitud} 
-                                descriptionSolicitud={selectedRequestType?.descripcion} />
+                                <Testigos
+                                    tipoSolicitudNombre={selectedRequestType?.nombre_solicitud}
+                                    descriptionSolicitud={selectedRequestType?.descripcion}
+                                    onValidationChange={(isValid) => updateStepValidation(4, isValid)} />
                             </div>
                         )}
                         {/* Step 5: requisitos */}
                         {currentStep === 5 && (
                             <div className="p-6 lg:p-6">
-                                <Requisitos 
-                                tipoSolicitudNombre={selectedRequestType?.nombre_solicitud}
-                                descriptionSolicitud={selectedRequestType?.descripcion}
-                                 />
+                                <Requisitos
+                                    tipoSolicitudNombre={selectedRequestType?.nombre_solicitud}
+                                    descriptionSolicitud={selectedRequestType?.descripcion}
+                                    onValidationChange={(isValid) => updateStepValidation(5, isValid)} />
                             </div>
                         )}
-                       
+
                         {/* Step 6: confirmacion */}
-                        {currentStep === 6 && ( 
+                        {currentStep === 6 && (
                             <div className="p-6 lg:p-6">
                                 {/* Barra de progreso de subida de documentos */}
                                 {isUploadingDocs && (
@@ -342,7 +344,7 @@ export default function NewRequest() {
                         <NavigationButtons
                             currentStep={currentStep}
                             totalSteps={6}
-                            canProceed={currentStep === 1 ? !!tipoSolicitud : true}
+                            canProceed={stepsValidation[currentStep] || false}
                             onPrevious={prevStep}
                             onNext={nextStep}
                         />
