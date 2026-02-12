@@ -58,3 +58,8 @@ export const CreateAplication = async (
     const response = await apiAxios.post("/api/v1/application", aplication);
     return response.data;
 }
+
+export const ValidateExpediente = async (expedientNumber: string) => {
+    const response = await apiAxios.get('/api/v1/application/validateExpedient',{params: expedientNumber});
+    return response.data.status;
+}
