@@ -12,12 +12,14 @@ export default function ApplicantForm({
     descriptionSolicitud,
     onValidationChange,
 }: ApplicantFormProps) {
+
     const { formDataAplication, updateApplicationData } = ApplicationHandler();
 
     // Estado para número de expediente
     const [expedientNumber, setExpedientNumber] = useState<string>(() => {
         return formDataAplication.application.expedientNumber || '';
     });
+
     const [expedientError, setExpedientError] = useState<string>('');
 
     // Verificar si el expediente está completo (mínimo 5 caracteres)
@@ -25,10 +27,12 @@ export default function ApplicantForm({
 
     // Función para manejar el cambio de número de expediente
     const handleExpedientNumberChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
+
         const value = e.target.value.trim().toUpperCase();
         setExpedientNumber(value);
 
         let error = '';
+
         if (value.length === 0) {
             error = 'El número de expediente es obligatorio';
         } else if (value.length < 5) {
@@ -36,25 +40,28 @@ export default function ApplicantForm({
         }
 
         setExpedientError(error);
-        
+
         const isValid = value.length >= 5 && error === '';
-        
+
         // Actualizar en el contexto
         updateApplicationData({ expedientNumber: value });
-        
+
         // Notificar al padre sobre la validez de este paso
         if (onValidationChange) {
             onValidationChange(isValid);
         }
+
     }, [updateApplicationData, onValidationChange]);
 
     return (
         <div className="space-y-4 sm:space-y-6">
+
             <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-3 sm:gap-2">
                 <h3 className="text-base sm:text-lg font-semibold text-gray-900 flex items-center gap-2">
                     <i className="fas fa-file-signature text-blue-600"></i>
                     <span>Validación de Expediente</span>
                 </h3>
+
                 {tipoSolicitudNombre && (
                     <span className="bg-blue-100 text-blue-800 text-xs sm:text-sm font-medium px-3 sm:px-4 py-1.5 sm:py-2 rounded-lg flex flex-col items-center w-fit">
                         <div>
@@ -69,25 +76,29 @@ export default function ApplicantForm({
             </div>
 
             {/* Campo de Número de Expediente */}
-            <div className="bg-white border border-gray-200 p-6 rounded-xl shadow-sm">
-                <div className="flex items-start gap-4">
-                    <div className="shrink-0 bg-yellow-100 p-3 rounded-lg">
-                        <i className="fas fa-folder-open text-yellow-600 text-xl"></i>
+            <div className="bg-yellow-100/50 border border-gray-200 p-8 rounded-xl shadow-sm">
+                <div className="flex flex-col items-center text-center gap-6">
+
+                    <div className="bg-yellow-100 p-4 rounded-xl">
+                        <i className="fas fa-folder-open text-yellow-600 text-2xl"></i>
                     </div>
-                    <div className="flex-1">
-                        <label className="block text-sm font-semibold text-gray-900 mb-1">
+
+                    <div className="w-full flex flex-col items-center">
+
+                        <label className="block text-base sm:text-lg font-bold text-gray-900 mb-2">
                             Número de Expediente <span className="text-red-500">*</span>
                         </label>
-                        <p className="text-xs text-gray-500 mb-4">
+
+                        <p className="text-sm text-gray-500 mb-6 max-w-md">
                             Ingrese el código identificador del expediente para proceder con la validación.
                         </p>
-                        
-                        <div className="max-w-md">
+
+                        <div className="w-full max-w-lg">
                             <input
                                 type="text"
                                 value={expedientNumber}
                                 onChange={handleExpedientNumberChange}
-                                className={`w-full px-4 py-3 text-sm sm:text-base border-2 rounded-lg font-bold uppercase outline-0 transition-all focus:ring-2 focus:ring-blue-500 ${
+                                className={`w-full px-6 py-4 text-lg sm:text-xl border-2 rounded-xl font-extrabold tracking-wider uppercase text-center outline-0 transition-all focus:ring-2 focus:ring-blue-500 ${
                                     expedientError
                                         ? 'border-red-500 bg-red-50'
                                         : isExpedientValid
@@ -97,22 +108,24 @@ export default function ApplicantForm({
                                 placeholder="EJ: EXP-2026-001"
                                 maxLength={20}
                             />
-                            
+
                             {expedientError && (
-                                <p className="text-red-500 text-xs mt-2 flex items-center gap-1">
+                                <p className="text-red-500 text-sm mt-3 flex items-center justify-center gap-2">
                                     <i className="fas fa-exclamation-circle"></i>
                                     {expedientError}
                                 </p>
                             )}
-                            
+
                             {isExpedientValid && (
-                                <p className="text-green-600 text-xs mt-2 flex items-center gap-1">
+                                <p className="text-green-600 text-sm mt-3 flex items-center justify-center gap-2">
                                     <i className="fas fa-check-circle"></i>
                                     Expediente verificado correctamente
                                 </p>
                             )}
                         </div>
+
                     </div>
+
                 </div>
             </div>
 
@@ -125,6 +138,7 @@ export default function ApplicantForm({
                     </p>
                 </div>
             )}
+
         </div>
     );
 }
