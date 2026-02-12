@@ -15,6 +15,7 @@ import { useUploadDocuments } from "../../hooks/useUploadDocuments.ts";
 import {useNavigate} from "react-router-dom";
 import {useDocument} from "../../hooks/useDocument.ts";
 import {db} from "../../model/documentModel.ts";
+import Alert from "../../components/Alert.tsx";
 export default function NewRequest() {
     const [tipoSolicitud, setTipoSolicitud] = useState<number | null>(null);
     const [searchTerm, setSearchTerm] = useState("");
@@ -25,6 +26,9 @@ export default function NewRequest() {
     const { uploadMultipleDocuments, isUploading: isUploadingDocs, uploadProgress } = useUploadDocuments();
     const navigate = useNavigate();
     const {deleteDocuments} = useDocument();
+    const [showAlert, setShowAlert] = useState(false);
+    const [messAlert, setMessAlert] = useState("");
+    const [typeAlert, setTypeAlert] = useState<'info'|'warning'|'error'|'success'>('info');
    /*
     const handleSelectTipoSolicitud = (id: number) => {
 
@@ -49,7 +53,11 @@ export default function NewRequest() {
 
     const { tiposolicitud } = useTipoSolici();
     const [currentStep, setCurrentStep] = useState(1);
-
+    const mostrarAlert = (message: string, type: 'info' | 'warning' | 'error' | 'success' = 'info') => {
+        setMessAlert(message);
+        setTypeAlert(type);
+        setShowAlert(true);
+    }
     const handleConfirmSubmit = async () => {
         try {
             setIsSubmitting(true);
@@ -89,26 +97,36 @@ export default function NewRequest() {
                         await deleteDocuments();
                         console.log('IndexedDB limpiado');
 
-                        alert(`Solicitud creada exitosamente con ${documentosParaSubir.length} documento(s) adjunto(s)`);
+                        //alert(`Solicitud creada exitosamente con ${documentosParaSubir.length} documento(s) adjunto(s)`);
+                        mostrarAlert(`Solicitud creada exitosamente con ${documentosParaSubir.length} documento(s) adjunto(s)`, 'success');
+                        setTimeout(()=>{
+                            setShowAlert(false);
+                            navigate('/dashboard/solicitud/history');
+                        }, 3000);
                     } else {
                         console.warn('Algunos documentos fallaron:', uploadResult.message);
-                        alert(
-                            `Solicitud creada pero algunos documentos fallaron:\n\n` +
-                            `${uploadResult.message}\n\n` +
-                            `Los documentos permanecen guardados localmente para reintentarlo más tarde.`
-                        );
+                        mostrarAlert(`Solicitud creada pero algunos documentos fallaron no se pudieron subir`, 'warning');
+                        setTimeout(()=>{
+                            setShowAlert(false);
+                            navigate('/dashboard/solicitud/history');
+                        }, 3000);
                         return;
                     }
                 } else {
                     console.log('ℹNo hay documentos para subir');
-                    alert('Solicitud creada exitosamente (sin documentos adjuntos)');
+                    mostrarAlert('Solicitud creada exitosamente (sin documentos adjuntos)','warning');
+                    setTimeout(()=>{
+                        setShowAlert(false);
+                        navigate('/dashboard/solicitud/history');
+                    }, 3000);
                 }
-                navigate('/dashboard/solicitud/history');
             } else if (error) {
                 console.error('Error al crear solicitud:', error);
-                alert(`Error al crear solicitud: ${error}`);
+                setShowAlert(true);
+                setTypeAlert('error');
+                setMessAlert(`Error al crear la solicitud: ${error}`);
+                setTimeout(() => setShowAlert(false), 3000);
             }
-
         } catch (error) {
             console.error('Error en el proceso:', error);
             const errorMessage = error instanceof Error ? error.message : 'Error desconocido';
@@ -315,6 +333,9 @@ export default function NewRequest() {
                                     onConfirm={handleConfirmSubmit}
                                     isSubmitting={isSubmitting || isUploadingDocs}
                                 />
+                                {showAlert && (
+                                    <Alert message={messAlert} type={typeAlert} onClose={() => setShowAlert(false)} />
+                                )}
                             </div>
                         )}
 
