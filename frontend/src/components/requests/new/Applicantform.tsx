@@ -10,12 +10,14 @@ interface ApplicantFormProps {
     onSolicitantesChange?: (solicitantes: Participant[]) => void;
     tipoSolicitudNombre?: string;
     descriptionSolicitud?: string;
+    onValidationChange?: (isValid: boolean) => void;
 }
 
 export default function ApplicantForm({
     onSolicitantesChange,
     tipoSolicitudNombre,
     descriptionSolicitud,
+    onValidationChange,
 }: ApplicantFormProps) {
     const { addParticipant, deleteParticipant, formDataAplication, updateApplicationData } = ApplicationHandler();
 
@@ -170,6 +172,16 @@ export default function ApplicantForm({
         }
     }, [solicitantesAgregados, onSolicitantesChange]);
 
+    useEffect(() => {
+        // La validación es verdadera si:
+        // - El expediente es válido (length >= 5 según tu lógica)
+        // - Hay al menos 1 solicitante en la lista
+        const isStepValid = isExpedientValid && solicitantesAgregados.length > 0;
+
+        if (onValidationChange) {
+            onValidationChange(isStepValid);
+        }
+    }, [isExpedientValid, solicitantesAgregados, onValidationChange]);
 
     // Buscar solicitante por documento
     const handleSearchApplicant = useCallback(async () => {

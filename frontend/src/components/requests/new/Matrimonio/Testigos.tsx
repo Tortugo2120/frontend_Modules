@@ -12,12 +12,13 @@ interface Solicitud {
     tipoSolicitudNombre?: string;
     descriptionSolicitud?: string;
     onTestigosChange?: (testigos: Participant[]) => void;
+    onValidationChange?: (isValid: boolean) => void;
 }
 
 type inputSearch = z.infer<typeof searchTypeDocument>;
 
 const Testigo = (props: Solicitud) => {
-    const { tipoSolicitudNombre, descriptionSolicitud, onTestigosChange } = props;
+    const { tipoSolicitudNombre, descriptionSolicitud, onTestigosChange, onValidationChange } = props;
     const { addParticipant, deleteParticipant, formDataAplication } = useApplicationContext();
 
     // Estados para búsqueda de Testigo 1
@@ -126,6 +127,17 @@ const Testigo = (props: Solicitud) => {
         }
     }, [formDataAplication.participants, onTestigosChange]);
 
+    // Validar como mínimo 2 testigos
+    useEffect(() => {
+        const isStepValid = testigo1Added && testigo2Added;
+
+        if (onValidationChange) {
+            onValidationChange(isStepValid);
+        }
+    }, [testigo1Added, testigo2Added, onValidationChange]);
+
+
+
     // Función para buscar persona
     const handleSearchTestigo = useCallback(async (testigoNum: 1 | 2) => {
         const isTestigo1 = testigoNum === 1;
@@ -218,7 +230,7 @@ const Testigo = (props: Solicitud) => {
             }
 
             // Agregar como testigo
-            addParticipant({ ...data, rol: 'testigo',documentTypeId: documentTypeMapping[tipoDoc] || 1 });
+            addParticipant({ ...data, rol: 'testigo', documentTypeId: documentTypeMapping[tipoDoc] || 1 });
             setAdded(true);
             setError('');
         })();
@@ -295,10 +307,10 @@ const Testigo = (props: Solicitud) => {
                                 onKeyDown={(e) => handleKeyDown(e, testigoNum)}
                                 onInput={(e) => handleDocumentInput(e, tipoDoc)}
                                 className={`w-full pl-9 sm:pl-11 pr-20 sm:pr-24 py-2 sm:py-2.5 text-sm sm:text-base border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-0 transition-all ${searchSuccess
-                                        ? 'border-green-500 bg-green-50'
-                                        : searchError
-                                            ? 'border-red-300 bg-red-50'
-                                            : 'border-gray-300'
+                                    ? 'border-green-500 bg-green-50'
+                                    : searchError
+                                        ? 'border-red-300 bg-red-50'
+                                        : 'border-gray-300'
                                     }`}
                                 {...registerSearch('documentNumber')}
                                 placeholder={tipoDoc === 'dni' ? "8 dígitos" : tipoDoc === 'pas' ? "Pasaporte" : "Cédula"}

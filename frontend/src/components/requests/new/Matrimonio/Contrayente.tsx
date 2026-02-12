@@ -13,13 +13,12 @@ interface Solicitud {
     descriptionSolicitud?: string;
     onContrayentesChange?: (contrayentes: Participant[]) => void;
     onValidationChange?: (isValid: boolean) => void;
-
 }
 
 type inputSearch = z.infer<typeof searchTypeDocument>;
 
 const Contrayente = (props: Solicitud) => {
-    const { tipoSolicitudNombre, descriptionSolicitud, onContrayentesChange } = props;
+    const { tipoSolicitudNombre, descriptionSolicitud, onContrayentesChange, onValidationChange } = props;
     const { addParticipant, deleteParticipant, formDataAplication } = useApplicationContext();
 
     // Estados para búsqueda de Contrayente 1
@@ -127,6 +126,14 @@ const Contrayente = (props: Solicitud) => {
             onContrayentesChange(contrayentes);
         }
     }, [formDataAplication.participants, onContrayentesChange]);
+
+    useEffect(() => {
+        const isStepValid = contrayente1Added && contrayente2Added;
+
+        if (onValidationChange) {
+            onValidationChange(isStepValid);
+        }
+    }, [contrayente1Added, contrayente2Added, onValidationChange]);
 
     // Función para buscar persona
     const handleSearchContrayente = useCallback(async (contrayenteNum: 1 | 2) => {
