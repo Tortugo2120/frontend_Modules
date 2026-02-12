@@ -1,4 +1,4 @@
-import {useEffect, useState} from "react";
+import { useEffect, useState } from "react";
 import StepProgressBar from "../../components/requests/new/Stepprogresebar";
 import RequestTypeCard from "../../components/requests/new/Requesttypecard";
 import ApplicantForm from "../../components/requests/new/Applicantform";
@@ -8,23 +8,36 @@ import useTipoSolici from "../../hooks/useTipoSolici.ts";
 import Contrayente from "../../components/requests/new/Matrimonio/Contrayente.tsx";
 import Testigos from "../../components/requests/new/Matrimonio/Testigos.tsx";
 import Requisitos from "../../components/requests/new/Matrimonio/Requisitos.tsx";
-import {ApplicationHandler} from "../../context/ApplicationContext.tsx";
-import {Auth} from "../../context/AuthContext.tsx";
+import { ApplicationHandler } from "../../context/ApplicationContext.tsx";
+import { Auth } from "../../context/AuthContext.tsx";
 import useCreateAplication from "../../hooks/useCreateAplication.ts";
 import { useUploadDocuments } from "../../hooks/useUploadDocuments.ts";
-import {useNavigate} from "react-router-dom";
-import {useDocument} from "../../hooks/useDocument.ts";
-import {db} from "../../model/documentModel.ts";
+import { useNavigate } from "react-router-dom";
+import { useDocument } from "../../hooks/useDocument.ts";
+import { db } from "../../model/documentModel.ts";
+import Alert from "../../components/Alert.tsx";
 export default function NewRequest() {
     const [tipoSolicitud, setTipoSolicitud] = useState<number | null>(null);
     const [searchTerm, setSearchTerm] = useState("");
-    const {updateApplicationData, formDataAplication,resetForm} = ApplicationHandler();
-    const {user} = Auth();
+    const { updateApplicationData, formDataAplication, resetForm } = ApplicationHandler();
+    const { user } = Auth();
     const [isSubmitting, setIsSubmitting] = useState(false);
-    const {error,createSolicitud} = useCreateAplication();
+    const { error, createSolicitud } = useCreateAplication();
     const { uploadMultipleDocuments, isUploading: isUploadingDocs, uploadProgress } = useUploadDocuments();
     const navigate = useNavigate();
-    const {deleteDocuments} = useDocument();
+    const { deleteDocuments } = useDocument();
+    const [showAlert, setShowAlert] = useState(false);
+    const [messAlert, setMessAlert] = useState("");
+    const [typeAlert, setTypeAlert] = useState<'info' | 'warning' | 'error' | 'success'>('info');
+    /*
+     const handleSelectTipoSolicitud = (id: number) => {
+ 
+         setTipoSolicitud(prev =>
+             prev === id ? null : id
+         );
+         if (id) setIsValid(true);
+     };
+     */
     useEffect(() => {
         if (user) {
             updateApplicationData({ userId: user.user_id });
@@ -40,7 +53,11 @@ export default function NewRequest() {
 
     const { tiposolicitud } = useTipoSolici();
     const [currentStep, setCurrentStep] = useState(1);
-
+    const mostrarAlert = (message: string, type: 'info' | 'warning' | 'error' | 'success' = 'info') => {
+        setMessAlert(message);
+        setTypeAlert(type);
+        setShowAlert(true);
+    }
     const handleConfirmSubmit = async () => {
         try {
             setIsSubmitting(true);
@@ -80,26 +97,36 @@ export default function NewRequest() {
                         await deleteDocuments();
                         console.log('IndexedDB limpiado');
 
-                        alert(`Solicitud creada exitosamente con ${documentosParaSubir.length} documento(s) adjunto(s)`);
+                        //alert(`Solicitud creada exitosamente con ${documentosParaSubir.length} documento(s) adjunto(s)`);
+                        mostrarAlert(`Solicitud creada exitosamente con ${documentosParaSubir.length} documento(s) adjunto(s)`, 'success');
+                        setTimeout(() => {
+                            setShowAlert(false);
+                            navigate('/dashboard/solicitud/history');
+                        }, 3000);
                     } else {
                         console.warn('Algunos documentos fallaron:', uploadResult.message);
-                        alert(
-                            `Solicitud creada pero algunos documentos fallaron:\n\n` +
-                            `${uploadResult.message}\n\n` +
-                            `Los documentos permanecen guardados localmente para reintentarlo más tarde.`
-                        );
+                        mostrarAlert(`Solicitud creada pero algunos documentos fallaron no se pudieron subir`, 'warning');
+                        setTimeout(() => {
+                            setShowAlert(false);
+                            navigate('/dashboard/solicitud/history');
+                        }, 3000);
                         return;
                     }
                 } else {
                     console.log('ℹNo hay documentos para subir');
-                    alert('Solicitud creada exitosamente (sin documentos adjuntos)');
+                    mostrarAlert('Solicitud creada exitosamente (sin documentos adjuntos)', 'warning');
+                    setTimeout(() => {
+                        setShowAlert(false);
+                        navigate('/dashboard/solicitud/history');
+                    }, 3000);
                 }
-                navigate('/dashboard/solicitud/history');
             } else if (error) {
                 console.error('Error al crear solicitud:', error);
-                alert(`Error al crear solicitud: ${error}`);
+                setShowAlert(true);
+                setTypeAlert('error');
+                setMessAlert(`Error al crear la solicitud: ${error}`);
+                setTimeout(() => setShowAlert(false), 3000);
             }
-
         } catch (error) {
             console.error('Error en el proceso:', error);
             const errorMessage = error instanceof Error ? error.message : 'Error desconocido';
@@ -124,7 +151,7 @@ export default function NewRequest() {
         tipo.nombre_solicitud.toLowerCase().includes(searchTerm.toLowerCase())
     );
 
-    const [stepsValidation, setStepsValidation] = useState<{[key: number]: boolean}>({
+    const [stepsValidation, setStepsValidation] = useState<{ [key: number]: boolean }>({
         1: false,
         2: false,
         3: false,
@@ -239,6 +266,7 @@ export default function NewRequest() {
                                     <ApplicantForm
                                         tipoSolicitudNombre={selectedRequestType?.nombre_solicitud}
                                         descriptionSolicitud={selectedRequestType?.descripcion}
+                                        onValidationChange={(isValid) => updateStepValidation(2, isValid)}
                                     />
                                 </div>
                             </div>
@@ -248,26 +276,27 @@ export default function NewRequest() {
                         {currentStep === 3 && (
                             <div className="p-6 lg:p-6">
                                 <Contrayente
-                                tipoSolicitudNombre={selectedRequestType?.nombre_solicitud}
-                                descriptionSolicitud={selectedRequestType?.descripcion}
-                                onValidationChange={(isValid) => updateStepValidation(3, isValid)} />
+                                    tipoSolicitudNombre={selectedRequestType?.nombre_solicitud}
+                                    descriptionSolicitud={selectedRequestType?.descripcion}
+                                    onValidationChange={(isValid) => updateStepValidation(3, isValid)} />
                             </div>
                         )}
                         {/* Step 4: testigo */}
                         {currentStep === 4 && (
                             <div className="p-6 lg:p-6">
                                 <Testigos
-                                tipoSolicitudNombre={selectedRequestType?.nombre_solicitud}
-                                descriptionSolicitud={selectedRequestType?.descripcion} />
+                                    tipoSolicitudNombre={selectedRequestType?.nombre_solicitud}
+                                    descriptionSolicitud={selectedRequestType?.descripcion}
+                                    onValidationChange={(isValid) => updateStepValidation(4, isValid)} />
                             </div>
                         )}
                         {/* Step 5: requisitos */}
                         {currentStep === 5 && (
                             <div className="p-6 lg:p-6">
                                 <Requisitos
-                                tipoSolicitudNombre={selectedRequestType?.nombre_solicitud}
-                                descriptionSolicitud={selectedRequestType?.descripcion}
-                                 />
+                                    tipoSolicitudNombre={selectedRequestType?.nombre_solicitud}
+                                    descriptionSolicitud={selectedRequestType?.descripcion}
+                                    onValidationChange={(isValid) => updateStepValidation(5, isValid)} />
                             </div>
                         )}
 
@@ -306,13 +335,16 @@ export default function NewRequest() {
                                     onConfirm={handleConfirmSubmit}
                                     isSubmitting={isSubmitting || isUploadingDocs}
                                 />
+                                {showAlert && (
+                                    <Alert message={messAlert} type={typeAlert} onClose={() => setShowAlert(false)} />
+                                )}
                             </div>
                         )}
 
                         <NavigationButtons
                             currentStep={currentStep}
                             totalSteps={6}
-                            canProceed={currentStep === 1 ? !!tipoSolicitud : true}
+                            canProceed={currentStep === 1 ? !!tipoSolicitud : (stepsValidation[currentStep] || false)}
                             onPrevious={prevStep}
                             onNext={nextStep}
                         />
