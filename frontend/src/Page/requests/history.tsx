@@ -106,7 +106,7 @@ export default function History() {
     }
 
     return (
-        <div className="min-h-screen bg-linear-to-br from-slate-50 via-blue-50 to-indigo-50 p-4 sm:p-6 lg:p-8">
+        <div className="min-h-screen bg-blue-300/40 from-slate-50 via-blue-50 to-indigo-50 p-4 sm:p-6 lg:p-8">
             {/* Header */}
             <div className="max-w-7xl mx-auto mb-8">
                 <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-6">
@@ -243,7 +243,7 @@ export default function History() {
 
             {/* Tabla */}
             <div className="max-w-7xl mx-auto">
-                <div className="bg-white rounded-xl shadow-xl overflow-hidden border border-gray-100">
+                <div className="bg-white rounded-md shadow-xl overflow-hidden border border-gray-100">
                     {solicitudes.length === 0 ? (
                         <div className="p-12 text-center">
                             <div className="w-20 h-20 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-4">
@@ -324,13 +324,6 @@ export default function History() {
                                                     >
                                                         <i className="fas fa-pen-to-square"></i>
                                                     </button>
-                                                    <button
-                                                        onClick={() => console.log("Descargar solicitud", solicitud.id)}
-                                                        className="btn btn-sm btn-circle btn-ghost text-green-600 hover:bg-green-100 transition-colors"
-                                                        title="Descargar solicitud"
-                                                    >
-                                                        <i className="fas fa-download"></i>
-                                                    </button>
                                                 </div>
                                             </td>
                                         </tr>
@@ -381,11 +374,10 @@ export default function History() {
                                         <button
                                             key={pageNum}
                                             onClick={() => cambiarPagina(pageNum)}
-                                            className={`btn btn-sm ${
-                                                paginaActual === pageNum
-                                                    ? 'bg-indigo-600 text-white hover:bg-indigo-700'
-                                                    : 'bg-white border-gray-300 hover:bg-gray-50'
-                                            }`}
+                                            className={`btn btn-sm ${paginaActual === pageNum
+                                                ? 'bg-indigo-600 text-white hover:bg-indigo-700'
+                                                : 'bg-white border-gray-300 hover:bg-gray-50'
+                                                }`}
                                         >
                                             {pageNum}
                                         </button>
@@ -413,7 +405,7 @@ export default function History() {
                 )}
             </div>
 
-            {/* Modal permanece igual */}
+            {/* Modal */}
             {vistaDetalle && (
                 <div className="fixed inset-0 bg-slate-900/60 backdrop-blur-sm flex items-center justify-center p-4 z-50">
                     <div className="bg-white rounded-2xl max-w-3xl w-full shadow-2xl animate-fadeIn max-h-[90vh] overflow-y-auto">

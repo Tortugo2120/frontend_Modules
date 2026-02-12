@@ -8,7 +8,7 @@ interface Filtros {
     estado: string;
 }
 
-const ITEMS_POR_PAGINA = 10;
+const ITEMS_POR_PAGINA = 5; // 👈 Cambiado a 5 solicitudes por página
 
 export const useApplicationHistory = () => {
     // Estado para TODAS las solicitudes (sin filtrar)
@@ -36,11 +36,34 @@ export const useApplicationHistory = () => {
                 setLoading(true);
                 setError(null);
                 
-                // Cargar todas las solicitudes (sin filtros)
+                // 🔧 OPCIÓN 1: Si tu backend devuelve TODAS las solicitudes en una sola llamada
                 const { applications } = await ListApplications(1);
                 setTodasLasSolicitudes(applications);
+
+                // 🔧 OPCIÓN 2: Si tu backend pagina y necesitas obtener TODAS las páginas
+                // Descomenta esto si necesitas cargar múltiples páginas del backend:
+                /*
+                let todasLasSolicitudesTemp: ApplicationItem[] = [];
+                let paginaBackend = 1;
+                let hayMasPaginas = true;
+                
+                while (hayMasPaginas) {
+                    const { applications, totalPages } = await ListApplications(paginaBackend);
+                    todasLasSolicitudesTemp = [...todasLasSolicitudesTemp, ...applications];
+                    
+                    if (paginaBackend >= totalPages) {
+                        hayMasPaginas = false;
+                    } else {
+                        paginaBackend++;
+                    }
+                }
+                
+                setTodasLasSolicitudes(todasLasSolicitudesTemp);
+                */
+                
             } catch (err: any) {
                 setError(err.response?.data?.message || "Error al cargar solicitudes");
+                setTodasLasSolicitudes([]); // Asegurar que esté vacío en caso de error
             } finally {
                 setLoading(false);
             }
@@ -49,13 +72,13 @@ export const useApplicationHistory = () => {
         cargarTodasLasSolicitudes();
     }, []);
 
-    // Obtener tipos únicos
+    // Obtener tipos únicos para el filtro
     const tiposUnicos = useMemo(() => {
         const tipos = todasLasSolicitudes.map(s => s.nombreSolicitud);
         return Array.from(new Set(tipos)).sort();
     }, [todasLasSolicitudes]);
 
-    // Obtener estados únicos
+    // Obtener estados únicos para el filtro
     const estadosUnicos = useMemo(() => {
         const estados = todasLasSolicitudes.map(s => s.estado);
         return Array.from(new Set(estados)).sort();
@@ -102,7 +125,7 @@ export const useApplicationHistory = () => {
         return resultado;
     }, [todasLasSolicitudes, filtros]);
 
-    // PAGINACIÓN EN FRONTEND
+    // PAGINACIÓN EN FRONTEND (ahora con 5 elementos por página)
     const solicitudesPaginadas = useMemo(() => {
         const inicio = (paginaActual - 1) * ITEMS_POR_PAGINA;
         const fin = inicio + ITEMS_POR_PAGINA;
@@ -118,22 +141,34 @@ export const useApplicationHistory = () => {
         setPaginaActual(1);
     }, [filtros.busqueda, filtros.tipo, filtros.estado]);
 
+    // Validar que la página actual no exceda el total de páginas
+    useEffect(() => {
+        if (paginaActual > totalPaginas && totalPaginas > 0) {
+            setPaginaActual(totalPaginas);
+        }
+    }, [totalPaginas, paginaActual]);
+
     // Función para actualizar filtros
     const actualizarFiltros = (nuevosFiltros: Partial<Filtros>) => {
         setFiltros(prev => ({ ...prev, ...nuevosFiltros }));
     };
 
+    // Limpiar todos los filtros
     const limpiarFiltros = () => {
         setFiltros({ busqueda: "", tipo: "", estado: "" });
     };
 
+    // Cambiar de página con validación
     const cambiarPagina = (nuevaPagina: number) => {
         if (nuevaPagina >= 1 && nuevaPagina <= totalPaginas) {
             setPaginaActual(nuevaPagina);
+            // Scroll suave al inicio de la página
+            window.scrollTo({ top: 0, behavior: 'smooth' });
         }
     };
 
     return {
+        // Solicitudes paginadas (5 por página)
         solicitudes: solicitudesPaginadas,
         loading,
         error,
