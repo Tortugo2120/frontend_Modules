@@ -1,4 +1,4 @@
-import {useEffect, useState} from "react";
+import { useEffect, useState } from "react";
 import StepProgressBar from "../../components/requests/new/Stepprogresebar";
 import RequestTypeCard from "../../components/requests/new/Requesttypecard";
 import ApplicantForm from "../../components/requests/new/Applicantform";
@@ -12,9 +12,9 @@ import { ApplicationHandler } from "../../context/ApplicationContext.tsx";
 import { Auth } from "../../context/AuthContext.tsx";
 import useCreateAplication from "../../hooks/useCreateAplication.ts";
 import { useUploadDocuments } from "../../hooks/useUploadDocuments.ts";
-import {useNavigate} from "react-router-dom";
-import {useDocument} from "../../hooks/useDocument.ts";
-import {db} from "../../model/documentModel.ts";
+import { useNavigate } from "react-router-dom";
+import { useDocument } from "../../hooks/useDocument.ts";
+import { db } from "../../model/documentModel.ts";
 import Alert from "../../components/Alert.tsx";
 export default function NewRequest() {
     const [tipoSolicitud, setTipoSolicitud] = useState<number | null>(null);
@@ -25,19 +25,19 @@ export default function NewRequest() {
     const { error, createSolicitud } = useCreateAplication();
     const { uploadMultipleDocuments, isUploading: isUploadingDocs, uploadProgress } = useUploadDocuments();
     const navigate = useNavigate();
-    const {deleteDocuments} = useDocument();
+    const { deleteDocuments } = useDocument();
     const [showAlert, setShowAlert] = useState(false);
     const [messAlert, setMessAlert] = useState("");
-    const [typeAlert, setTypeAlert] = useState<'info'|'warning'|'error'|'success'>('info');
-   /*
-    const handleSelectTipoSolicitud = (id: number) => {
-
-        setTipoSolicitud(prev =>
-            prev === id ? null : id
-        );
-        if (id) setIsValid(true);
-    };
-    */
+    const [typeAlert, setTypeAlert] = useState<'info' | 'warning' | 'error' | 'success'>('info');
+    /*
+     const handleSelectTipoSolicitud = (id: number) => {
+ 
+         setTipoSolicitud(prev =>
+             prev === id ? null : id
+         );
+         if (id) setIsValid(true);
+     };
+     */
     useEffect(() => {
         if (user) {
             updateApplicationData({ userId: user.user_id });
@@ -99,14 +99,14 @@ export default function NewRequest() {
 
                         //alert(`Solicitud creada exitosamente con ${documentosParaSubir.length} documento(s) adjunto(s)`);
                         mostrarAlert(`Solicitud creada exitosamente con ${documentosParaSubir.length} documento(s) adjunto(s)`, 'success');
-                        setTimeout(()=>{
+                        setTimeout(() => {
                             setShowAlert(false);
                             navigate('/dashboard/solicitud/history');
                         }, 3000);
                     } else {
                         console.warn('Algunos documentos fallaron:', uploadResult.message);
                         mostrarAlert(`Solicitud creada pero algunos documentos fallaron no se pudieron subir`, 'warning');
-                        setTimeout(()=>{
+                        setTimeout(() => {
                             setShowAlert(false);
                             navigate('/dashboard/solicitud/history');
                         }, 3000);
@@ -114,8 +114,8 @@ export default function NewRequest() {
                     }
                 } else {
                     console.log('ℹNo hay documentos para subir');
-                    mostrarAlert('Solicitud creada exitosamente (sin documentos adjuntos)','warning');
-                    setTimeout(()=>{
+                    mostrarAlert('Solicitud creada exitosamente (sin documentos adjuntos)', 'warning');
+                    setTimeout(() => {
                         setShowAlert(false);
                         navigate('/dashboard/solicitud/history');
                     }, 3000);
@@ -344,7 +344,7 @@ export default function NewRequest() {
                         <NavigationButtons
                             currentStep={currentStep}
                             totalSteps={6}
-                            canProceed={stepsValidation[currentStep] || false}
+                            canProceed={currentStep === 1 ? !!tipoSolicitud : (stepsValidation[currentStep] || false)}
                             onPrevious={prevStep}
                             onNext={nextStep}
                         />
