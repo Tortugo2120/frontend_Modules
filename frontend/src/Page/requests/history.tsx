@@ -1,4 +1,5 @@
 import { useApplicationHistory } from "../../hooks/useApplicationHistory";
+import { useNavigate } from "react-router-dom";
 
 // Funciones helper (mantén las que ya tienes)
 const getEstadoClasses = (estado: string): string => {
@@ -13,23 +14,6 @@ const getEstadoClasses = (estado: string): string => {
     };
     return clases[estadoNormalizado] || "bg-gray-100 text-gray-800";
 };
-
-const getRolIcon = (rol: string): string => {
-    const rolNormalizado = rol.toLowerCase();
-    if (rolNormalizado.includes('contrayente')) return 'fa-rings-wedding';
-    if (rolNormalizado.includes('testigo')) return 'fa-user-check';
-    if (rolNormalizado.includes('solicitante')) return 'fa-user';
-    return 'fa-user-circle';
-};
-
-const getRolColor = (rol: string): string => {
-    const rolNormalizado = rol.toLowerCase();
-    if (rolNormalizado.includes('contrayente')) return 'text-pink-600';
-    if (rolNormalizado.includes('testigo')) return 'text-blue-600';
-    if (rolNormalizado.includes('solicitante')) return 'text-indigo-600';
-    return 'text-gray-600';
-};
-
 
 const formatearFechaHora = (fecha: string): string => {
     try {
@@ -53,6 +37,7 @@ const formatearPrecio = (precio: number): string => {
 };
 
 export default function History() {
+    const navigate = useNavigate();
     const {
         solicitudes,
         loading,
@@ -62,8 +47,6 @@ export default function History() {
         paginaActual,
         totalPaginas,
         totalRegistros,
-        vistaDetalle,
-        setVistaDetalle,
         limpiarFiltros,
         tiposUnicos,
         estadosUnicos,
@@ -107,7 +90,7 @@ export default function History() {
     return (
         <div className="min-h-screen bg-blue-300/40 from-slate-50 via-blue-50 to-indigo-50 p-4 sm:p-6 lg:p-6">
             {/* Header */}
-            <div className="max-w-7xl mx-auto mb-2">
+            <div className=" mx-auto mb-2">
                 <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-6">
                     <div className="flex items-center gap-3">
                         <div className="w-12 h-12 bg-info-content rounded-xl flex items-center justify-center shadow-lg">
@@ -241,7 +224,7 @@ export default function History() {
             </div>
             {/* Paginación */}
             {totalPaginas > 1 && (
-                <div className="flex flex-col sm:flex-row items-center justify-between gap-4 mt-6 bg-white rounded-t-md shadow-lg px-5 py-3">
+                <div className="flex flex-col sticky top-18 z-30 sm:flex-row items-center justify-between gap-4 mt-6 bg-white rounded-t-md shadow-lg px-5 py-3">
                     <div className="text-sm text-gray-600">
                         Mostrando {solicitudes.length} de {totalRegistros} solicitudes (Página {paginaActual} de {totalPaginas})
                     </div>
@@ -309,7 +292,7 @@ export default function History() {
                 </div>
             )}
             {/* Tabla */}
-            <div className="max-w-7xl mx-auto">
+            <div className=" mx-auto">
                 <div className="bg-white rounded-b-md shadow-xl overflow-hidden border-0">
                     {solicitudes.length === 0 ? (
                         <div className="p-12 text-center">
@@ -335,7 +318,7 @@ export default function History() {
                             )}
                         </div>
                     ) : (
-                        < div className="overflow-x-auto  ">
+                        < div className="overflow-x-auto">
                             <table className="w-full table-fixed">
                                 <thead className="bg-info-content text-white">
                                     <tr>
@@ -381,7 +364,7 @@ export default function History() {
                                                     )}
                                                 </div>
                                             </td>
-                                            {/* Celda de Fecha añadida */}
+
                                             <td className=" text-md text-gray-600">
                                                 <div className="flex flex-col gap-1">
                                                     {solicitud.participantes && solicitud.participantes.length > 0 ? (
@@ -416,7 +399,7 @@ export default function History() {
                                             <td className="pr-4">
                                                 <div className="flex items-center justify-center gap-2">
                                                     <button
-                                                        onClick={() => setVistaDetalle(solicitud)}
+                                                        onClick={() => navigate(`/dashboard/solicitud/detalles/${solicitud.id}`)}
                                                         className="btn btn-sm btn-circle btn-ghost text-indigo-600 hover:bg-indigo-100 transition-colors"
                                                         title="Ver detalles"
                                                     >
@@ -442,148 +425,6 @@ export default function History() {
 
             </div>
 
-            {/* Modal */}
-            {
-                vistaDetalle && (
-                    <div className="fixed inset-0 bg-slate-900/60 backdrop-blur-sm flex items-center justify-center p-4 z-50">
-                        <div className="bg-white rounded-2xl max-w-3xl w-full shadow-2xl animate-fadeIn max-h-[90vh] overflow-y-auto">
-                            <div className="bg-linear-to-r from-indigo-600 to-purple-600 px-5 py-3 flex items-center justify-between rounded-t-2xl sticky top-0 z-10">
-                                <h3 className="text-lg font-bold text-white flex items-center gap-2">
-                                    <i className="fas fa-file-alt"></i>
-                                    Detalles del Expediente
-                                </h3>
-                                <button
-                                    onClick={() => setVistaDetalle(null)}
-                                    className="text-white/80 hover:text-white transition-colors"
-                                >
-                                    <i className="fas fa-times text-xl"></i>
-                                </button>
-                            </div>
-                            <div className="p-6 space-y-6">
-                                {/* Resto del modal igual... */}
-                                <div className="grid grid-cols-2 gap-4">
-                                    <div className="col-span-2 bg-indigo-50 p-4 rounded-lg">
-                                        <p className="text-xs text-indigo-600 uppercase font-bold mb-1">Número de Expediente</p>
-                                        <p className="font-mono text-2xl text-indigo-700 font-bold">{vistaDetalle.expediente}</p>
-                                    </div>
-
-                                    <div className="col-span-2">
-                                        <p className="text-xs text-gray-400 uppercase font-bold mb-2">Tipo de Solicitud</p>
-                                        <div className="bg-linear-to-r from-gray-50 to-white p-4 rounded-lg border border-gray-200">
-                                            <p className="text-gray-800 font-bold text-lg flex items-center gap-2">
-                                                <i className="fas fa-file-contract text-indigo-600"></i>
-                                                {vistaDetalle.nombreSolicitud}
-                                            </p>
-                                            <p className="text-gray-600 text-sm mt-1">{vistaDetalle.descripcionSolicitud}</p>
-                                        </div>
-                                    </div>
-
-                                    <div>
-                                        <p className="text-xs text-gray-400 uppercase font-bold mb-1">Estado</p>
-                                        <span className={`badge ${getEstadoClasses(vistaDetalle.estado)} py-2 px-3`}>
-                                            {vistaDetalle.estado}
-                                        </span>
-                                    </div>
-
-                                    <div>
-                                        <p className="text-xs text-gray-400 uppercase font-bold mb-1">Precio</p>
-                                        <p className="flex items-center gap-2 text-lg font-bold text-green-600">
-                                            {formatearPrecio(vistaDetalle.precio)}
-                                        </p>
-                                    </div>
-
-                                    <div className="col-span-2">
-                                        <p className="text-xs text-gray-400 uppercase font-bold mb-1">Encargado</p>
-                                        <p className="text-gray-800 flex items-center gap-2">
-                                            <i className="fas fa-user-tie text-gray-400"></i>
-                                            {vistaDetalle.encargado}
-                                        </p>
-                                    </div>
-
-                                    <div>
-                                        <p className="text-xs text-gray-400 uppercase font-bold mb-1">Fecha de Inicio</p>
-                                        <p className="text-gray-800 flex items-center gap-2">
-                                            <i className="fas fa-calendar-alt text-gray-400"></i>
-                                            {formatearFechaHora(vistaDetalle.fecha)}
-                                        </p>
-                                    </div>
-                                    <div>
-                                        <p className="text-xs text-gray-400 uppercase font-bold mb-1">Última Actualización</p>
-                                        <p className="text-gray-800 flex items-center gap-2">
-                                            <i className="fas fa-clock text-gray-400"></i>
-                                            {formatearFechaHora(vistaDetalle.fechaActualizacion)}
-                                        </p>
-                                    </div>
-                                    {vistaDetalle.fechaFin && (
-                                        <div className="col-span-2">
-                                            <p className="text-xs text-gray-400 uppercase font-bold mb-1">Fecha de Fin</p>
-                                            <p className="text-gray-800 flex items-center gap-2">
-                                                <i className="fas fa-calendar-check text-green-600"></i>
-                                                {formatearFechaHora(vistaDetalle.fechaFin)}
-                                            </p>
-                                        </div>
-                                    )}
-                                </div>
-
-                                {/* Participantes */}
-                                {vistaDetalle.participantes && vistaDetalle.participantes.length > 0 ? (
-                                    <div className="border-t pt-6">
-                                        <h4 className="text-lg font-bold text-gray-900 mb-4 flex items-center gap-2">
-                                            <i className="fas fa-users text-indigo-600"></i>
-                                            Participantes ({vistaDetalle.participantes.length})
-                                        </h4>
-                                        <div className="space-y-3">
-                                            {vistaDetalle.participantes.map((participante, index) => (
-                                                <div
-                                                    key={index}
-                                                    className="bg-linear-to-r from-gray-50 to-white p-4 rounded-lg border border-gray-200 hover:shadow-md transition-shadow"
-                                                >
-                                                    <div className="flex items-center gap-3">
-                                                        <div className={`w-10 h-10 rounded-full bg-linear-to-br from-indigo-100 to-purple-100 flex items-center justify-center ${getRolColor(participante.rol)}`}>
-                                                            <i className={`fas ${getRolIcon(participante.rol)}`}></i>
-                                                        </div>
-                                                        <div className="flex-1">
-                                                            <p className="font-semibold text-gray-900">{participante.nombre}</p>
-                                                            <p className="text-sm text-gray-500 uppercase font-medium">{participante.rol}</p>
-                                                        </div>
-                                                    </div>
-                                                </div>
-                                            ))}
-                                        </div>
-                                    </div>
-                                ) : (
-                                    <div className="border-t pt-6">
-                                        <div className="bg-gray-50 p-6 rounded-lg text-center">
-                                            <i className="fas fa-users-slash text-gray-400 text-3xl mb-2"></i>
-                                            <p className="text-gray-600">No hay participantes registrados</p>
-                                        </div>
-                                    </div>
-                                )}
-
-                                {vistaDetalle.observaciones && (
-                                    <div className="border-t pt-6">
-                                        <p className="text-xs text-gray-400 uppercase font-bold mb-2">Observaciones</p>
-                                        <div className="bg-yellow-50 border-l-4 border-yellow-400 p-3 rounded">
-                                            <p className="text-sm text-yellow-800">
-                                                <i className="fas fa-exclamation-triangle mr-2"></i>
-                                                {vistaDetalle.observaciones}
-                                            </p>
-                                        </div>
-                                    </div>
-                                )}
-
-                                <button
-                                    onClick={() => setVistaDetalle(null)}
-                                    className="w-full btn bg-indigo-600 hover:bg-indigo-700 text-white mt-4 transition-colors"
-                                >
-                                    <i className="fas fa-times-circle mr-2"></i>
-                                    Cerrar
-                                </button>
-                            </div>
-                        </div>
-                    </div>
-                )
-            }
         </div >
     );
 }
