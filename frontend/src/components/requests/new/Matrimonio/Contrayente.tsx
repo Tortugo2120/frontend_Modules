@@ -125,7 +125,8 @@ const Contrayente = (props: Solicitud) => {
         if (onContrayentesChange) {
             onContrayentesChange(contrayentes);
         }
-    }, [formDataAplication.participants, onContrayentesChange]);
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [formDataAplication.participants]);
 
     useEffect(() => {
         const isStepValid = contrayente1Added && contrayente2Added;
@@ -133,7 +134,8 @@ const Contrayente = (props: Solicitud) => {
         if (onValidationChange) {
             onValidationChange(isStepValid);
         }
-    }, [contrayente1Added, contrayente2Added, onValidationChange]);
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [contrayente1Added, contrayente2Added]);
 
     // Función para buscar persona
     const handleSearchContrayente = useCallback(async (contrayenteNum: 1 | 2) => {

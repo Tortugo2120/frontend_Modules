@@ -123,7 +123,8 @@ const RequisitosMatrimonio = ({
         if (onArchivosChange) {
             onArchivosChange(archivos);
         }
-    }, [archivos, onArchivosChange]);
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [archivos]);
 
     useEffect(() => {
         const obtenerCondiciones = () => {
@@ -252,7 +253,8 @@ const RequisitosMatrimonio = ({
             const isStepValid = progreso.completados > 0;
             onValidationChange(isStepValid);
         }
-    }, [progreso.completados, onValidationChange]);
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [progreso.completados]);
 
     const formatearTamaño = (bytes: number): string => {
         if (bytes === 0) return '0 Bytes';

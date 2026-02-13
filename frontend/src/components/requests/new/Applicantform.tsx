@@ -1,5 +1,6 @@
-import { useCallback, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import { ApplicationHandler } from "../../../context/ApplicationContext.tsx";
+import { useValidateExpediente } from "../../../hooks/useValidateExpediente.ts";
 
 interface ApplicantFormProps {
     tipoSolicitudNombre?: string;
@@ -12,56 +13,110 @@ export default function ApplicantForm({
     descriptionSolicitud,
     onValidationChange,
 }: ApplicantFormProps) {
-
     const { formDataAplication, updateApplicationData } = ApplicationHandler();
+    const {
+        setSearchValue,
+        isChecking,
+        error,
+        exists,
+        clearCache
+    } = useValidateExpediente(500);
 
     // Estado para número de expediente
     const [expedientNumber, setExpedientNumber] = useState<string>(() => {
         return formDataAplication.application.expedientNumber || '';
     });
-
     const [expedientError, setExpedientError] = useState<string>('');
+    const [backendValidated, setBackendValidated] = useState<boolean>(false);
 
-    // Verificar si el expediente está completo (mínimo 5 caracteres)
-    const isExpedientValid = expedientNumber.length >= 5 && !expedientError;
-
-    // Función para manejar el cambio de número de expediente
-    const handleExpedientNumberChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
-
-        const value = e.target.value.trim().toUpperCase();
+    // Validación de longitud en tiempo real (sin debounce)
+    const handleExpedientInput = useCallback((e: React.FormEvent<HTMLInputElement>) => {
+        const value = (e.target as HTMLInputElement).value.trim().toUpperCase();
         setExpedientNumber(value);
 
-        let error = '';
-
+        // Validaciones locales inmediatas
+        let localError = '';
         if (value.length === 0) {
-            error = 'El número de expediente es obligatorio';
-        } else if (value.length < 5) {
-            error = 'El número de expediente debe tener al menos 5 caracteres';
+            localError = 'El número de expediente es obligatorio';
+        } else if (value.length < 3) {
+            localError = 'El número de expediente debe tener al menos 3 caracteres';
         }
 
-        setExpedientError(error);
+        setExpedientError(localError);
+        setBackendValidated(false);
+    }, []);
 
-        const isValid = value.length >= 5 && error === '';
+    // Dispara la búsqueda en el backend cuando el usuario deja de escribir
+    const handleExpedientChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
+        const value = e.target.value.trim().toUpperCase();
 
-        // Actualizar en el contexto
-        updateApplicationData({ expedientNumber: value });
+        // Solo buscar si el valor tiene al menos 3 caracteres
+        if (value.length >= 3) {
+            setSearchValue(value);
+        }
+    }, [setSearchValue]);
 
-        // Notificar al padre sobre la validez de este paso
+    // Maneja los resultados de la validación del backend
+    useEffect(() => {
+        if (expedientNumber.length < 3) {
+            setBackendValidated(false);
+            return;
+        }
+
+        if (isChecking) {
+            setExpedientError('Verificando disponibilidad...');
+            setBackendValidated(false);
+            return;
+        }
+
+        // Verificar el resultado del backend primero
+        if (exists !== null && exists !== undefined) {
+            if (exists) {
+                // El expediente ya existe (status: false, code: 409)
+                setExpedientError('El número de expediente ya está registrado');
+                setBackendValidated(false);
+            } else {
+                // El expediente está disponible (status: true, code: 200)
+                setExpedientError('');
+                setBackendValidated(true);
+                // Guardar en el contexto local
+                updateApplicationData({ expedientNumber });
+            }
+            return;
+        }
+
+        // Solo mostrar error de conexión si hay un error real y no hay resultado
+        if (error) {
+            setExpedientError('Error al verificar el expediente. Intente nuevamente.');
+            setBackendValidated(false);
+            return;
+        }
+    }, [isChecking, error, exists, expedientNumber, updateApplicationData]);
+
+    // Notificar al padre sobre la validez del formulario
+    useEffect(() => {
+        const isValid = expedientNumber.length >= 3 && !expedientError && backendValidated && !isChecking;
+
         if (onValidationChange) {
             onValidationChange(isValid);
         }
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [expedientNumber, expedientError, backendValidated, isChecking]);
 
-    }, [updateApplicationData, onValidationChange]);
+    // Limpiar caché cuando se desmonte el componente o cambie el tipo de solicitud
+    useEffect(() => {
+        return () => {
+            clearCache();
+        };
+    }, [clearCache, tipoSolicitudNombre]);
 
     return (
         <div className="space-y-4 sm:space-y-6">
-
             <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-3 sm:gap-2">
                 <h3 className="text-base sm:text-lg font-semibold text-gray-900 flex items-center gap-2">
                     <i className="fas fa-file-signature text-blue-600"></i>
                     <span>Validación de Expediente</span>
                 </h3>
-
                 {tipoSolicitudNombre && (
                     <span className="bg-blue-100 text-blue-800 text-xs sm:text-sm font-medium px-3 sm:px-4 py-1.5 sm:py-2 rounded-lg flex flex-col items-center w-fit">
                         <div>
@@ -97,40 +152,48 @@ export default function ApplicantForm({
                             <input
                                 type="text"
                                 value={expedientNumber}
-                                onChange={handleExpedientNumberChange}
-                                className={`w-full px-6 py-4 text-lg sm:text-xl border-2 rounded-xl font-extrabold tracking-wider uppercase text-center outline-0 transition-all focus:ring-2 focus:ring-blue-500 ${
-                                    expedientError
-                                        ? 'border-red-500 bg-red-50'
-                                        : isExpedientValid
-                                            ? 'border-green-500 bg-green-50'
-                                            : 'border-gray-300 bg-white'
+                                onInput={handleExpedientInput}
+                                onChange={handleExpedientChange}
+                                className={`w-full px-4 py-3 text-sm sm:text-base border-2 rounded-lg font-bold uppercase outline-0 transition-all focus:ring-2 focus:ring-blue-500 ${
+                                    isChecking
+                                        ? 'border-yellow-500 bg-yellow-50'
+                                        : expedientError
+                                            ? 'border-red-500 bg-red-50'
+                                            : backendValidated
+                                                ? 'border-green-500 bg-green-50'
+                                                : 'border-gray-300 bg-white'
                                 }`}
                                 placeholder="EJ: EXP-2026-001"
                                 maxLength={20}
                             />
+                            
+                            {isChecking && (
+                                <p className="text-yellow-600 text-xs mt-2 flex items-center gap-1">
+                                    <i className="fas fa-spinner fa-spin"></i>
+                                    Verificando disponibilidad del expediente...
+                                </p>
+                            )}
 
-                            {expedientError && (
-                                <p className="text-red-500 text-sm mt-3 flex items-center justify-center gap-2">
+                            {expedientError && !isChecking && (
+                                <p className="text-red-500 text-xs mt-2 flex items-center gap-1">
                                     <i className="fas fa-exclamation-circle"></i>
                                     {expedientError}
                                 </p>
                             )}
-
-                            {isExpedientValid && (
-                                <p className="text-green-600 text-sm mt-3 flex items-center justify-center gap-2">
+                            
+                            {backendValidated && !isChecking && !expedientError && (
+                                <p className="text-green-600 text-xs mt-2 flex items-center gap-1">
                                     <i className="fas fa-check-circle"></i>
                                     Expediente verificado correctamente
                                 </p>
                             )}
                         </div>
-
                     </div>
-
                 </div>
             </div>
 
             {/* Resumen de Estado */}
-            {!isExpedientValid && (
+            {!backendValidated && (
                 <div className="bg-blue-50 border border-blue-100 rounded-lg p-4 flex items-center gap-3">
                     <i className="fas fa-info-circle text-blue-500"></i>
                     <p className="text-sm text-blue-700">
@@ -138,7 +201,6 @@ export default function ApplicantForm({
                     </p>
                 </div>
             )}
-
         </div>
     );
 }

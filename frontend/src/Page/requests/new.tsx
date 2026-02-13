@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useCallback } from "react";
 import StepProgressBar from "../../components/requests/new/Stepprogresebar";
 import RequestTypeCard from "../../components/requests/new/Requesttypecard";
 import ApplicantForm from "../../components/requests/new/Applicantform";
@@ -42,13 +42,15 @@ export default function NewRequest() {
         if (user) {
             updateApplicationData({ userId: user.user_id });
         }
-    }, [user, updateApplicationData]);
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [user]);
 
     useEffect(() => {
         if (tipoSolicitud) {
             updateApplicationData({ applicationTypeId: tipoSolicitud });
         }
-    }, [tipoSolicitud, updateApplicationData]);
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [tipoSolicitud]);
 
 
     const { tiposolicitud } = useTipoSolici();
@@ -160,12 +162,12 @@ export default function NewRequest() {
         6: false
     });
 
-    const updateStepValidation = (step: number, isValid: boolean) => {
+    const updateStepValidation = useCallback((step: number, isValid: boolean) => {
         setStepsValidation(prev => ({
             ...prev,
             [step]: isValid
         }));
-    };
+    }, []);
 
     const handleSelectTipoSolicitud = (id: number) => {
         setTipoSolicitud(prev => prev === id ? null : id);
