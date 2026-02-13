@@ -14,7 +14,13 @@ export default function ApplicantForm({
     onValidationChange,
 }: ApplicantFormProps) {
     const { formDataAplication, updateApplicationData } = ApplicationHandler();
-    const { setSearchValue, isChecking, error, exists } = useValidateExpediente(500);
+    const {
+        setSearchValue,
+        isChecking,
+        error,
+        exists,
+        clearCache
+    } = useValidateExpediente(500);
 
     // Estado para número de expediente
     const [expedientNumber, setExpedientNumber] = useState<string>(() => {
@@ -96,6 +102,13 @@ export default function ApplicantForm({
         }
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [expedientNumber, expedientError, backendValidated, isChecking]);
+
+    // Limpiar caché cuando se desmonte el componente o cambie el tipo de solicitud
+    useEffect(() => {
+        return () => {
+            clearCache();
+        };
+    }, [clearCache, tipoSolicitudNombre]);
 
     return (
         <div className="space-y-4 sm:space-y-6">

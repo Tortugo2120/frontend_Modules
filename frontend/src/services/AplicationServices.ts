@@ -59,7 +59,7 @@ export const CreateAplication = async (
     return response.data;
 }
 
-export const ValidateExpediente = async (expedientNumber: string, controller: AbortController) => {
+export const ValidateExpediente = async (expedientNumber: string, controller: any) => {
     try {
         const response = await apiAxios.get('/api/v1/application/validateExpedient', {
             params: { expedientNumber },
