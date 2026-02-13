@@ -131,20 +131,24 @@ export default function ApplicantForm({
             </div>
 
             {/* Campo de Número de Expediente */}
-            <div className="bg-white border border-gray-200 p-6 rounded-xl shadow-sm">
-                <div className="flex items-start gap-4">
-                    <div className="shrink-0 bg-yellow-100 p-3 rounded-lg">
-                        <i className="fas fa-folder-open text-yellow-600 text-xl"></i>
+            <div className="bg-yellow-100/50 border border-gray-200 p-8 rounded-xl shadow-sm">
+                <div className="flex flex-col items-center text-center gap-6">
+
+                    <div className="bg-yellow-100 p-4 rounded-xl">
+                        <i className="fas fa-folder-open text-yellow-600 text-2xl"></i>
                     </div>
-                    <div className="flex-1">
-                        <label className="block text-sm font-semibold text-gray-900 mb-1">
+
+                    <div className="w-full flex flex-col items-center">
+
+                        <label className="block text-base sm:text-lg font-bold text-gray-900 mb-2">
                             Número de Expediente <span className="text-red-500">*</span>
                         </label>
-                        <p className="text-xs text-gray-500 mb-4">
+
+                        <p className="text-sm text-gray-500 mb-6 max-w-md">
                             Ingrese el código identificador del expediente para proceder con la validación.
                         </p>
-                        
-                        <div className="max-w-md">
+
+                        <div className="w-full max-w-lg">
                             <input
                                 type="text"
                                 value={expedientNumber}
@@ -180,7 +184,7 @@ export default function ApplicantForm({
                             {backendValidated && !isChecking && !expedientError && (
                                 <p className="text-green-600 text-xs mt-2 flex items-center gap-1">
                                     <i className="fas fa-check-circle"></i>
-                                    Expediente disponible y verificado correctamente
+                                    Expediente verificado correctamente
                                 </p>
                             )}
                         </div>

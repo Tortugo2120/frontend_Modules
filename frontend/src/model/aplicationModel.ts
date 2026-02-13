@@ -2,6 +2,8 @@
 export interface ParticipanteDetalle {
     nombre: string;
     rol: string;
+    numero_identificacion: string;  
+    tipo_identificacion: string;
 }
 
 // Interfaz para la paginación
@@ -14,8 +16,8 @@ export interface Pager {
     pageCount: number;
     pageSelector: string;
     currentPage: number;
-    next: number | null;
-    previous: number | null;
+    next: string | null;     
+    previous: string | null;
     segment: number;
 }
 
@@ -82,7 +84,7 @@ export interface Participant {
     phone: string;
     ubigeoId: string;
     maritalStatus: string;
-    rol: ParticipantRol; 
+    rol: ParticipantRol;
 }
 
 export interface ApplicationData {
