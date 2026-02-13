@@ -59,7 +59,19 @@ export const CreateAplication = async (
     return response.data;
 }
 
-export const ValidateExpediente = async (expedientNumber: string) => {
-    const response = await apiAxios.get('/api/v1/application/validateExpedient',{params: expedientNumber});
-    return response.data.status;
+export const ValidateExpediente = async (expedientNumber: string, controller: AbortController) => {
+    try {
+        const response = await apiAxios.get('/api/v1/application/validateExpedient', {
+            params: { expedientNumber },
+            signal: controller.signal
+        });
+        return response.data;
+    } catch (error: any) {
+        // Si el error es un 409, es una respuesta válida del negocio (expediente existe)
+        if (error.response && error.response.status === 409) {
+            return error.response.data;
+        }
+        // Para cualquier otro error, lo relanzamos
+        throw error;
+    }
 }

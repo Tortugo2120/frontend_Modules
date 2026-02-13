@@ -125,7 +125,8 @@ const Testigo = (props: Solicitud) => {
         if (onTestigosChange) {
             onTestigosChange(testigos);
         }
-    }, [formDataAplication.participants, onTestigosChange]);
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [formDataAplication.participants]);
 
     // Validar como mínimo 2 testigos
     useEffect(() => {
@@ -134,7 +135,8 @@ const Testigo = (props: Solicitud) => {
         if (onValidationChange) {
             onValidationChange(isStepValid);
         }
-    }, [testigo1Added, testigo2Added, onValidationChange]);
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [testigo1Added, testigo2Added]);
 
 
 
