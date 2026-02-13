@@ -38,6 +38,7 @@ const formatearFechaHora = (fecha: string): string => {
             year: 'numeric',
             month: '2-digit',
             day: '2-digit',
+
         });
     } catch {
         return fecha;
@@ -106,10 +107,10 @@ export default function History() {
     return (
         <div className="min-h-screen bg-blue-300/40 from-slate-50 via-blue-50 to-indigo-50 p-4 sm:p-6 lg:p-6">
             {/* Header */}
-            <div className="max-w-7xl mx-auto mb-8">
+            <div className="max-w-7xl mx-auto mb-2">
                 <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-6">
                     <div className="flex items-center gap-3">
-                        <div className="w-12 h-12 bg-slate-700 from-indigo-600 to-purple-600 rounded-xl flex items-center justify-center shadow-lg">
+                        <div className="w-12 h-12 bg-info-content rounded-xl flex items-center justify-center shadow-lg">
                             <i className="fas fa-history text-white text-xl"></i>
                         </div>
                         <div>
@@ -125,7 +126,7 @@ export default function History() {
                 <div className="bg-white rounded-xl shadow-xl p-6 mb-6 border border-gray-100">
                     <div className="flex items-center justify-between mb-4">
                         <h3 className="font-semibold text-gray-900 flex items-center gap-2">
-                            <i className="fas fa-filter text-indigo-600"></i>
+                            <i className="fas fa-filter text-slate-600"></i>
                             Filtros de Búsqueda
                         </h3>
                         {(filtros.busqueda || filtros.tipo || filtros.estado) && (
@@ -238,10 +239,78 @@ export default function History() {
                     )}
                 </div>
             </div>
+            {/* Paginación */}
+            {totalPaginas > 1 && (
+                <div className="flex flex-col sm:flex-row items-center justify-between gap-4 mt-6 bg-white rounded-t-md shadow-lg px-5 py-3">
+                    <div className="text-sm text-gray-600">
+                        Mostrando {solicitudes.length} de {totalRegistros} solicitudes (Página {paginaActual} de {totalPaginas})
+                    </div>
+                    <div className="flex gap-2">
+                        <button
+                            onClick={() => cambiarPagina(1)}
+                            disabled={paginaActual === 1}
+                            className="btn btn-sm bg-white border-gray-300 disabled:opacity-50 disabled:cursor-not-allowed hover:bg-gray-50"
+                            title="Primera página"
+                        >
+                            <i className="fas fa-angle-double-left"></i>
+                        </button>
+                        <button
+                            onClick={() => cambiarPagina(paginaActual - 1)}
+                            disabled={paginaActual === 1}
+                            className="btn btn-sm bg-white border-gray-300 disabled:opacity-50 disabled:cursor-not-allowed hover:bg-gray-50"
+                        >
+                            <i className="fas fa-chevron-left"></i>
+                        </button>
 
+                        <div className="flex gap-1">
+                            {Array.from({ length: Math.min(5, totalPaginas) }, (_, i) => {
+                                let pageNum;
+                                if (totalPaginas <= 5) {
+                                    pageNum = i + 1;
+                                } else if (paginaActual <= 3) {
+                                    pageNum = i + 1;
+                                } else if (paginaActual >= totalPaginas - 2) {
+                                    pageNum = totalPaginas - 4 + i;
+                                } else {
+                                    pageNum = paginaActual - 2 + i;
+                                }
+
+                                return (
+                                    <button
+                                        key={pageNum}
+                                        onClick={() => cambiarPagina(pageNum)}
+                                        className={`btn btn-sm ${paginaActual === pageNum
+                                            ? 'bg-info-content text-white hover:bg-info-content/95'
+                                            : 'bg-white border-gray-300 hover:bg-gray-50'
+                                            }`}
+                                    >
+                                        {pageNum}
+                                    </button>
+                                );
+                            })}
+                        </div>
+
+                        <button
+                            onClick={() => cambiarPagina(paginaActual + 1)}
+                            disabled={paginaActual === totalPaginas}
+                            className="btn btn-sm bg-white border-gray-300 disabled:opacity-50 disabled:cursor-not-allowed hover:bg-gray-50"
+                        >
+                            <i className="fas fa-chevron-right"></i>
+                        </button>
+                        <button
+                            onClick={() => cambiarPagina(totalPaginas)}
+                            disabled={paginaActual === totalPaginas}
+                            className="btn btn-sm bg-white border-gray-300 disabled:opacity-50 disabled:cursor-not-allowed hover:bg-gray-50"
+                            title="Última página"
+                        >
+                            <i className="fas fa-angle-double-right"></i>
+                        </button>
+                    </div>
+                </div>
+            )}
             {/* Tabla */}
             <div className="max-w-7xl mx-auto">
-                <div className="bg-white rounded-md shadow-xl overflow-hidden border-0">
+                <div className="bg-white rounded-b-md shadow-xl overflow-hidden border-0">
                     {solicitudes.length === 0 ? (
                         <div className="p-12 text-center">
                             <div className="w-20 h-20 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-4">
@@ -267,45 +336,45 @@ export default function History() {
                         </div>
                     ) : (
                         < div className="overflow-x-auto  ">
-                            <table className="w-full ">
-                                <thead className="bg-slate-700 text-white">
+                            <table className="w-full table-fixed">
+                                <thead className="bg-info-content text-white">
                                     <tr>
-                                        <th className="px-6 py-4 text-left text-sm font-semibold">Expediente</th>
-                                        <th className="px-6 py-4 text-left text-sm font-semibold">Tipo de Solicitud</th>
-                                        <th className="px-6 py-4 text-left text-sm font-semibold">Contrayentes</th>
-                                        <th className="px-6 py-4 text-left text-sm font-semibold">Fecha Trámite</th>
-                                        <th className="px-6 py-4 text-left text-sm font-semibold">Estado</th>
-                                        <th className="px-6 py-4 text-left text-sm font-semibold">Precio</th>
-                                        <th className="px-6 py-4 text-center text-sm font-semibold">Acciones</th>
+                                        <th className="px-2 py-3 w-35 text-center text-sm font-semibold">Expediente</th>
+                                        <th className="px-2 py-3 w-45 text-center text-sm font-semibold">Tipo de Solicitud</th>
+                                        <th className="px-2 py-3 w-65 text-center text-sm font-semibold">Contrayentes</th>
+                                        <th className="px-2 py-3 w-32 text-center text-sm font-semibold">DNI/CIU</th>
+                                        <th className="px-2 py-3 text-center text-sm font-semibold">Fecha Trámite</th>
+                                        <th className="px-2 py-3 w-36 text-center text-sm font-semibold">Estado</th>
+                                        <th className="px-2 py-3 text-center text-sm font-semibold">Precio</th>
+                                        <th className="px-2 py-3 text-center text-sm font-semibold">Acciones</th>
                                     </tr>
                                 </thead>
                                 <tbody className="divide-y divide-gray-100">
                                     {solicitudes.map((solicitud) => (
                                         <tr
                                             key={solicitud.id}
-                                            className="hover:bg-indigo-50/50 transition-colors duration-150"
+                                            className="hover:bg-indigo-100/50 transition-colors duration-150 border-b border-b-gray-300"
                                         >
-                                            <td className="px-6 py-4 font-mono  font-semibold text-indigo-700">
+                                            <td className="px-4 font-mono font-semibold text-indigo-700">
                                                 {solicitud.expediente}
                                             </td>
-                                            <td className="px-6 py-4">
+                                            <td className="py-3">
                                                 <div>
                                                     <p className="text-xs text-gray-500">{solicitud.nombreSolicitud}</p>
                                                     <p className="text-sm font-semibold text-gray-800">{solicitud.descripcionSolicitud}</p>
                                                 </div>
                                             </td>
                                             {/* Celda de Contrayentes modificada */}
-                                            <td className="px-6 py-4 text-gray-600">
+                                            <td className="px-3 text-gray-600 ">
                                                 <div className="flex flex-col gap-1">
                                                     {solicitud.participantes && solicitud.participantes.length > 0 ? (
                                                         solicitud.participantes
                                                             .filter(p => p.rol.toLowerCase().includes('contrayente'))
                                                             .map((p, idx) => (
-                                                                <div key={idx} className="flex flex-col items-center">
-                                                                    <i className="fas fa-rings-wedding text-pink-500 text-xs"></i>
-                                                                    <span className="text-sm font-medium">{p.nombre}</span>
-                                                                    <span className="text-sm font-black">{p.tipo_identificacion}: {p.numero_identificacion}</span>
-                                                                </div>
+
+
+                                                                <span key={idx} className="text-sm font-medium">{p.nombre}</span>
+
                                                             ))
                                                     ) : (
                                                         <span className="text-gray-400 italic text-sm">No registrados</span>
@@ -313,23 +382,38 @@ export default function History() {
                                                 </div>
                                             </td>
                                             {/* Celda de Fecha añadida */}
-                                            <td className="px-6 py-4 text-sm text-gray-600">
+                                            <td className=" text-md text-gray-600">
+                                                <div className="flex flex-col gap-1">
+                                                    {solicitud.participantes && solicitud.participantes.length > 0 ? (
+                                                        solicitud.participantes
+                                                            .filter(p => p.rol.toLowerCase().includes('contrayente'))
+                                                            .map((p, idx) => (
+                                                                <div key={idx} className="flex flex-row">
+                                                                    <span className="text-sm font-black pl-1">{p.tipo_identificacion}: {p.numero_identificacion}</span>
+                                                                </div>
+                                                            ))
+                                                    ) : (
+                                                        <span className="text-gray-400 italic text-sm">No registrados</span>
+                                                    )}
+                                                </div>
+                                            </td>
+                                            <td className="text-md text-gray-600">
                                                 <div className="flex items-center gap-2">
                                                     <i className="far fa-calendar-alt text-indigo-400"></i>
                                                     {formatearFechaHora(solicitud.fecha)}
                                                 </div>
                                             </td>
-                                            <td className="px-6 py-4">
+                                            <td className="text-center">
                                                 <span className={`badge ${getEstadoClasses(solicitud.estado)} border-none py-3 px-4`}>
                                                     {solicitud.estado}
                                                 </span>
                                             </td>
-                                            <td className="px-6 py-4">
+                                            <td className="text-center">
                                                 <span className="font-semibold text-green-600">
                                                     {formatearPrecio(solicitud.precio)}
                                                 </span>
                                             </td>
-                                            <td className="px-6 py-4">
+                                            <td className="pr-4">
                                                 <div className="flex items-center justify-center gap-2">
                                                     <button
                                                         onClick={() => setVistaDetalle(solicitud)}
@@ -355,75 +439,7 @@ export default function History() {
                     )}
                 </div>
 
-                {/* Paginación */}
-                {totalPaginas > 1 && (
-                    <div className="flex flex-col sm:flex-row items-center justify-between gap-4 mt-6 bg-white rounded-xl shadow-lg px-6 py-4">
-                        <div className="text-sm text-gray-600">
-                            Mostrando {solicitudes.length} de {totalRegistros} solicitudes (Página {paginaActual} de {totalPaginas})
-                        </div>
-                        <div className="flex gap-2">
-                            <button
-                                onClick={() => cambiarPagina(1)}
-                                disabled={paginaActual === 1}
-                                className="btn btn-sm bg-white border-gray-300 disabled:opacity-50 disabled:cursor-not-allowed hover:bg-gray-50"
-                                title="Primera página"
-                            >
-                                <i className="fas fa-angle-double-left"></i>
-                            </button>
-                            <button
-                                onClick={() => cambiarPagina(paginaActual - 1)}
-                                disabled={paginaActual === 1}
-                                className="btn btn-sm bg-white border-gray-300 disabled:opacity-50 disabled:cursor-not-allowed hover:bg-gray-50"
-                            >
-                                <i className="fas fa-chevron-left"></i>
-                            </button>
 
-                            <div className="flex gap-1">
-                                {Array.from({ length: Math.min(5, totalPaginas) }, (_, i) => {
-                                    let pageNum;
-                                    if (totalPaginas <= 5) {
-                                        pageNum = i + 1;
-                                    } else if (paginaActual <= 3) {
-                                        pageNum = i + 1;
-                                    } else if (paginaActual >= totalPaginas - 2) {
-                                        pageNum = totalPaginas - 4 + i;
-                                    } else {
-                                        pageNum = paginaActual - 2 + i;
-                                    }
-
-                                    return (
-                                        <button
-                                            key={pageNum}
-                                            onClick={() => cambiarPagina(pageNum)}
-                                            className={`btn btn-sm ${paginaActual === pageNum
-                                                ? 'bg-indigo-600 text-white hover:bg-indigo-700'
-                                                : 'bg-white border-gray-300 hover:bg-gray-50'
-                                                }`}
-                                        >
-                                            {pageNum}
-                                        </button>
-                                    );
-                                })}
-                            </div>
-
-                            <button
-                                onClick={() => cambiarPagina(paginaActual + 1)}
-                                disabled={paginaActual === totalPaginas}
-                                className="btn btn-sm bg-white border-gray-300 disabled:opacity-50 disabled:cursor-not-allowed hover:bg-gray-50"
-                            >
-                                <i className="fas fa-chevron-right"></i>
-                            </button>
-                            <button
-                                onClick={() => cambiarPagina(totalPaginas)}
-                                disabled={paginaActual === totalPaginas}
-                                className="btn btn-sm bg-white border-gray-300 disabled:opacity-50 disabled:cursor-not-allowed hover:bg-gray-50"
-                                title="Última página"
-                            >
-                                <i className="fas fa-angle-double-right"></i>
-                            </button>
-                        </div>
-                    </div>
-                )}
             </div>
 
             {/* Modal */}
@@ -431,7 +447,7 @@ export default function History() {
                 vistaDetalle && (
                     <div className="fixed inset-0 bg-slate-900/60 backdrop-blur-sm flex items-center justify-center p-4 z-50">
                         <div className="bg-white rounded-2xl max-w-3xl w-full shadow-2xl animate-fadeIn max-h-[90vh] overflow-y-auto">
-                            <div className="bg-linear-to-r from-indigo-600 to-purple-600 px-6 py-4 flex items-center justify-between rounded-t-2xl sticky top-0 z-10">
+                            <div className="bg-linear-to-r from-indigo-600 to-purple-600 px-5 py-3 flex items-center justify-between rounded-t-2xl sticky top-0 z-10">
                                 <h3 className="text-lg font-bold text-white flex items-center gap-2">
                                     <i className="fas fa-file-alt"></i>
                                     Detalles del Expediente

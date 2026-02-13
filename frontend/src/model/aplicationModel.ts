@@ -16,8 +16,8 @@ export interface Pager {
     pageCount: number;
     pageSelector: string;
     currentPage: number;
-    next: number | null;
-    previous: number | null;
+    next: string | null;     
+    previous: string | null;
     segment: number;
 }
 

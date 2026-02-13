@@ -21,24 +21,22 @@ export default function RequestTypeCard({ id, nombre, precio, descripcion, isSel
             ></div>
 
             <div className="relative flex flex-col items-center text-center">
-                <h3 className="font-bold text-slate-900 text-lg mb-2">
+                <h3 className="font-bold text-slate-900 text-lg ">
                     {nombre}
                 </h3>
-                <div className="w-14 h-14 rounded-xl bg-blue-500 flex items-center justify-center mb-4 shadow-md">
-                    <i className="fa-regular fa-file text-white text-xl"></i>
-                </div>
-
-
                 <p className="text-gray-600 text-sm mb-2">
                     {descripcion}
                 </p>
+                <div className="w-14 h-14 rounded-xl bg-blue-500 flex items-center justify-center mb-4 shadow-md">
+                    <i className="fa-regular fa-file text-white text-xl"></i>
+                </div>
 
                 <p className="text-gray-600 font-bold text-md">
                     Precio: S/. {precio}
                 </p>
 
                 {isSelected && (
-                    <div className="absolute top-4 right-4">
+                    <div className="absolute top-0.5 right-1">
                         <div className="w-6 h-6 bg-blue-600 rounded-full flex items-center justify-center">
                             <i className="fas fa-check text-white text-xs"></i>
                         </div>
