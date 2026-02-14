@@ -32,7 +32,7 @@ export const getDetalleSolicitudById = async (id: string | number): Promise<Appl
 
         return transformDetalleSolicitud(response.data.data);
     } catch (error) {
-        console.error("Error al obtener el detalle de la solicitud en Piam:", error);
+        console.error("Error al obtener el detalle de la solicitud.", error);
         throw error;
     }
 };

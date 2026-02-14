@@ -1,6 +1,5 @@
-import { useEffect, useState, useCallback } from "react";
+import { useEffect, useState, useCallback, useMemo } from "react";
 import StepProgressBar from "../../components/requests/new/Stepprogresebar";
-import RequestTypeCard from "../../components/requests/new/Requesttypecard";
 import ApplicantForm from "../../components/requests/new/Applicantform";
 import ConfirmationSummary from "../../components/requests/new/Confirmationsummary";
 import NavigationButtons from "../../components/requests/new/Navigationbuttons";
@@ -16,6 +15,9 @@ import { useNavigate } from "react-router-dom";
 import { useDocument } from "../../hooks/useDocument.ts";
 import { db } from "../../model/documentModel.ts";
 import Alert from "../../components/Alert.tsx";
+import CategoryAccordion from "../../components/requests/new/CategoryAccordion";
+import { groupSolicitudesByCategory, getCategoryOrder } from "../../Types/requests/SolicitudUtils.ts";
+
 export default function NewRequest() {
     const [tipoSolicitud, setTipoSolicitud] = useState<number | null>(null);
     const [searchTerm, setSearchTerm] = useState("");
@@ -29,15 +31,7 @@ export default function NewRequest() {
     const [showAlert, setShowAlert] = useState(false);
     const [messAlert, setMessAlert] = useState("");
     const [typeAlert, setTypeAlert] = useState<'info' | 'warning' | 'error' | 'success'>('info');
-    /*
-     const handleSelectTipoSolicitud = (id: number) => {
- 
-         setTipoSolicitud(prev =>
-             prev === id ? null : id
-         );
-         if (id) setIsValid(true);
-     };
-     */
+
     useEffect(() => {
         if (user) {
             updateApplicationData({ userId: user.user_id });
@@ -52,14 +46,15 @@ export default function NewRequest() {
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [tipoSolicitud]);
 
-
     const { tiposolicitud } = useTipoSolici();
     const [currentStep, setCurrentStep] = useState(1);
+
     const mostrarAlert = (message: string, type: 'info' | 'warning' | 'error' | 'success' = 'info') => {
         setMessAlert(message);
         setTypeAlert(type);
         setShowAlert(true);
     }
+
     const handleConfirmSubmit = async () => {
         try {
             setIsSubmitting(true);
@@ -95,11 +90,8 @@ export default function NewRequest() {
 
                     if (uploadResult.success) {
                         console.log('Todos los documentos subidos exitosamente');
-
                         await deleteDocuments();
                         console.log('IndexedDB limpiado');
-
-                        //alert(`Solicitud creada exitosamente con ${documentosParaSubir.length} documento(s) adjunto(s)`);
                         mostrarAlert(`Solicitud creada exitosamente con ${documentosParaSubir.length} documento(s) adjunto(s)`, 'success');
                         setTimeout(() => {
                             setShowAlert(false);
@@ -153,6 +145,12 @@ export default function NewRequest() {
         tipo.nombre_solicitud.toLowerCase().includes(searchTerm.toLowerCase())
     );
 
+    const groupedSolicitudes = useMemo(() => {
+        return groupSolicitudesByCategory(filteredSolicitudes);
+    }, [filteredSolicitudes]);
+
+    const categoryOrder = getCategoryOrder();
+
     const [stepsValidation, setStepsValidation] = useState<{ [key: number]: boolean }>({
         1: false,
         2: false,
@@ -177,6 +175,7 @@ export default function NewRequest() {
             updateStepValidation(1, false);
         }
     };
+
     return (
         <div className="min-h-screen bg-blue-300/40 from-slate-50 via-blue-50 to-indigo-50 p-4 sm:p-6 lg:p-6">
             <div className="mb-4">
@@ -196,17 +195,17 @@ export default function NewRequest() {
             <div className="mx-auto">
                 <div className="bg-white rounded-lg shadow-xl overflow-hidden">
                     <div>
-                        {/* Step 1: Tipo de Solicitud */}
+                        {/* Step 1: Selección de tipo de solicitud */}
                         {currentStep === 1 && (
                             <div className="p-6 lg:p-6 animate-fadeIn">
-                                <div className="flex justify-between items-center flex-col sm:flex-row sm:items-end">
+                                <div className="flex justify-between items-center flex-col sm:flex-row sm:items-end mb-6">
                                     <div>
                                         <h2 className="text-2xl font-bold text-gray-900 mb-2">Seleccione el tipo de solicitud</h2>
-                                        <p className="text-gray-600 mb-6">Elija el trámite que desea realizar</p>
+                                        <p className="text-gray-600">Elija el trámite que desea realizar</p>
                                     </div>
 
                                     {/* Buscador */}
-                                    <div className="mb-6">
+                                    <div className="w-full sm:w-auto sm:min-w-[300px] mt-4 sm:mt-0">
                                         <div className="relative">
                                             <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
                                                 <i className="fas fa-search text-gray-400"></i>
@@ -235,20 +234,31 @@ export default function NewRequest() {
                                         )}
                                     </div>
                                 </div>
-                                {/* Grid de solicitudes */}
+
+                                {/* Acordeones agrupados por categoría */}
                                 {filteredSolicitudes.length > 0 ? (
-                                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-                                        {filteredSolicitudes.map((tipo) => (
-                                            <RequestTypeCard
-                                                key={tipo.id}
-                                                id={tipo.id}
-                                                nombre={tipo.nombre_solicitud.toUpperCase()}
-                                                descripcion={tipo.descripcion}
-                                                precio={tipo.precio}
-                                                isSelected={tipoSolicitud === tipo.id}
-                                                onSelect={handleSelectTipoSolicitud}
-                                            />
-                                        ))}
+                                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-2 gap-4">
+                                        {categoryOrder.map((category) => {
+                                            const solicitudesEnCategoria = groupedSolicitudes[category];
+
+                                            // Solo mostrar categorías que tienen solicitudes
+                                            if (!solicitudesEnCategoria || solicitudesEnCategoria.length === 0) {
+                                                return null;
+                                            }
+
+                                            return (
+                                                <div>
+                                                    <CategoryAccordion
+                                                        key={category}
+                                                        categoryName={category}
+                                                        solicitudes={solicitudesEnCategoria}
+                                                        selectedId={tipoSolicitud}
+                                                        onSelect={handleSelectTipoSolicitud}
+                                                        defaultOpen={false}
+                                                    />
+                                                </div>
+                                            );
+                                        })}
                                     </div>
                                 ) : (
                                     <div className="text-center py-12">
@@ -264,7 +274,6 @@ export default function NewRequest() {
                         {currentStep === 2 && (
                             <div className="p-6 lg:p-6 animate-fadeIn">
                                 <div className="space-y-8">
-                                    {/* Datos del Solicitante */}
                                     <ApplicantForm
                                         tipoSolicitudNombre={selectedRequestType?.nombre_solicitud}
                                         descriptionSolicitud={selectedRequestType?.descripcion}
@@ -283,6 +292,7 @@ export default function NewRequest() {
                                     onValidationChange={(isValid) => updateStepValidation(3, isValid)} />
                             </div>
                         )}
+
                         {/* Step 4: testigo */}
                         {currentStep === 4 && (
                             <div className="p-6 lg:p-6">
@@ -292,6 +302,7 @@ export default function NewRequest() {
                                     onValidationChange={(isValid) => updateStepValidation(4, isValid)} />
                             </div>
                         )}
+
                         {/* Step 5: requisitos */}
                         {currentStep === 5 && (
                             <div className="p-6 lg:p-6">
@@ -305,7 +316,6 @@ export default function NewRequest() {
                         {/* Step 6: confirmacion */}
                         {currentStep === 6 && (
                             <div className="p-6 lg:p-6">
-                                {/* Barra de progreso de subida de documentos */}
                                 {isUploadingDocs && (
                                     <div className="mb-6 bg-blue-50 border border-blue-200 rounded-lg p-4">
                                         <div className="flex items-center gap-3 mb-2">
