@@ -75,3 +75,13 @@ export const ValidateExpediente = async (expedientNumber: string, controller: an
         throw error;
     }
 }
+
+export const FilterAplications = async (
+    state:string,
+    beginDate:string,
+    endDate:string,
+    ApplicationType:number,
+    page:number
+)=>{
+
+}

@@ -12,6 +12,7 @@ export default function useCreateAplication() {
       setError(null);
       setSuccess(false);
       try {
+          console.log("preparando data desde el hook: ",dataForm);
           const response = await CreateAplication(dataForm);
           setSuccess(true);
           return response;
