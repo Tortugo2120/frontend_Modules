@@ -8,6 +8,7 @@ import type {
     ApplicationBackendItem,
     Pager
 } from "../model/aplicationModel.ts";
+import type {ApiResponse} from "../model/aplicationFilterModel.ts";
 
 const transformApplicationData = (backendData: ApplicationBackendItem): ApplicationItem => {
     return {
@@ -82,6 +83,13 @@ export const FilterAplications = async (
     endDate:string,
     ApplicationType:number,
     page:number
-)=>{
-
+):Promise<ApiResponse>=>{
+    const reponse = await apiAxios.get("/api/v1/application/filter",{params:{
+        state,
+        beginDate,
+        endDate,
+        ApplicationType,
+        page
+    }});
+    return reponse.data;
 }

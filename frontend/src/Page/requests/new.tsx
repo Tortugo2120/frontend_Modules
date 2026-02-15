@@ -64,14 +64,14 @@ export default function NewRequest() {
         try {
             setIsSubmitting(true);
             const documents = await db.obtenerDocuments();
-            console.log(`Documentos recuperados de IndexedDB: ${documents.length}`);
-            console.log('Preparando para enviar solicitud a la API:', formDataAplication);
-            console.log(JSON.stringify(formDataAplication, null, 2));
+            //console.log(`Documentos recuperados de IndexedDB: ${documents.length}`);
+            //console.log('Preparando para enviar solicitud a la API:', formDataAplication);
+            //console.log(JSON.stringify(formDataAplication, null, 2));
             const response = await createSolicitud(formDataAplication);
 
             if (response?.status) {
                 console.log('Solicitud creada exitosamente:', response);
-                //resetForm();
+                resetForm();
                 const applicationId = response?.data?.applicationId;
 
                 if (!applicationId) {

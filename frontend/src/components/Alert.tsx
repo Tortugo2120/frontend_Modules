@@ -21,7 +21,7 @@ const Alert=({message,type='info',onClose}:Props)=>{
     return(
         <div role="alert" className={`alert ${alertStyles[type]} shadow-lg mb-4`}>
             <i className={`fas ${icons[type]} text-xl`}></i>
-            <span>${message}</span>
+            <span>{message}</span>
             {onClose && (
                 <div className="flex-none">
                     <button onClick={onClose} className="btn btn-sm btn-ghost">Cerrar</button>
