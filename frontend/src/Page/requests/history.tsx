@@ -1,5 +1,5 @@
 import { useApplicationHistory } from "../../hooks/useApplicationHistory";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, Link } from "react-router-dom";
 
 // Funciones helper (mantén las que ya tienes)
 const getEstadoClasses = (estado: string): string => {
@@ -224,7 +224,7 @@ export default function History() {
             </div>
             {/* Paginación */}
             {totalPaginas > 1 && (
-                <div className="flex flex-col sticky top-18 z-30 sm:flex-row items-center justify-between gap-4 mt-6 bg-white rounded-t-md shadow-lg px-5 py-3">
+                <div className="flex flex-col sticky top-23 z-3 sm:flex-row items-center justify-between gap-4 mt-6 bg-white rounded-t-md shadow-lg px-5 py-3">
                     <div className="text-sm text-gray-600">
                         Mostrando {solicitudes.length} de {totalRegistros} solicitudes (Página {paginaActual} de {totalPaginas})
                     </div>
@@ -338,8 +338,10 @@ export default function History() {
                                             key={solicitud.id}
                                             className="hover:bg-indigo-100/50 transition-colors duration-150 border-b border-b-gray-300"
                                         >
-                                            <td className="px-4 font-mono font-semibold text-indigo-700">
-                                                {solicitud.expediente}
+                                            <td className="px-4 font-mono font-semibold text-gray-800">
+                                                <Link to={`/dashboard/solicitud/detalles/${solicitud.id}`}>
+                                                    {solicitud.expediente}
+                                                </Link>
                                             </td>
                                             <td className="py-3">
                                                 <div>

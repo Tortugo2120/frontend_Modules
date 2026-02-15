@@ -6,11 +6,12 @@ export const Detalles = () => {
   const navigate = useNavigate();
   const { application, loading, error } = useDetailsApplication(id);
 
-  if (loading) return <div className="min-h-screen flex items-center justify-center">Cargando detalles...</div>;
+  if (loading) return <div className="min-h-screen font-bold text-xl flex flex-col items-center justify-center">
+    <span className="loading loading-dots loading-xl text-indigo-800"></span>
+    Cargando detalles...</div>;
   if (error) return <div className="min-h-screen flex items-center justify-center text-red-500">Error: {error}</div>;
   if (!application) return null;
 
-  // Filtramos los participantes según su rol para las secciones específicas
   const contrayentes = application.participantes.filter(p => p.rol === "CONTRAYENTE");
   const testigos = application.participantes.filter(p => p.rol === "TESTIGO");
 
@@ -18,8 +19,8 @@ export const Detalles = () => {
     <div className="min-h-screen bg-blue-300/40 p-2 md:p-2">
       <div className="mb-4">
         <button
-          onClick={() => navigate(-1)} // Navega a la página anterior en el historial
-          className="flex items-center gap-2 px-4 py-2 bg-white text-info-content font-semibold rounded shadow hover:bg-gray-100 cursor-pointerf transition-colors"
+          onClick={() => navigate(-1)}
+          className="flex items-center gap-2 px-4 py-2 bg-white text-info-content font-semibold rounded shadow hover:bg-gray-100 cursor-pointer transition-colors"
         >
           <span>←</span> Volver al Historial
         </button>
@@ -112,7 +113,7 @@ export const Detalles = () => {
                     <span className="text-gray-600">{c.direccion}</span>
                   </div>
                   <div className="flex gap-2">
-                    <span className="font-semibold text-gray-700">DNI:</span>
+                    <span className="font-semibold text-gray-700">{c.tipo_identificacion} :</span>
                     <span className="text-gray-600">N° {c.numero_identificacion}</span>
                   </div>
                 </div>
@@ -134,7 +135,7 @@ export const Detalles = () => {
                     <span className="text-gray-600">{t.nombre}</span>
                   </div>
                   <div className="flex gap-2">
-                    <span className="font-semibold text-gray-700">DNI:</span>
+                    <span className="font-semibold text-gray-700">{t.tipo_identificacion} :</span>
                     <span className="text-gray-600">N° {t.numero_identificacion}</span>
                   </div>
                   <div className="flex gap-2">
