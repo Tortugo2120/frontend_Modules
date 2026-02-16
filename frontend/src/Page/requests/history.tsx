@@ -73,11 +73,9 @@ export default function History() {
         const sourceData = enabled ? data : solicitudes;
 
         // Eliminar duplicados basados en el ID
-        const uniqueData = sourceData.filter((item, index, self) =>
+        return sourceData.filter((item, index, self) =>
             index === self.findIndex((t) => t.id === item.id)
         );
-
-        return uniqueData;
     }, [enabled, data, solicitudes]);
 
     const aplicarFiltros = () =>{
@@ -115,13 +113,12 @@ export default function History() {
     const handleExportExcel = async () => {
         setIsExportingExcel(true);
         try {
+            const applicationType = filtersAvanzados.get('applicationType');
             await ExportApplicationsExcel({
-                state: filtersAvanzados.get('state') || selectedState || undefined,
+                state: filtersAvanzados.get('state') || undefined,
                 beginDate: filtersAvanzados.get('beginDate') || undefined,
                 endDate: filtersAvanzados.get('endDate') || undefined,
-                ApplicationType: filtersAvanzados.get('applicationType')
-                    ? parseInt(filtersAvanzados.get('applicationType'))
-                    : undefined,
+                ApplicationType: applicationType ? parseInt(applicationType) : undefined,
             });
         } catch (err) {
             console.error(err);
@@ -357,6 +354,18 @@ export default function History() {
                                 onClick={aplicarFiltros}
                             >
                                 Aplicar
+                            </button>
+                            <button
+                                type={"button"}
+                                disabled={isExportingExcel}
+                                className={"btn bg-green-600 flex-1 h-full text-white font-medium hover:bg-green-700 disabled:bg-gray-400"}
+                                onClick={handleExportExcel}
+                            >
+                                {isExportingExcel ? (
+                                    <><i className="fas fa-spinner fa-spin"></i> Exportando...</>
+                                ) : (
+                                    <><i className="fas fa-file-excel"></i> Exportar Excel</>
+                                )}
                             </button>
                             <button
                                 type={"button"}
