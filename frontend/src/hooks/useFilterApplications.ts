@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from "react";
 import type { Application, Pager } from "../model/aplicationFilterModel";
 import { FilterAplications } from "../services/AplicationServices";
+import type {ApplicationItem} from "../model/aplicationModel.ts";
 
 interface Filters {
     state?: string;
@@ -23,16 +24,32 @@ const useFilterApplications = () => {
     const [draftFilters, setDraftFilters] = useState<Filters>(initialFilters);
 
     const [appliedFilters, setAppliedFilters] = useState<Filters>(initialFilters);
+    const [enabled,setEnabled] = useState(false);
 
-    const [data, setData] = useState<Application[]>([]);
+    const [data, setData] = useState<ApplicationItem[]>([]);
     const [pagination, setPagination] = useState<Pager | null>(null);
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState<string | null>(null);
 
     const abortControllerRef = useRef<AbortController | null>(null);
 
+    const transformFilterData = (dataFilter:Application): ApplicationItem=> {
+        return {
+            id: parseInt(dataFilter.id),
+            expediente: dataFilter.numero_expediente,
+            nombreSolicitud: dataFilter.nombre_solicitud,
+            descripcionSolicitud: "",
+            precio: 0,
+            estado: dataFilter.estado,
+            fecha: dataFilter.fecha_inicio,
+            fechaActualizacion: dataFilter.fecha_actualizacion,
+            fechaFin: dataFilter.fecha_fin,
+            encargado: "",
+            participantes: [],
+        }
+    }
     useEffect(() => {
-
+        if (!enabled) return;
         const getDataFilter = async () => {
 
             if (abortControllerRef.current) {
@@ -52,13 +69,14 @@ const useFilterApplications = () => {
                 );
                 console.log(response);
                 if (response.status) {
-                    setData(response.data);
+                    const dataTransformed = response.data.map(transformFilterData);
+                    setData(dataTransformed);
                     setPagination(response.pager);
                 }
 
-            } catch (err: any) {
+            } catch (err: unknown) {
 
-                if (err?.name === "CanceledError" || err?.name === "AbortError") {
+                if ((err as { name?: string })?.name === "CanceledError" || (err as { name?: string })?.name === "AbortError") {
                     return;
                 }
 
@@ -77,9 +95,9 @@ const useFilterApplications = () => {
             }
         };
 
-    }, [appliedFilters]);
+    }, [appliedFilters,enabled]);
 
-    const updateFilter = (key: keyof Filters, value: any) => {
+    const updateFilter = <K extends keyof Filters>(key: K, value: Filters[K]) => {
         setDraftFilters(prev => ({
             ...prev,
             [key]: value
@@ -94,6 +112,8 @@ const useFilterApplications = () => {
     };
 
     const applyFilters = () => {
+        setEnabled(true);
+        setLoading(true);
         setAppliedFilters({
             ...draftFilters,
             page: 1
@@ -101,6 +121,7 @@ const useFilterApplications = () => {
     };
 
     const applyQuickState = (state: string) => {
+        setEnabled(true);
         const newFilters = {
             ...appliedFilters,
             state,
@@ -112,6 +133,7 @@ const useFilterApplications = () => {
     };
 
     const changePage = (newPage: number) => {
+        setEnabled(true);
         setAppliedFilters(prev => ({
             ...prev,
             page: newPage
@@ -121,9 +143,15 @@ const useFilterApplications = () => {
     const resetFilters = () => {
         setDraftFilters(initialFilters);
         setAppliedFilters(initialFilters);
+        setEnabled(false);
+        setData([]);
+        setPagination(null);
+        setError(null);
+        setLoading(false);
     };
 
     return {
+        enabled,
         draftFilters,
         appliedFilters,
         data,

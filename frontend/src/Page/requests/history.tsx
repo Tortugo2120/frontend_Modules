@@ -1,9 +1,13 @@
 import { useApplicationHistory } from "../../hooks/useApplicationHistory";
-import {useState} from "react";
+import {useMemo, useState} from "react";
 import useFilterApplications from "../../hooks/useFilterApplications.ts";
 import Alert from "../../components/Alert.tsx";
 import TableList from "../../components/requests/history/TableList.tsx";
-
+type AdvancedFiltersForm = {
+    beginDate: string;
+    endDate: string;
+    applicationType: string;
+};
 export default function History() {
     const {
         solicitudes,
@@ -18,33 +22,60 @@ export default function History() {
     } = useApplicationHistory();
     const states = new Map<number, string>([[1, "Pendiente"], [2, "En Proceso"], [3, "Completado"], [4, "Anulado"]]);
     const typeApplication = new Map<number, string>([[1, "Matrimonio"], [2, "Divorcio"]]);
-    const  [selectedState, setSelectedState] = useState<string>("");
-    const [filtersAvanzados, setFiltersAvanzados] = useState<Map<string, any>>(new Map());
+    const [filtersAvanzados, setFiltersAvanzados] = useState<Map<string, string>>(new Map());
     const [showAlert, setShowAlert] = useState(false);
 
-    const {updateFilter,data,applyFilters,applyQuickState,resetFilters} = useFilterApplications();
+    // Estado controlado para los inputs de filtros avanzados
+    const [advancedForm, setAdvancedForm] = useState<AdvancedFiltersForm>({
+        beginDate: "",
+        endDate: "",
+        applicationType: ""
+    });
+
+    const {enabled,updateFilter,data,applyFilters,applyQuickState,resetFilters} = useFilterApplications();
 
     const stateSelect = (state: string) => {
         console.log("estado seleccionado: ", state);
         applyQuickState(state);
-        setSelectedState(state);
         console.log("data del estado seleccionado: ",data)
     }
 
     const handleFiltersAvanzadosChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
-        const target = e.target as HTMLInputElement & { name: keyof typeof filtros };
-        const name = target.name as keyof typeof filtros;
+        const target = e.target;
+        const name = target.name;
         const value = target.value;
+
+        // Actualizar el formulario controlado
+        setAdvancedForm(prev => ({
+            ...prev,
+            [name]: value
+        }));
+
         setFiltersAvanzados((prev) => {
             const next = new Map(prev);
             if (value === "") next.delete(name);
             else next.set(name, value);
             return next;
         });
-        console.log(name, value);
-        updateFilter(name, value);
-        console.log("data obtenido del filtro: ", data);
+        if (name === "applicationType") {
+            updateFilter("ApplicationType", value === "" ? 0 : Number(value));
+        } else if (name === "beginDate") {
+            updateFilter("beginDate", value);
+        } else if (name === "endDate") {
+            updateFilter("endDate", value);
+        }
     }
+
+    const tableData = useMemo(() => {
+        const sourceData = enabled ? data : solicitudes;
+
+        // Eliminar duplicados basados en el ID
+        const uniqueData = sourceData.filter((item, index, self) =>
+            index === self.findIndex((t) => t.id === item.id)
+        );
+
+        return uniqueData;
+    }, [enabled, data, solicitudes]);
 
     const aplicarFiltros = () =>{
         console.log(filtersAvanzados.size);
@@ -54,8 +85,28 @@ export default function History() {
             return;
         }
         applyFilters();
-        //resetFilters();
-        setFiltersAvanzados(new Map);
+
+        // Resetear los inputs del formulario
+        setAdvancedForm({
+            beginDate: "",
+            endDate: "",
+            applicationType: ""
+        });
+        setFiltersAvanzados(new Map());
+    }
+
+    const volverAHistorial = () => {
+        // Resetear filtros del hook
+        resetFilters();
+
+        // Limpiar formulario visual
+        setAdvancedForm({
+            beginDate: "",
+            endDate: "",
+            applicationType: ""
+        });
+        setFiltersAvanzados(new Map());
+        setShowAlert(false);
     }
 
     if (loading) {
@@ -167,8 +218,12 @@ export default function History() {
                                   />
                               ))
                           }
-                                <input className="btn btn-square flex-1" type="reset" value="X"
-                                       onChange={()=>{setSelectedState("");resetFilters()}}/>
+                                <input
+                                    className="btn btn-square flex-1"
+                                    type="reset"
+                                    value="X"
+                                    onClick={volverAHistorial}
+                                />
                             </form>
                         </div>
                     </div>
@@ -233,27 +288,38 @@ export default function History() {
                     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
                         <div>
                             <label htmlFor={"beginDate"}>Desde</label>
-                            <input type="date" name="beginDate" id={"beginDate"}
-                                   className={"input input-lg outline-0"}
-                                   onChange={handleFiltersAvanzadosChange}
+                            <input
+                                type="date"
+                                name="beginDate"
+                                id={"beginDate"}
+                                className={"input input-lg outline-0"}
+                                value={advancedForm.beginDate}
+                                onChange={handleFiltersAvanzadosChange}
                             />
                         </div>
 
                         <div>
                             <div>
                                 <label htmlFor={"endDate"}>Hasta</label>
-                                <input type="date" name="endDate" id={"endDate"}
-                                       className={"input input-lg outline-0"}
-                                       onChange={handleFiltersAvanzadosChange}
+                                <input
+                                    type="date"
+                                    name="endDate"
+                                    id={"endDate"}
+                                    className={"input input-lg outline-0"}
+                                    value={advancedForm.endDate}
+                                    onChange={handleFiltersAvanzadosChange}
                                 />
                             </div>
                         </div>
 
                         <div>
                             <label htmlFor={"applicationType"}>Tipo de solicitud</label>
-                            <select defaultValue={""} name={"applicationType"} id={"applicationType"}
-                                    className="select select-lg w-full px-4 py-3 focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 outline-none transition-all"
-                                    onChange={handleFiltersAvanzadosChange}
+                            <select
+                                name={"applicationType"}
+                                id={"applicationType"}
+                                className="select select-lg w-full px-4 py-3 focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 outline-none transition-all"
+                                value={advancedForm.applicationType}
+                                onChange={handleFiltersAvanzadosChange}
                             >
                                 <option value="">Seleccionar</option>
                                 {
@@ -263,10 +329,24 @@ export default function History() {
                                 }
                             </select>
                         </div>
-                        <div className={"flex items-end"}>
+                        <div className={"flex items-end gap-2"}>
                             <button
-                            type={"button"}
-                            className={"btn btn-primary w-full text-[18px] font-medium"} onClick={()=>aplicarFiltros()}>Aplicar Filtro</button>
+                                type={"button"}
+                                className={"btn btn-primary flex-1 text-[18px] font-medium"}
+                                onClick={aplicarFiltros}
+                            >
+                                Aplicar
+                            </button>
+                            <button
+                                type={"button"}
+                                className={"btn btn-outline flex-1 text-[18px] font-medium"}
+                                onClick={volverAHistorial}
+                                disabled={!enabled}
+                                title="Volver a mostrar el historial completo"
+                            >
+                                <i className="fas fa-undo mr-2"></i>
+                                Limpiar
+                            </button>
                         </div>
                         {showAlert && (
                             <div className={"col-span-full"}>
@@ -350,7 +430,7 @@ export default function History() {
                 </div>
             )}
             {/* Tabla */}
-            <TableList data={solicitudes}/>
+            <TableList data={tableData}/>
         </div >
     );
 }

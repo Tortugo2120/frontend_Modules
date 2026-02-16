@@ -65,8 +65,8 @@ export default function TableList({data}:Props){
                         </tr>
                         </thead>
                         <tbody className={"divide-y divide-gray-100"}>
-                        {data.map((item) => (
-                            <tr key={item.id}>
+                        {data.map((item, index) => (
+                            <tr key={`${item.id}-${index}`}>
                                 <td>
                                     <Link to={`/dashboard/solicitud/detalles/${item.id}`}>
                                         {item.expediente}
