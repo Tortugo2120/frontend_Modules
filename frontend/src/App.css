@@ -3,16 +3,16 @@
 @plugin "daisyui";
 
 @font-face {
-  font-family: 'Anybody Variable';
-  src: url('./assets/fonts/Anybody-VariableFont_wdth\,wght.ttf') format('truetype');
+  font-family: 'Intel Clear';
+  src: url('./assets/fonts/IntelClear_Rg.ttf') format('truetype');
   font-weight: 400;
   font-style: normal;
 }
 
-.font-anybody {
-  font-family: 'Anybody Variable', sans-serif;
+.font-intel-clear {
+  font-family: 'Intel Clear', sans-serif;
 }
 
 * {
-  font-family: 'Anybody Variable', sans-serif;  
+  font-family: 'Intel Clear', sans-serif;  
 }

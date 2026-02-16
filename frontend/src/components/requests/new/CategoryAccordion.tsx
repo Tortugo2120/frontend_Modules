@@ -46,7 +46,7 @@ export default function CategoryAccordion({
             </div>
             <div className="collapse-content bg-gray-50">
                 <div
-                    className={`pt-2 ${needsScroll ? 'max-h-[400px] overflow-y-auto pr-2 pl-0.5' : ''}`}
+                    className={`pt-2 ${needsScroll ? 'max-h-100 overflow-y-auto pr-2 pl-0.5' : ''}`}
                     style={needsScroll ? {
                         scrollbarWidth: 'thin',
                         scrollbarColor: '#CBD5E0 #F7FAFC'

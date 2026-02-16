@@ -4,8 +4,8 @@ interface NavigationButtonsProps {
     canProceed: boolean;
     onPrevious: () => void;
     onNext: () => void;
-    disabledMessage?: string; // Mensaje personalizado cuando no se puede avanzar
-    isLoading?: boolean; // Para mostrar estado de carga
+    disabledMessage?: string;
+    isLoading?: boolean;
 }
 
 export default function NavigationButtons({
@@ -21,22 +21,7 @@ export default function NavigationButtons({
     const isLastStep = currentStep === totalSteps;
 
     return (
-        <div className="bg-gray-50 px-4 sm:px-8 py-4 sm:py-6 border-t border-gray-200">
-            {/* Mensaje informativo cuando no se puede avanzar 
-            {!canProceed && !isLastStep && (
-                <div className="mb-4 bg-orange-50 border-l-4 border-orange-400 p-3 sm:p-4 rounded-lg">
-                    <div className="flex items-start gap-2 sm:gap-3">
-                        <i className="fas fa-exclamation-triangle text-orange-600 text-sm sm:text-base mt-0.5"></i>
-                        <div className="flex-1">
-                            <p className="text-xs text-orange-700 mt-1">
-                                {disabledMessage}
-                            </p>
-                        </div>
-                    </div>
-                </div>
-            ) }
-            */}
-
+        <div className="bg-gray-50 px-4 sm:px-8 py-4 sm:py-6 border-t border-gray-200 sticky bottom-0 z-10">
             {/* Botones de navegación */}
             <div className="flex flex-col sm:flex-row gap-3 sm:justify-between items-stretch sm:items-center">
                 <button
@@ -52,8 +37,8 @@ export default function NavigationButtons({
                     <span className="text-sm sm:text-base">Anterior</span>
                 </button>
 
-                {/* Indicador de paso actual */}
-                <div className="hidden flex flex-col sm:flex items-center gap-2 text-sm text-gray-600">
+                {/* Indicador de paso actual - Solo desktop */}
+                <div className="hidden sm:flex flex-col items-center gap-2 text-sm text-gray-600">
                     {!canProceed && !isLastStep && (
                         <div className="flex items-center gap-2">
                             <i className="fas fa-exclamation-triangle text-orange-600 text-sm sm:text-base mt-0.5"></i>
@@ -83,6 +68,7 @@ export default function NavigationButtons({
                         </div>
                     </div>
                 </div>
+
                 {!isLastStep && (
                     <div className="relative group">
                         <button
@@ -119,6 +105,14 @@ export default function NavigationButtons({
                     </div>
                 )}
             </div>
+
+            {/* Mensaje de advertencia para móvil */}
+            {!canProceed && !isLastStep && (
+                <div className="sm:hidden mt-3 flex items-center gap-2 text-xs text-orange-700 bg-orange-50 p-2 rounded-lg">
+                    <i className="fas fa-exclamation-triangle text-orange-600"></i>
+                    <p>{disabledMessage}</p>
+                </div>
+            )}
 
             {/* Indicador de paso para móvil */}
             <div className="sm:hidden mt-3 flex items-center justify-center gap-2 text-xs text-gray-600">

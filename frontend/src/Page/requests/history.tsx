@@ -8,6 +8,8 @@ type AdvancedFiltersForm = {
     endDate: string;
     applicationType: string;
 };
+import { ExportApplicationsExcel } from "../../services/AplicationServices.ts";
+
 export default function History() {
     const {
         solicitudes,
@@ -24,6 +26,7 @@ export default function History() {
     const typeApplication = new Map<number, string>([[1, "Matrimonio"], [2, "Divorcio"]]);
     const [filtersAvanzados, setFiltersAvanzados] = useState<Map<string, string>>(new Map());
     const [showAlert, setShowAlert] = useState(false);
+    const [isExportingExcel, setIsExportingExcel] = useState(false);
 
     // Estado controlado para los inputs de filtros avanzados
     const [advancedForm, setAdvancedForm] = useState<AdvancedFiltersForm>({
@@ -109,6 +112,24 @@ export default function History() {
         setShowAlert(false);
     }
 
+    const handleExportExcel = async () => {
+        setIsExportingExcel(true);
+        try {
+            await ExportApplicationsExcel({
+                state: filtersAvanzados.get('state') || selectedState || undefined,
+                beginDate: filtersAvanzados.get('beginDate') || undefined,
+                endDate: filtersAvanzados.get('endDate') || undefined,
+                ApplicationType: filtersAvanzados.get('applicationType')
+                    ? parseInt(filtersAvanzados.get('applicationType'))
+                    : undefined,
+            });
+        } catch (err) {
+            console.error(err);
+        } finally {
+            setIsExportingExcel(false);
+        }
+    };
+
     if (loading) {
         return (
             <div className="min-h-screen flex items-center justify-center bg-slate-50">
@@ -149,12 +170,12 @@ export default function History() {
             <div className=" mx-auto mb-2">
                 <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-6">
                     <div className="flex items-center gap-3">
-                        <div className="w-12 h-12 bg-info-content rounded-xl flex items-center justify-center shadow-lg">
-                            <i className="fas fa-history text-white text-xl"></i>
+                        <div className="w-10 h-10 sm:w-12 sm:h-12 bg-info-content rounded-xl flex items-center justify-center shadow-lg">
+                            <i className="fas fa-history text-white text-lg sm:text-xl"></i>
                         </div>
                         <div>
-                            <h1 className="text-3xl font-bold text-gray-900">Historial de Solicitudes</h1>
-                            <p className="text-gray-600 text-sm mt-1">
+                            <h1 className="text-xl sm:text-2xl lg:text-3xl font-bold text-gray-900">Historial de Solicitudes</h1>
+                            <p className="text-gray-600 text-xs sm:text-sm mt-1">
                                 {totalRegistros} solicitud{totalRegistros !== 1 ? 'es' : ''} encontrada{totalRegistros !== 1 ? 's' : ''}
                             </p>
                         </div>
@@ -162,9 +183,9 @@ export default function History() {
                 </div>
 
                 {/* Filtros */}
-                <div className="bg-white rounded-xl shadow-xl p-6 mb-6 border border-gray-100">
-                    <div className="flex items-center justify-between mb-4">
-                        <h3 className="font-semibold text-gray-900 flex items-center gap-2">
+                <div className="bg-white rounded-xl shadow-xl p-3 sm:p-6 mb-4 sm:mb-6 border border-gray-100">
+                    <div className="flex items-center justify-between mb-3 sm:mb-4">
+                        <h3 className="font-semibold text-gray-900 flex items-center gap-2 text-sm sm:text-base">
                             <i className="fas fa-filter text-slate-600"></i>
                             Filtros de Búsqueda
                         </h3>
@@ -278,9 +299,9 @@ export default function History() {
                 </div>
 
                 {/* Filtros avanzados */}
-                <div className="bg-white rounded-xl shadow-xl p-6 mb-6 border border-gray-100">
-                    <div className="flex items-center justify-between mb-4">
-                        <h3 className="font-semibold text-gray-900 flex items-center gap-2 text-lg">
+                <div className="bg-white rounded-xl shadow-xl p-3 sm:p-6 mb-4 sm:mb-6 border border-gray-100">
+                    <div className="flex items-center justify-between mb-3 sm:mb-4">
+                        <h3 className="font-semibold text-gray-900 flex items-center gap-2 text-sm sm:text-lg">
                             <i className="fas fa-filter text-slate-600"></i>
                             Filtros Avanzados
                         </h3>
@@ -362,11 +383,13 @@ export default function History() {
             </div>
             {/* Paginación */}
             {totalPaginas > 1 && (
-                <div className="flex flex-col sticky top-23 z-3 sm:flex-row items-center justify-between gap-4 mt-6 bg-white rounded-t-md shadow-lg px-5 py-3">
-                    <div className="text-sm text-gray-600">
-                        Mostrando {solicitudes.length} de {totalRegistros} solicitudes (Página {paginaActual} de {totalPaginas})
+                <div className="flex flex-col sticky top-18 z-30 sm:flex-row items-center justify-between gap-2 sm:gap-4 mt-4 sm:mt-6 bg-white rounded-t-md shadow-lg px-3 sm:px-5 py-2 sm:py-3">
+                    <div className="text-xs sm:text-sm text-gray-600 text-center sm:text-left">
+                        <span className="hidden sm:inline">Mostrando {solicitudes.length} de {totalRegistros} solicitudes</span>
+                        <span className="sm:hidden">{solicitudes.length}/{totalRegistros}</span>
+                        {' '}(Pág. {paginaActual}/{totalPaginas})
                     </div>
-                    <div className="flex gap-2">
+                    <div className="flex gap-1 sm:gap-2">
                         <button
                             onClick={() => cambiarPagina(1)}
                             disabled={paginaActual === 1}

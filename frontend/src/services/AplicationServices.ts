@@ -1,14 +1,14 @@
 import apiAxios from "../api/Axios.tsx";
-import type { 
-    CreateApplicationPayload, 
-    AplicationResponse, 
+import type {
+    CreateApplicationPayload,
+    AplicationResponse,
     GetAplicationState,
     ListApplicationsResponse,
     ApplicationItem,
     ApplicationBackendItem,
     Pager
 } from "../model/aplicationModel.ts";
-import type {ApiResponse} from "../model/aplicationFilterModel.ts";
+import type { ApiResponse } from "../model/aplicationFilterModel.ts";
 
 const transformApplicationData = (backendData: ApplicationBackendItem): ApplicationItem => {
     return {
@@ -46,7 +46,7 @@ export const ListApplications = async (page: number = 1): Promise<ListApplicatio
     const response = await apiAxios.get<ListApplicationsResponse>("/api/v1/application", {
         params: { page }
     });
-    
+
     return {
         applications: response.data.data.map(transformApplicationData),
         pager: response.data.pager
@@ -77,14 +77,95 @@ export const ValidateExpediente = async (expedientNumber: string, controller: an
     }
 }
 
+export const ExportApplicationById = async (id: number): Promise<void> => {
+    try {
+        const response = await apiAxios.get(`/api/v1/application/export/${id}`, {
+            responseType: 'blob', // Indicar que esperamos un archivo
+        });
+
+        // Extraer el nombre del archivo de las cabeceras de respuesta
+        const contentDisposition = response.headers['content-disposition'];
+        let filename = `Solicitud-${id}.pdf`; // Nombre por defecto
+        if (contentDisposition) {
+            const filenameMatch = contentDisposition.match(/filename="?(.+)"?/);
+            if (filenameMatch && filenameMatch.length > 1) {
+                filename = filenameMatch[1];
+            }
+        }
+
+        // Crear una URL para el blob y simular un clic para descargar
+        const url = window.URL.createObjectURL(new Blob([response.data]));
+        const link = document.createElement('a');
+        link.href = url;
+        link.setAttribute('download', filename);
+        document.body.appendChild(link);
+        link.click();
+
+        // Limpiar
+        link.parentNode?.removeChild(link);
+        window.URL.revokeObjectURL(url);
+
+    } catch (error) {
+        console.error("Error al exportar la solicitud:", error);
+        // Aquí podrías manejar el error, por ejemplo, mostrando una notificación al usuario
+        throw new Error("No se pudo exportar la solicitud.");
+    }
+};
+
 export const FilterAplications = async (
-    filters:any,
-    controller:any
-):Promise<ApiResponse>=>{
+    filters: any,
+    controller: any
+): Promise<ApiResponse> => {
     console.log(filters);
-    const reponse = await apiAxios.get("/api/v1/application/filter",{
-        params:filters,
+    const response = await apiAxios.get("/api/v1/application/filter", {
+        params: filters,
         signal: controller.signal
     });
-    return reponse.data;
+    return response.data;
 }
+
+export interface ExportExcelFilters {
+    state?: string;
+    beginDate?: string;
+    endDate?: string;
+    ApplicationType?: number;
+}
+
+export const ExportApplicationsExcel = async (filters?: ExportExcelFilters): Promise<void> => {
+    try {
+        const params: Record<string, string | number> = {};
+        if (filters?.state) params.state = filters.state;
+        if (filters?.beginDate) params.beginDate = filters.beginDate;
+        if (filters?.endDate) params.endDate = filters.endDate;
+        if (filters?.ApplicationType) params.ApplicationType = filters.ApplicationType;
+
+        const response = await apiAxios.get('/api/v1/report/build', {
+            params,
+            responseType: 'blob',
+        });
+
+        const contentDisposition = response.headers['content-disposition'];
+        let filename = `Reporte_Solicitudes_${new Date().toISOString().slice(0, 10)}.xlsx`;
+        if (contentDisposition) {
+            const filenameMatch = contentDisposition.match(/filename="?(.+?)"?$/);
+            if (filenameMatch && filenameMatch.length > 1) {
+                filename = filenameMatch[1];
+            }
+        }
+
+        const url = window.URL.createObjectURL(new Blob([response.data], {
+            type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
+        }));
+        const link = document.createElement('a');
+        link.href = url;
+        link.setAttribute('download', filename);
+        document.body.appendChild(link);
+        link.click();
+
+        link.parentNode?.removeChild(link);
+        window.URL.revokeObjectURL(url);
+    } catch (error) {
+        console.error('Error al exportar reporte Excel:', error);
+        throw new Error('No se pudo exportar el reporte en Excel.');
+    }
+};

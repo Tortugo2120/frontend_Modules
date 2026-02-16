@@ -4,8 +4,8 @@ interface StepProgressBarProps {
 
 export default function StepProgressBar({ currentStep }: StepProgressBarProps) {
     const steps = [
-        { number: 1, label: 'Tipo', fullLabel: 'de Solicitud', shortLabel: 'Tipo' },
-        { number: 2, label: 'N° EXP', fullLabel: 'EDIENTE', shortLabel: 'EXP' },
+        { number: 1, label: 'Tipo ', fullLabel: 'de Solicitud', shortLabel: 'Tipo' },
+        { number: 2, label: 'N° Exp', fullLabel: 'ediente', shortLabel: 'EXP' },
         { number: 3, label: 'Contrayentes', fullLabel: '', shortLabel: 'Contrayentes' },
         { number: 4, label: 'Testigos', fullLabel: '', shortLabel: 'Testigos' },
         { number: 5, label: 'Requisitos', fullLabel: '', shortLabel: 'Requisitos' },
@@ -20,13 +20,13 @@ export default function StepProgressBar({ currentStep }: StepProgressBarProps) {
                 {steps.map((step, index) => (
                     <div key={step.number} className="flex items-center flex-1 justify-center">
                         <li
-                            className={`flex flex-col items-center ${currentStep >= step.number
+                            className={`flex items-center font-bold ${currentStep >= step.number
                                 ? 'text-blue-600'
                                 : 'text-gray-500'
                                 }`}
                         >
                             <span
-                                className={`flex items-center justify-center w-5 h-5 text-xs border rounded-full shrink-0 ${currentStep >= step.number
+                                className={`flex items-center justify-center w-5 h-5 text-md shrink-0 ${currentStep >= step.number
                                     ? 'border-blue-600'
                                     : 'border-gray-500'
                                     }`}
@@ -45,7 +45,7 @@ export default function StepProgressBar({ currentStep }: StepProgressBarProps) {
 
                         {index < steps.length - 1 && (
                             <svg
-                                className={`w-4 h-4 sm:w-5 sm:h-5 mx-4 rtl:rotate-180 ${currentStep >= step.number
+                                className={`w-4 h-4 sm:w-5 sm:h-5 rtl:rotate-180 ${currentStep >= step.number
                                     ? 'text-blue-600'
                                     : 'text-gray-500'}`}
                                 aria-hidden="true"

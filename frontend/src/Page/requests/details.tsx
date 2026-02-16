@@ -1,10 +1,27 @@
 import { useParams, useNavigate } from "react-router-dom";
 import { useDetailsApplication } from "../../hooks/useApplicationDetails";
+import { ExportApplicationById } from "../../services/AplicationServices";
+import { useState } from "react";
 
 export const Detalles = () => {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
   const { application, loading, error } = useDetailsApplication(id);
+  const [isExporting, setIsExporting] = useState(false);
+
+  const handleExport = async () => {
+    if (!id) return;
+    setIsExporting(true);
+    try {
+      await ExportApplicationById(parseInt(id, 10));
+      // Opcional: mostrar una notificación de éxito
+    } catch (exportError) {
+      // Opcional: mostrar una notificación de error
+      console.error(exportError);
+    } finally {
+      setIsExporting(false);
+    }
+  };
 
   if (loading) return <div className="min-h-screen font-bold text-xl flex flex-col items-center justify-center">
     <span className="loading loading-dots loading-xl text-indigo-800"></span>
@@ -17,12 +34,12 @@ export const Detalles = () => {
 
   return (
     <div className="min-h-screen bg-blue-300/40 p-2 md:p-2">
-      <div className="mb-4">
+      <div className="flex justify-between items-center mx-4 mb-4 sticky top-20 z-20">
         <button
           onClick={() => navigate(-1)}
           className="flex items-center gap-2 px-4 py-2 bg-white text-info-content font-semibold rounded shadow hover:bg-gray-100 cursor-pointer transition-colors"
         >
-          <span>←</span> Volver al Historial
+          <span>←</span> Volver
         </button>
       </div>
       <div className="max-w-5xl mx-auto bg-white shadow-lg">
@@ -203,6 +220,17 @@ export const Detalles = () => {
             </div>
           </section>
         </div>
+      </div>
+      <div className="sticky bottom-4 z-30 flex justify-end px-4 pb-4">
+        <button
+          onClick={handleExport}
+          disabled={isExporting}
+          tabIndex={0}
+          className="flex items-center gap-2 p-5 bg-green-600 text-xs text-white font-semibold rounded-full shadow hover:bg-green-700 cursor-pointer transition-all duration-200 hover:-translate-y-3 hover:scale-105 disabled:bg-gray-400 disabled:hover:translate-y-0 disabled:hover:scale-100"
+        >
+          <svg className="fill-current w-4 h-4" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20"><path d="M13 8V2H7v6H2l8 8 8-8h-5zM0 18h20v2H0v-2z" /></svg>
+            Descargar PDF
+        </button>
       </div>
     </div>
   );
