@@ -8,6 +8,7 @@ import type {
     ApplicationBackendItem,
     Pager
 } from "../model/aplicationModel.ts";
+import type { ApiResponse } from "../model/aplicationFilterModel.ts";
 
 const transformApplicationData = (backendData: ApplicationBackendItem): ApplicationItem => {
     return {
@@ -112,11 +113,59 @@ export const ExportApplicationById = async (id: number): Promise<void> => {
 };
 
 export const FilterAplications = async (
-    state: string,
-    beginDate: string,
-    endDate: string,
-    ApplicationType: number,
-    page: number
-) => {
-
+    filters: any,
+    controller: any
+): Promise<ApiResponse> => {
+    console.log(filters);
+    const response = await apiAxios.get("/api/v1/application/filter", {
+        params: filters,
+        signal: controller.signal
+    });
+    return response.data;
 }
+
+export interface ExportExcelFilters {
+    state?: string;
+    beginDate?: string;
+    endDate?: string;
+    ApplicationType?: number;
+}
+
+export const ExportApplicationsExcel = async (filters?: ExportExcelFilters): Promise<void> => {
+    try {
+        const params: Record<string, string | number> = {};
+        if (filters?.state) params.state = filters.state;
+        if (filters?.beginDate) params.beginDate = filters.beginDate;
+        if (filters?.endDate) params.endDate = filters.endDate;
+        if (filters?.ApplicationType) params.ApplicationType = filters.ApplicationType;
+
+        const response = await apiAxios.get('/api/v1/report/build', {
+            params,
+            responseType: 'blob',
+        });
+
+        const contentDisposition = response.headers['content-disposition'];
+        let filename = `Reporte_Solicitudes_${new Date().toISOString().slice(0, 10)}.xlsx`;
+        if (contentDisposition) {
+            const filenameMatch = contentDisposition.match(/filename="?(.+?)"?$/);
+            if (filenameMatch && filenameMatch.length > 1) {
+                filename = filenameMatch[1];
+            }
+        }
+
+        const url = window.URL.createObjectURL(new Blob([response.data], {
+            type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
+        }));
+        const link = document.createElement('a');
+        link.href = url;
+        link.setAttribute('download', filename);
+        document.body.appendChild(link);
+        link.click();
+
+        link.parentNode?.removeChild(link);
+        window.URL.revokeObjectURL(url);
+    } catch (error) {
+        console.error('Error al exportar reporte Excel:', error);
+        throw new Error('No se pudo exportar el reporte en Excel.');
+    }
+};

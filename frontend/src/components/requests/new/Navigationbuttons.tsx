@@ -21,9 +21,9 @@ export default function NavigationButtons({
     const isLastStep = currentStep === totalSteps;
 
     return (
-        <div className="bg-gray-50 px-4 sm:px-8 py-4 sm:py-6 border-t border-gray-200 sticky bottom-0 z-10 w-full">
+        <div className="bg-gray-50 px-4 sm:px-8 py-4 sm:py-6 border-t border-gray-200 sticky bottom-0 z-10">
             {/* Botones de navegación */}
-            <div className="flex flex-col sm:flex-row gap-3 sm:justify-between items-stretch sm:items-center relative">
+            <div className="flex flex-col sm:flex-row gap-3 sm:justify-between items-stretch sm:items-center">
                 <button
                     type="button"
                     onClick={onPrevious}

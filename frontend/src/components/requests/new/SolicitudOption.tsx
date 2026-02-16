@@ -43,7 +43,7 @@ export default function SolicitudOption({
                 </div>
 
                 {/* Indicador de selección */}
-                <div className={`flex-shrink-0 w-6 h-6 rounded-full flex items-center justify-center transition-all ${isSelected
+                <div className={`shrink-0 w-6 h-6 rounded-full flex items-center justify-center transition-all ${isSelected
                     ? 'bg-white text-blue-600'
                     : 'bg-gray-200 text-gray-400'
                     }`}>

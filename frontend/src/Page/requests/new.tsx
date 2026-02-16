@@ -59,14 +59,14 @@ export default function NewRequest() {
         try {
             setIsSubmitting(true);
             const documents = await db.obtenerDocuments();
-            console.log(`Documentos recuperados de IndexedDB: ${documents.length}`);
-            console.log('Preparando para enviar solicitud a la API:', formDataAplication);
-            console.log(JSON.stringify(formDataAplication, null, 2));
+            //console.log(`Documentos recuperados de IndexedDB: ${documents.length}`);
+            //console.log('Preparando para enviar solicitud a la API:', formDataAplication);
+            //console.log(JSON.stringify(formDataAplication, null, 2));
             const response = await createSolicitud(formDataAplication);
 
             if (response?.status) {
                 console.log('Solicitud creada exitosamente:', response);
-                //resetForm();
+                resetForm();
                 const applicationId = response?.data?.applicationId;
 
                 if (!applicationId) {
@@ -177,7 +177,7 @@ export default function NewRequest() {
     };
 
     return (
-        <div > 
+        <div className="overflow-hidden">
             <div className="min-h-screen bg-blue-300/40 from-slate-50 via-blue-50 to-indigo-50 p-4 sm:p-6 lg:p-6">
                 <div className="mb-4">
                     <div className="flex items-center gap-3 mb-6">

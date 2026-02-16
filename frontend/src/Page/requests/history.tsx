@@ -1,43 +1,11 @@
 import { useApplicationHistory } from "../../hooks/useApplicationHistory";
-import { useNavigate, Link } from "react-router-dom";
-
-// Funciones helper (mantén las que ya tienes)
-const getEstadoClasses = (estado: string): string => {
-    const estadoNormalizado = estado.toLowerCase();
-    const clases: Record<string, string> = {
-        "pendiente": "bg-yellow-100 text-yellow-800",
-        "en proceso": "bg-blue-100 text-blue-800",
-        "completado": "bg-green-100 text-green-800",
-        "observado": "bg-orange-100 text-orange-800",
-        "cancelado": "bg-red-100 text-red-800",
-        "anulada": "bg-red-100 text-red-800"
-    };
-    return clases[estadoNormalizado] || "bg-gray-100 text-gray-800";
-};
-
-const formatearFechaHora = (fecha: string): string => {
-    try {
-        const date = new Date(fecha);
-        return date.toLocaleString('es-PE', {
-            year: 'numeric',
-            month: '2-digit',
-            day: '2-digit',
-
-        });
-    } catch {
-        return fecha;
-    }
-};
-
-const formatearPrecio = (precio: number): string => {
-    return new Intl.NumberFormat('es-PE', {
-        style: 'currency',
-        currency: 'PEN'
-    }).format(precio);
-};
+import { useState } from "react";
+import useFilterApplications from "../../hooks/useFilterApplications.ts";
+import Alert from "../../components/Alert.tsx";
+import TableList from "../../components/requests/history/TableList.tsx";
+import { ExportApplicationsExcel } from "../../services/AplicationServices.ts";
 
 export default function History() {
-    const navigate = useNavigate();
     const {
         solicitudes,
         loading,
@@ -47,11 +15,68 @@ export default function History() {
         paginaActual,
         totalPaginas,
         totalRegistros,
-        limpiarFiltros,
-        tiposUnicos,
-        estadosUnicos,
         cambiarPagina
     } = useApplicationHistory();
+    const states = new Map<number, string>([[1, "Pendiente"], [2, "En Proceso"], [3, "Completado"], [4, "Anulado"]]);
+    const typeApplication = new Map<number, string>([[1, "Matrimonio"], [2, "Divorcio"]]);
+    const [selectedState, setSelectedState] = useState<string>("");
+    const [filtersAvanzados, setFiltersAvanzados] = useState<Map<string, any>>(new Map());
+    const [showAlert, setShowAlert] = useState(false);
+    const [isExportingExcel, setIsExportingExcel] = useState(false);
+
+    const { updateFilter, data, applyFilters, applyQuickState, resetFilters } = useFilterApplications();
+
+    const stateSelect = (state: string) => {
+        console.log("estado seleccionado: ", state);
+        applyQuickState(state);
+        setSelectedState(state);
+        console.log("data del estado seleccionado: ", data)
+    }
+
+    const handleFiltersAvanzadosChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
+        const target = e.target as HTMLInputElement & { name: keyof typeof filtros };
+        const name = target.name as keyof typeof filtros;
+        const value = target.value;
+        setFiltersAvanzados((prev) => {
+            const next = new Map(prev);
+            if (value === "") next.delete(name);
+            else next.set(name, value);
+            return next;
+        });
+        console.log(name, value);
+        updateFilter(name, value);
+        console.log("data obtenido del filtro: ", data);
+    }
+
+    const aplicarFiltros = () => {
+        console.log(filtersAvanzados.size);
+        console.log(filtersAvanzados);
+        if (filtersAvanzados.size <= 0) {
+            setShowAlert(true);
+            return;
+        }
+        applyFilters();
+        //resetFilters();
+        setFiltersAvanzados(new Map);
+    }
+
+    const handleExportExcel = async () => {
+        setIsExportingExcel(true);
+        try {
+            await ExportApplicationsExcel({
+                state: filtersAvanzados.get('state') || selectedState || undefined,
+                beginDate: filtersAvanzados.get('beginDate') || undefined,
+                endDate: filtersAvanzados.get('endDate') || undefined,
+                ApplicationType: filtersAvanzados.get('applicationType')
+                    ? parseInt(filtersAvanzados.get('applicationType'))
+                    : undefined,
+            });
+        } catch (err) {
+            console.error(err);
+        } finally {
+            setIsExportingExcel(false);
+        }
+    };
 
     if (loading) {
         return (
@@ -93,12 +118,12 @@ export default function History() {
             <div className=" mx-auto mb-2">
                 <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-6">
                     <div className="flex items-center gap-3">
-                        <div className="w-12 h-12 bg-info-content rounded-xl flex items-center justify-center shadow-lg">
-                            <i className="fas fa-history text-white text-xl"></i>
+                        <div className="w-10 h-10 sm:w-12 sm:h-12 bg-info-content rounded-xl flex items-center justify-center shadow-lg">
+                            <i className="fas fa-history text-white text-lg sm:text-xl"></i>
                         </div>
                         <div>
-                            <h1 className="text-3xl font-bold text-gray-900">Historial de Solicitudes</h1>
-                            <p className="text-gray-600 text-sm mt-1">
+                            <h1 className="text-xl sm:text-2xl lg:text-3xl font-bold text-gray-900">Historial de Solicitudes</h1>
+                            <p className="text-gray-600 text-xs sm:text-sm mt-1">
                                 {totalRegistros} solicitud{totalRegistros !== 1 ? 'es' : ''} encontrada{totalRegistros !== 1 ? 's' : ''}
                             </p>
                         </div>
@@ -106,12 +131,13 @@ export default function History() {
                 </div>
 
                 {/* Filtros */}
-                <div className="bg-white rounded-xl shadow-xl p-6 mb-6 border border-gray-100">
-                    <div className="flex items-center justify-between mb-4">
-                        <h3 className="font-semibold text-gray-900 flex items-center gap-2">
+                <div className="bg-white rounded-xl shadow-xl p-3 sm:p-6 mb-4 sm:mb-6 border border-gray-100">
+                    <div className="flex items-center justify-between mb-3 sm:mb-4">
+                        <h3 className="font-semibold text-gray-900 flex items-center gap-2 text-sm sm:text-base">
                             <i className="fas fa-filter text-slate-600"></i>
                             Filtros de Búsqueda
                         </h3>
+                        {/*
                         {(filtros.busqueda || filtros.tipo || filtros.estado) && (
                             <button
                                 onClick={limpiarFiltros}
@@ -120,6 +146,7 @@ export default function History() {
                                 <i className="fas fa-times-circle"></i> Limpiar filtros
                             </button>
                         )}
+                        */}
                     </div>
 
                     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
@@ -140,42 +167,33 @@ export default function History() {
                                         className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600 transition-colors"
                                         title="Limpiar búsqueda"
                                     >
-                                        <i className="fas fa-times"></i>
                                     </button>
                                 )}
                             </div>
                         </div>
-
-                        {/* Filtro por Tipo de Solicitud */}
-                        <div>
-                            <select
-                                value={filtros.tipo}
-                                onChange={(e) => setFiltros({ tipo: e.target.value })}
-                                className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 outline-none transition-all"
-                            >
-                                <option value="">Todos los tipos</option>
-                                {tiposUnicos.map(tipo => (
-                                    <option key={tipo} value={tipo}>{tipo}</option>
-                                ))}
-                            </select>
-                        </div>
-
-                        {/* Filtro por Estado */}
-                        <div>
-                            <select
-                                value={filtros.estado}
-                                onChange={(e) => setFiltros({ estado: e.target.value })}
-                                className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 outline-none transition-all"
-                            >
-                                <option value="">Todos los estados</option>
-                                {estadosUnicos.map(estado => (
-                                    <option key={estado} value={estado}>{estado}</option>
-                                ))}
-                            </select>
+                        <div className={"lg:col-span-2"}>
+                            <form className={"flex flex-wrap gap-2"}>
+                                {
+                                    Array.from(states.entries()).map(([key, value]) => (
+                                        <input
+                                            key={key}
+                                            type="radio"
+                                            name="state"
+                                            value={value}
+                                            aria-label={value}
+                                            className="btn flex-1 min-w-17.5 text-xs sm:text-[15px]"
+                                            onChange={(e) => stateSelect(e.target.value)}
+                                        />
+                                    ))
+                                }
+                                <input className="btn btn-square" type="reset" value="X"
+                                    onChange={() => { setSelectedState(""); resetFilters() }} />
+                            </form>
                         </div>
                     </div>
 
                     {/* Indicadores de filtros activos */}
+                    {/*
                     {(filtros.busqueda || filtros.tipo || filtros.estado) && (
                         <div className="mt-4 flex flex-wrap items-center gap-2">
                             <span className="text-sm text-gray-600 font-medium">Filtros activos:</span>
@@ -220,15 +238,92 @@ export default function History() {
                             )}
                         </div>
                     )}
+                    */}
+                </div>
+
+                {/* Filtros avanzados */}
+                <div className="bg-white rounded-xl shadow-xl p-3 sm:p-6 mb-4 sm:mb-6 border border-gray-100">
+                    <div className="flex items-center justify-between mb-3 sm:mb-4">
+                        <h3 className="font-semibold text-gray-900 flex items-center gap-2 text-sm sm:text-lg">
+                            <i className="fas fa-filter text-slate-600"></i>
+                            Filtros Avanzados
+                        </h3>
+                    </div>
+                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+                        <div>
+                            <label htmlFor={"beginDate"}>Desde</label>
+                            <input type="date" name="beginDate" id={"beginDate"}
+                                className={"input input-lg outline-0"}
+                                onChange={handleFiltersAvanzadosChange}
+                            />
+                        </div>
+
+                        <div>
+                            <div>
+                                <label htmlFor={"endDate"}>Hasta</label>
+                                <input type="date" name="endDate" id={"endDate"}
+                                    className={"input input-lg outline-0"}
+                                    onChange={handleFiltersAvanzadosChange}
+                                />
+                            </div>
+                        </div>
+
+                        <div>
+                            <label htmlFor={"applicationType"}>Tipo de solicitud</label>
+                            <select defaultValue={""} name={"applicationType"} id={"applicationType"}
+                                className="select select-lg w-full px-4 py-3 focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 outline-none transition-all"
+                                onChange={handleFiltersAvanzadosChange}
+                            >
+                                <option value="">Seleccionar</option>
+                                {
+                                    Array.from(typeApplication.entries()).map(([key, value]) => (
+                                        <option key={key} value={key}>{value}</option>
+                                    ))
+                                }
+                            </select>
+                        </div>
+                        <div className={"flex items-end pt-6 gap-2"}>
+                            <button
+                                type={"button"}
+                                className={"btn bg-info-content flex-1 h-full text-white font-medium"}
+                                onClick={() => aplicarFiltros()}
+                            >
+                                Aplicar Filtro
+                            </button>
+                            <button
+                                type={"button"}
+                                disabled={isExportingExcel}
+                                className={"btn bg-green-600 flex-1 h-full text-white font-medium hover:bg-green-700 disabled:bg-gray-400"}
+                                onClick={handleExportExcel}
+                            >
+                                {isExportingExcel ? (
+                                    <><i className="fas fa-spinner fa-spin"></i> Exportando...</>
+                                ) : (
+                                    <><i className="fas fa-file-excel"></i> Exportar Excel</>
+                                )}
+                            </button>
+                        </div>
+                        {showAlert && (
+                            <div className={"col-span-full"}>
+                                <Alert
+                                    message={"Seleccione al menos un filtro para avanzar"}
+                                    type={"warning"}
+                                    onClose={() => setShowAlert(false)}
+                                />
+                            </div>
+                        )}
+                    </div>
                 </div>
             </div>
             {/* Paginación */}
             {totalPaginas > 1 && (
-                <div className="flex flex-col sticky top-18 z-3 sm:flex-row items-center justify-between gap-4 mt-6 bg-white rounded-t-md shadow-lg px-5 py-3">
-                    <div className="text-sm text-gray-600">
-                        Mostrando {solicitudes.length} de {totalRegistros} solicitudes (Página {paginaActual} de {totalPaginas})
+                <div className="flex flex-col sticky top-18 z-30 sm:flex-row items-center justify-between gap-2 sm:gap-4 mt-4 sm:mt-6 bg-white rounded-t-md shadow-lg px-3 sm:px-5 py-2 sm:py-3">
+                    <div className="text-xs sm:text-sm text-gray-600 text-center sm:text-left">
+                        <span className="hidden sm:inline">Mostrando {solicitudes.length} de {totalRegistros} solicitudes</span>
+                        <span className="sm:hidden">{solicitudes.length}/{totalRegistros}</span>
+                        {' '}(Pág. {paginaActual}/{totalPaginas})
                     </div>
-                    <div className="flex gap-2">
+                    <div className="flex gap-1 sm:gap-2">
                         <button
                             onClick={() => cambiarPagina(1)}
                             disabled={paginaActual === 1}
@@ -292,141 +387,7 @@ export default function History() {
                 </div>
             )}
             {/* Tabla */}
-            <div className=" mx-auto">
-                <div className="bg-white rounded-b-md shadow-xl overflow-hidden border-0">
-                    {solicitudes.length === 0 ? (
-                        <div className="p-12 text-center">
-                            <div className="w-20 h-20 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-4">
-                                <i className="fas fa-folder-open text-gray-400 text-3xl"></i>
-                            </div>
-                            <h3 className="text-xl font-semibold text-gray-700 mb-2">
-                                No se encontraron solicitudes
-                            </h3>
-                            <p className="text-gray-500 mb-4">
-                                {filtros.busqueda || filtros.tipo || filtros.estado
-                                    ? 'No hay resultados con los filtros aplicados'
-                                    : 'Aún no hay solicitudes registradas'}
-                            </p>
-                            {(filtros.busqueda || filtros.tipo || filtros.estado) && (
-                                <button
-                                    onClick={limpiarFiltros}
-                                    className="btn bg-indigo-600 text-white hover:bg-indigo-700"
-                                >
-                                    <i className="fas fa-times-circle mr-2"></i>
-                                    Limpiar filtros
-                                </button>
-                            )}
-                        </div>
-                    ) : (
-                        < div className="overflow-x-auto">
-                            <table className="w-full table-fixed">
-                                <thead className="bg-info-content sticky text-white">
-                                    <tr>
-                                        <th className="px-2 py-3 w-35 text-center text-sm font-semibold">Expediente</th>
-                                        <th className="px-2 py-3 w-45 text-center text-sm font-semibold">Tipo de Solicitud</th>
-                                        <th className="px-2 py-3 w-65 text-center text-sm font-semibold">Contrayentes</th>
-                                        <th className="px-2 py-3 w-32 text-center text-sm font-semibold">DNI/CIU</th>
-                                        <th className="px-2 py-3 text-center text-sm font-semibold">Fecha Trámite</th>
-                                        <th className="px-2 py-3 w-36 text-center text-sm font-semibold">Estado</th>
-                                        <th className="px-2 py-3 text-center text-sm font-semibold">Precio</th>
-                                        <th className="px-2 py-3 text-center text-sm font-semibold">Acciones</th>
-                                    </tr>
-                                </thead>
-                                <tbody className="divide-y divide-gray-100">
-                                    {solicitudes.map((solicitud) => (
-                                        <tr
-                                            key={solicitud.id}
-                                            className="hover:bg-indigo-100/50 transition-colors duration-150 border-b border-b-gray-300"
-                                        >
-                                            <td className="px-4 font-mono font-semibold text-gray-800">
-                                                <Link to={`/dashboard/solicitud/detalles/${solicitud.id}`}>
-                                                    {solicitud.expediente}
-                                                </Link>
-                                            </td>
-                                            <td className="py-3">
-                                                <div>
-                                                    <p className="text-xs text-gray-500">{solicitud.nombreSolicitud}</p>
-                                                    <p className="text-sm font-semibold text-gray-800">{solicitud.descripcionSolicitud}</p>
-                                                </div>
-                                            </td>
-                                            {/* Celda de Contrayentes modificada */}
-                                            <td className="px-3 text-gray-600 ">
-                                                <div className="flex flex-col gap-1">
-                                                    {solicitud.participantes && solicitud.participantes.length > 0 ? (
-                                                        solicitud.participantes
-                                                            .filter(p => p.rol.toLowerCase().includes('contrayente'))
-                                                            .map((p, idx) => (
-
-
-                                                                <span key={idx} className="text-sm font-medium">{p.nombre}</span>
-
-                                                            ))
-                                                    ) : (
-                                                        <span className="text-gray-400 italic text-sm">No registrados</span>
-                                                    )}
-                                                </div>
-                                            </td>
-
-                                            <td className=" text-md text-gray-600">
-                                                <div className="flex flex-col gap-1">
-                                                    {solicitud.participantes && solicitud.participantes.length > 0 ? (
-                                                        solicitud.participantes
-                                                            .filter(p => p.rol.toLowerCase().includes('contrayente'))
-                                                            .map((p, idx) => (
-                                                                <div key={idx} className="flex flex-row">
-                                                                    <span className="text-sm font-black pl-1">{p.tipo_identificacion}: {p.numero_identificacion}</span>
-                                                                </div>
-                                                            ))
-                                                    ) : (
-                                                        <span className="text-gray-400 italic text-sm">No registrados</span>
-                                                    )}
-                                                </div>
-                                            </td>
-                                            <td className="text-md text-gray-600">
-                                                <div className="flex items-center gap-2">
-                                                    <i className="far fa-calendar-alt text-indigo-400"></i>
-                                                    {formatearFechaHora(solicitud.fecha)}
-                                                </div>
-                                            </td>
-                                            <td className="text-center">
-                                                <span className={`badge ${getEstadoClasses(solicitud.estado)} border-none py-3 px-4`}>
-                                                    {solicitud.estado}
-                                                </span>
-                                            </td>
-                                            <td className="text-center">
-                                                <span className="font-semibold text-green-600">
-                                                    {formatearPrecio(solicitud.precio)}
-                                                </span>
-                                            </td>
-                                            <td className="pr-4">
-                                                <div className="flex items-center justify-center gap-2">
-                                                    <button
-                                                        onClick={() => navigate(`/dashboard/solicitud/detalles/${solicitud.id}`)}
-                                                        className="btn btn-sm btn-circle btn-ghost text-indigo-600 hover:bg-indigo-100 transition-colors"
-                                                        title="Ver detalles"
-                                                    >
-                                                        <i className="fas fa-eye"></i>
-                                                    </button>
-                                                    <button
-                                                        onClick={() => console.log("Editar solicitud", solicitud.id)}
-                                                        className="btn btn-sm btn-circle btn-ghost text-amber-600 hover:bg-amber-100 transition-colors"
-                                                        title="Editar solicitud"
-                                                    >
-                                                        <i className="fas fa-pen-to-square"></i>
-                                                    </button>
-                                                </div>
-                                            </td>
-                                        </tr>
-                                    ))}
-                                </tbody>
-                            </table>
-                        </div>
-                    )}
-                </div>
-
-
-            </div>
-
+            <TableList data={solicitudes} />
         </div >
     );
 }
