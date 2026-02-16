@@ -24,3 +24,11 @@ export interface ApiResponse {
     data: Application[];
     pager: Pager;
 }
+
+export interface ApiRequestFilters{
+    beginDate?:string;
+    endDate?:string;
+    ApplicationType:number;
+    page:0;
+    state:string;
+}

@@ -78,18 +78,13 @@ export const ValidateExpediente = async (expedientNumber: string, controller: an
 }
 
 export const FilterAplications = async (
-    state:string,
-    beginDate:string,
-    endDate:string,
-    ApplicationType:number,
-    page:number
+    filters:any,
+    controller:any
 ):Promise<ApiResponse>=>{
-    const reponse = await apiAxios.get("/api/v1/application/filter",{params:{
-        state,
-        beginDate,
-        endDate,
-        ApplicationType,
-        page
-    }});
+    console.log(filters);
+    const reponse = await apiAxios.get("/api/v1/application/filter",{
+        params:filters,
+        signal: controller.signal
+    });
     return reponse.data;
 }
