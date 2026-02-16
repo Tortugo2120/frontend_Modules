@@ -21,7 +21,7 @@ import { groupSolicitudesByCategory, getCategoryOrder } from "../../Types/reques
 export default function NewRequest() {
     const [tipoSolicitud, setTipoSolicitud] = useState<number | null>(null);
     const [searchTerm, setSearchTerm] = useState("");
-    const { updateApplicationData, formDataAplication, resetForm } = ApplicationHandler();
+    const { updateApplicationData, formDataAplication } = ApplicationHandler();
     const { user } = Auth();
     const [isSubmitting, setIsSubmitting] = useState(false);
     const { error, createSolicitud } = useCreateAplication();
@@ -177,192 +177,194 @@ export default function NewRequest() {
     };
 
     return (
-        <div className="min-h-screen bg-blue-300/40 from-slate-50 via-blue-50 to-indigo-50 p-4 sm:p-6 lg:p-6">
-            <div className="mb-4">
-                <div className="flex items-center gap-3 mb-6">
-                    <div className="w-12 h-12 bg-info-content rounded-xl flex items-center justify-center shadow-lg">
-                        <i className="fas fa-file-invoice text-white text-xl"></i>
+        <div > 
+            <div className="min-h-screen bg-blue-300/40 from-slate-50 via-blue-50 to-indigo-50 p-4 sm:p-6 lg:p-6">
+                <div className="mb-4">
+                    <div className="flex items-center gap-3 mb-6">
+                        <div className="w-12 h-12 bg-info-content rounded-xl flex items-center justify-center shadow-lg">
+                            <i className="fas fa-file-invoice text-white text-xl"></i>
+                        </div>
+                        <div>
+                            <h1 className="text-3xl font-bold text-gray-900">Nueva Solicitud</h1>
+                            <p className="text-gray-600 text-sm mt-1">Complete los datos para registrar una nueva solicitud</p>
+                        </div>
                     </div>
-                    <div>
-                        <h1 className="text-3xl font-bold text-gray-900">Nueva Solicitud</h1>
-                        <p className="text-gray-600 text-sm mt-1">Complete los datos para registrar una nueva solicitud</p>
-                    </div>
+                    <StepProgressBar currentStep={currentStep} />
                 </div>
-                <StepProgressBar currentStep={currentStep} />
-            </div>
 
-            {/* Form Container */}
-            <div className="mx-auto">
-                <div className="bg-white rounded-lg shadow-xl overflow-hidden">
-                    <div>
-                        {/* Step 1: Selección de tipo de solicitud */}
-                        {currentStep === 1 && (
-                            <div className="p-6 lg:p-6 animate-fadeIn">
-                                <div className="flex justify-between items-center flex-col sm:flex-row sm:items-end mb-6">
-                                    <div>
-                                        <h2 className="text-2xl font-bold text-gray-900 mb-2">Seleccione el tipo de solicitud</h2>
-                                        <p className="text-gray-600">Elija el trámite que desea realizar</p>
-                                    </div>
+                {/* Form Container */}
+                <div className="mx-auto">
+                    <div className="bg-white rounded-lg shadow-xl overflow-hidden">
+                        <div>
+                            {/* Step 1: Selección de tipo de solicitud */}
+                            {currentStep === 1 && (
+                                <div className="p-6 lg:p-6 animate-fadeIn">
+                                    <div className="flex justify-between items-center flex-col sm:flex-row sm:items-end mb-6">
+                                        <div>
+                                            <h2 className="text-2xl font-bold text-gray-900 mb-2">Seleccione el tipo de solicitud</h2>
+                                            <p className="text-gray-600">Elija el trámite que desea realizar</p>
+                                        </div>
 
-                                    {/* Buscador */}
-                                    <div className="w-full sm:w-auto sm:min-w-[300px] mt-4 sm:mt-0">
-                                        <div className="relative">
-                                            <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
-                                                <i className="fas fa-search text-gray-400"></i>
+                                        {/* Buscador */}
+                                        <div className="w-full sm:w-auto sm:min-w-75 mt-4 sm:mt-0">
+                                            <div className="relative">
+                                                <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
+                                                    <i className="fas fa-search text-gray-400"></i>
+                                                </div>
+                                                <input
+                                                    type="text"
+                                                    value={searchTerm}
+                                                    onChange={(e) => setSearchTerm(e.target.value)}
+                                                    placeholder="Buscar tipo de solicitud..."
+                                                    className="w-full pl-11 pr-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-0 transition-all"
+                                                />
+                                                {searchTerm && (
+                                                    <button
+                                                        type="button"
+                                                        onClick={() => setSearchTerm("")}
+                                                        className="absolute inset-y-0 right-0 pr-4 flex items-center text-gray-400 hover:text-gray-600"
+                                                    >
+                                                        <i className="fas fa-times"></i>
+                                                    </button>
+                                                )}
                                             </div>
-                                            <input
-                                                type="text"
-                                                value={searchTerm}
-                                                onChange={(e) => setSearchTerm(e.target.value)}
-                                                placeholder="Buscar tipo de solicitud..."
-                                                className="w-full pl-11 pr-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-0 transition-all"
-                                            />
                                             {searchTerm && (
-                                                <button
-                                                    type="button"
-                                                    onClick={() => setSearchTerm("")}
-                                                    className="absolute inset-y-0 right-0 pr-4 flex items-center text-gray-400 hover:text-gray-600"
-                                                >
-                                                    <i className="fas fa-times"></i>
-                                                </button>
+                                                <p className="mt-2 text-sm text-gray-600">
+                                                    {filteredSolicitudes.length} resultado{filteredSolicitudes.length !== 1 ? 's' : ''} encontrado{filteredSolicitudes.length !== 1 ? 's' : ''}
+                                                </p>
                                             )}
                                         </div>
-                                        {searchTerm && (
-                                            <p className="mt-2 text-sm text-gray-600">
-                                                {filteredSolicitudes.length} resultado{filteredSolicitudes.length !== 1 ? 's' : ''} encontrado{filteredSolicitudes.length !== 1 ? 's' : ''}
-                                            </p>
-                                        )}
+                                    </div>
+
+                                    {/* Acordeones agrupados por categoría */}
+                                    {filteredSolicitudes.length > 0 ? (
+                                        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-2 gap-4">
+                                            {categoryOrder.map((category) => {
+                                                const solicitudesEnCategoria = groupedSolicitudes[category];
+
+                                                // Solo mostrar categorías que tienen solicitudes
+                                                if (!solicitudesEnCategoria || solicitudesEnCategoria.length === 0) {
+                                                    return null;
+                                                }
+
+                                                return (
+                                                    <div>
+                                                        <CategoryAccordion
+                                                            key={category}
+                                                            categoryName={category}
+                                                            solicitudes={solicitudesEnCategoria}
+                                                            selectedId={tipoSolicitud}
+                                                            onSelect={handleSelectTipoSolicitud}
+                                                            defaultOpen={false}
+                                                        />
+                                                    </div>
+                                                );
+                                            })}
+                                        </div>
+                                    ) : (
+                                        <div className="text-center py-12">
+                                            <i className="fas fa-search text-gray-300 text-5xl mb-4"></i>
+                                            <p className="text-gray-500 text-lg">No se encontraron solicitudes</p>
+                                            <p className="text-gray-400 text-sm mt-2">Intenta con otros términos de búsqueda</p>
+                                        </div>
+                                    )}
+                                </div>
+                            )}
+
+                            {/* Step 2: Formulario de Datos */}
+                            {currentStep === 2 && (
+                                <div className="p-6 lg:p-6 animate-fadeIn">
+                                    <div className="space-y-8">
+                                        <ApplicantForm
+                                            tipoSolicitudNombre={selectedRequestType?.nombre_solicitud}
+                                            descriptionSolicitud={selectedRequestType?.descripcion}
+                                            onValidationChange={(isValid) => updateStepValidation(2, isValid)}
+                                        />
                                     </div>
                                 </div>
+                            )}
 
-                                {/* Acordeones agrupados por categoría */}
-                                {filteredSolicitudes.length > 0 ? (
-                                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-2 gap-4">
-                                        {categoryOrder.map((category) => {
-                                            const solicitudesEnCategoria = groupedSolicitudes[category];
-
-                                            // Solo mostrar categorías que tienen solicitudes
-                                            if (!solicitudesEnCategoria || solicitudesEnCategoria.length === 0) {
-                                                return null;
-                                            }
-
-                                            return (
-                                                <div>
-                                                    <CategoryAccordion
-                                                        key={category}
-                                                        categoryName={category}
-                                                        solicitudes={solicitudesEnCategoria}
-                                                        selectedId={tipoSolicitud}
-                                                        onSelect={handleSelectTipoSolicitud}
-                                                        defaultOpen={false}
-                                                    />
-                                                </div>
-                                            );
-                                        })}
-                                    </div>
-                                ) : (
-                                    <div className="text-center py-12">
-                                        <i className="fas fa-search text-gray-300 text-5xl mb-4"></i>
-                                        <p className="text-gray-500 text-lg">No se encontraron solicitudes</p>
-                                        <p className="text-gray-400 text-sm mt-2">Intenta con otros términos de búsqueda</p>
-                                    </div>
-                                )}
-                            </div>
-                        )}
-
-                        {/* Step 2: Formulario de Datos */}
-                        {currentStep === 2 && (
-                            <div className="p-6 lg:p-6 animate-fadeIn">
-                                <div className="space-y-8">
-                                    <ApplicantForm
+                            {/* Step 3: contrayente */}
+                            {currentStep === 3 && (
+                                <div className="p-6 lg:p-6">
+                                    <Contrayente
                                         tipoSolicitudNombre={selectedRequestType?.nombre_solicitud}
                                         descriptionSolicitud={selectedRequestType?.descripcion}
-                                        onValidationChange={(isValid) => updateStepValidation(2, isValid)}
-                                    />
+                                        onValidationChange={(isValid) => updateStepValidation(3, isValid)} />
                                 </div>
-                            </div>
-                        )}
+                            )}
 
-                        {/* Step 3: contrayente */}
-                        {currentStep === 3 && (
-                            <div className="p-6 lg:p-6">
-                                <Contrayente
-                                    tipoSolicitudNombre={selectedRequestType?.nombre_solicitud}
-                                    descriptionSolicitud={selectedRequestType?.descripcion}
-                                    onValidationChange={(isValid) => updateStepValidation(3, isValid)} />
-                            </div>
-                        )}
+                            {/* Step 4: testigo */}
+                            {currentStep === 4 && (
+                                <div className="p-6 lg:p-6">
+                                    <Testigos
+                                        tipoSolicitudNombre={selectedRequestType?.nombre_solicitud}
+                                        descriptionSolicitud={selectedRequestType?.descripcion}
+                                        onValidationChange={(isValid) => updateStepValidation(4, isValid)} />
+                                </div>
+                            )}
 
-                        {/* Step 4: testigo */}
-                        {currentStep === 4 && (
-                            <div className="p-6 lg:p-6">
-                                <Testigos
-                                    tipoSolicitudNombre={selectedRequestType?.nombre_solicitud}
-                                    descriptionSolicitud={selectedRequestType?.descripcion}
-                                    onValidationChange={(isValid) => updateStepValidation(4, isValid)} />
-                            </div>
-                        )}
+                            {/* Step 5: requisitos */}
+                            {currentStep === 5 && (
+                                <div className="p-6 lg:p-6">
+                                    <Requisitos
+                                        tipoSolicitudNombre={selectedRequestType?.nombre_solicitud}
+                                        descriptionSolicitud={selectedRequestType?.descripcion}
+                                        onValidationChange={(isValid) => updateStepValidation(5, isValid)} />
+                                </div>
+                            )}
 
-                        {/* Step 5: requisitos */}
-                        {currentStep === 5 && (
-                            <div className="p-6 lg:p-6">
-                                <Requisitos
-                                    tipoSolicitudNombre={selectedRequestType?.nombre_solicitud}
-                                    descriptionSolicitud={selectedRequestType?.descripcion}
-                                    onValidationChange={(isValid) => updateStepValidation(5, isValid)} />
-                            </div>
-                        )}
-
-                        {/* Step 6: confirmacion */}
-                        {currentStep === 6 && (
-                            <div className="p-6 lg:p-6">
-                                {isUploadingDocs && (
-                                    <div className="mb-6 bg-blue-50 border border-blue-200 rounded-lg p-4">
-                                        <div className="flex items-center gap-3 mb-2">
-                                            <i className="fas fa-cloud-upload-alt text-blue-600 animate-pulse"></i>
-                                            <span className="text-sm font-medium text-gray-900">
-                                                Subiendo documentos...
-                                            </span>
+                            {/* Step 6: confirmacion */}
+                            {currentStep === 6 && (
+                                <div className="p-6 lg:p-6">
+                                    {isUploadingDocs && (
+                                        <div className="mb-6 bg-blue-50 border border-blue-200 rounded-lg p-4">
+                                            <div className="flex items-center gap-3 mb-2">
+                                                <i className="fas fa-cloud-upload-alt text-blue-600 animate-pulse"></i>
+                                                <span className="text-sm font-medium text-gray-900">
+                                                    Subiendo documentos...
+                                                </span>
+                                            </div>
+                                            <div className="w-full bg-gray-200 rounded-full h-2.5">
+                                                <div
+                                                    className="bg-blue-600 h-2.5 rounded-full transition-all duration-300"
+                                                    style={{
+                                                        width: `${uploadProgress.total > 0 ? (uploadProgress.current / uploadProgress.total) * 100 : 0}%`
+                                                    }}
+                                                ></div>
+                                            </div>
+                                            <p className="text-xs text-gray-600 mt-2">
+                                                {uploadProgress.current} de {uploadProgress.total} archivo(s)
+                                            </p>
                                         </div>
-                                        <div className="w-full bg-gray-200 rounded-full h-2.5">
-                                            <div
-                                                className="bg-blue-600 h-2.5 rounded-full transition-all duration-300"
-                                                style={{
-                                                    width: `${uploadProgress.total > 0 ? (uploadProgress.current / uploadProgress.total) * 100 : 0}%`
-                                                }}
-                                            ></div>
-                                        </div>
-                                        <p className="text-xs text-gray-600 mt-2">
-                                            {uploadProgress.current} de {uploadProgress.total} archivo(s)
-                                        </p>
-                                    </div>
-                                )}
+                                    )}
 
-                                <ConfirmationSummary
-                                    tipoSolicitud={tipoSolicitud}
-                                    tipoNombre={selectedRequestType?.nombre_solicitud}
-                                    descriptionSolicitud={selectedRequestType?.descripcion}
-                                    precio={selectedRequestType?.precio}
-                                    applicationData={formDataAplication}
-                                    onConfirm={handleConfirmSubmit}
-                                    isSubmitting={isSubmitting || isUploadingDocs}
-                                />
-                                {showAlert && (
-                                    <Alert message={messAlert} type={typeAlert} onClose={() => setShowAlert(false)} />
-                                )}
-                            </div>
-                        )}
+                                    <ConfirmationSummary
+                                        tipoSolicitud={tipoSolicitud}
+                                        tipoNombre={selectedRequestType?.nombre_solicitud}
+                                        descriptionSolicitud={selectedRequestType?.descripcion}
+                                        precio={selectedRequestType?.precio}
+                                        applicationData={formDataAplication}
+                                        onConfirm={handleConfirmSubmit}
+                                        isSubmitting={isSubmitting || isUploadingDocs}
+                                    />
+                                    {showAlert && (
+                                        <Alert message={messAlert} type={typeAlert} onClose={() => setShowAlert(false)} />
+                                    )}
+                                </div>
+                            )}
 
-                        <NavigationButtons
-                            currentStep={currentStep}
-                            totalSteps={6}
-                            canProceed={currentStep === 1 ? !!tipoSolicitud : (stepsValidation[currentStep] || false)}
-                            onPrevious={prevStep}
-                            onNext={nextStep}
-                        />
+                        </div>
                     </div>
                 </div>
             </div>
+            <NavigationButtons
+                currentStep={currentStep}
+                totalSteps={6}
+                canProceed={currentStep === 1 ? !!tipoSolicitud : (stepsValidation[currentStep] || false)}
+                onPrevious={prevStep}
+                onNext={nextStep}
+            />
         </div>
     );
 }

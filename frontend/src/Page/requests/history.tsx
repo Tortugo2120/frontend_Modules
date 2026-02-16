@@ -224,7 +224,7 @@ export default function History() {
             </div>
             {/* Paginación */}
             {totalPaginas > 1 && (
-                <div className="flex flex-col sticky top-23 z-3 sm:flex-row items-center justify-between gap-4 mt-6 bg-white rounded-t-md shadow-lg px-5 py-3">
+                <div className="flex flex-col sticky top-18 z-3 sm:flex-row items-center justify-between gap-4 mt-6 bg-white rounded-t-md shadow-lg px-5 py-3">
                     <div className="text-sm text-gray-600">
                         Mostrando {solicitudes.length} de {totalRegistros} solicitudes (Página {paginaActual} de {totalPaginas})
                     </div>
@@ -320,7 +320,7 @@ export default function History() {
                     ) : (
                         < div className="overflow-x-auto">
                             <table className="w-full table-fixed">
-                                <thead className="bg-info-content text-white">
+                                <thead className="bg-info-content sticky text-white">
                                     <tr>
                                         <th className="px-2 py-3 w-35 text-center text-sm font-semibold">Expediente</th>
                                         <th className="px-2 py-3 w-45 text-center text-sm font-semibold">Tipo de Solicitud</th>

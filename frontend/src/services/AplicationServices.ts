@@ -1,7 +1,7 @@
 import apiAxios from "../api/Axios.tsx";
-import type { 
-    CreateApplicationPayload, 
-    AplicationResponse, 
+import type {
+    CreateApplicationPayload,
+    AplicationResponse,
     GetAplicationState,
     ListApplicationsResponse,
     ApplicationItem,
@@ -45,7 +45,7 @@ export const ListApplications = async (page: number = 1): Promise<ListApplicatio
     const response = await apiAxios.get<ListApplicationsResponse>("/api/v1/application", {
         params: { page }
     });
-    
+
     return {
         applications: response.data.data.map(transformApplicationData),
         pager: response.data.pager
@@ -76,12 +76,47 @@ export const ValidateExpediente = async (expedientNumber: string, controller: an
     }
 }
 
+export const ExportApplicationById = async (id: number): Promise<void> => {
+    try {
+        const response = await apiAxios.get(`/api/v1/application/export/${id}`, {
+            responseType: 'blob', // Indicar que esperamos un archivo
+        });
+
+        // Extraer el nombre del archivo de las cabeceras de respuesta
+        const contentDisposition = response.headers['content-disposition'];
+        let filename = `Solicitud-${id}.pdf`; // Nombre por defecto
+        if (contentDisposition) {
+            const filenameMatch = contentDisposition.match(/filename="?(.+)"?/);
+            if (filenameMatch && filenameMatch.length > 1) {
+                filename = filenameMatch[1];
+            }
+        }
+
+        // Crear una URL para el blob y simular un clic para descargar
+        const url = window.URL.createObjectURL(new Blob([response.data]));
+        const link = document.createElement('a');
+        link.href = url;
+        link.setAttribute('download', filename);
+        document.body.appendChild(link);
+        link.click();
+
+        // Limpiar
+        link.parentNode?.removeChild(link);
+        window.URL.revokeObjectURL(url);
+
+    } catch (error) {
+        console.error("Error al exportar la solicitud:", error);
+        // Aquí podrías manejar el error, por ejemplo, mostrando una notificación al usuario
+        throw new Error("No se pudo exportar la solicitud.");
+    }
+};
+
 export const FilterAplications = async (
-    state:string,
-    beginDate:string,
-    endDate:string,
-    ApplicationType:number,
-    page:number
-)=>{
+    state: string,
+    beginDate: string,
+    endDate: string,
+    ApplicationType: number,
+    page: number
+) => {
 
 }
