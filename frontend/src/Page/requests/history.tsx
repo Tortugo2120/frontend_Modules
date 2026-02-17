@@ -22,7 +22,7 @@ export default function History() {
         totalRegistros,
         cambiarPagina
     } = useApplicationHistory();
-    const states = new Map<number, string>([[1, "Pendiente"], [2, "En Proceso"], [3, "Completado"], [4, "Anulado"]]);
+    const states = new Map<number, string>([[1, "Pendiente"], [2, "En Proceso"], [3, "Completado"], [4, "Anulada"]]);
     const typeApplication = new Map<number, string>([[1, "Matrimonio"], [2, "Divorcio"]]);
     const [filtersAvanzados, setFiltersAvanzados] = useState<Map<string, string>>(new Map());
     const [showAlert, setShowAlert] = useState(false);
@@ -195,16 +195,6 @@ export default function History() {
                             <i className="fas fa-filter text-slate-600"></i>
                             Filtros de Búsqueda
                         </h3>
-                        {/*
-                        {(filtros.busqueda || filtros.tipo || filtros.estado) && (
-                            <button
-                                onClick={limpiarFiltros}
-                                className="text-sm text-indigo-600 hover:text-indigo-700 font-medium flex items-center gap-1 transition-colors"
-                            >
-                                <i className="fas fa-times-circle"></i> Limpiar filtros
-                            </button>
-                        )}
-                        */}
                     </div>
 
                     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
@@ -254,54 +244,6 @@ export default function History() {
                             </form>
                         </div>
                     </div>
-
-                    {/* Indicadores de filtros activos */}
-                    {/*
-                    {(filtros.busqueda || filtros.tipo || filtros.estado) && (
-                        <div className="mt-4 flex flex-wrap items-center gap-2">
-                            <span className="text-sm text-gray-600 font-medium">Filtros activos:</span>
-                            {filtros.busqueda && (
-                                <span className="inline-flex items-center gap-2 px-3 py-1 bg-indigo-100 text-indigo-700 rounded-full text-sm font-medium">
-                                    <i className="fas fa-search text-xs"></i>
-                                    "{filtros.busqueda}"
-                                    <button
-                                        onClick={() => setFiltros({ busqueda: "" })}
-                                        className="hover:text-indigo-900 transition-colors"
-                                        title="Quitar filtro"
-                                    >
-                                        <i className="fas fa-times"></i>
-                                    </button>
-                                </span>
-                            )}
-                            {filtros.tipo && (
-                                <span className="inline-flex items-center gap-2 px-3 py-1 bg-blue-100 text-blue-700 rounded-full text-sm font-medium">
-                                    <i className="fas fa-file-alt text-xs"></i>
-                                    {filtros.tipo}
-                                    <button
-                                        onClick={() => setFiltros({ tipo: "" })}
-                                        className="hover:text-blue-900 transition-colors"
-                                        title="Quitar filtro"
-                                    >
-                                        <i className="fas fa-times"></i>
-                                    </button>
-                                </span>
-                            )}
-                            {filtros.estado && (
-                                <span className="inline-flex items-center gap-2 px-3 py-1 bg-green-100 text-green-700 rounded-full text-sm font-medium">
-                                    <i className="fas fa-info-circle text-xs"></i>
-                                    {filtros.estado}
-                                    <button
-                                        onClick={() => setFiltros({ estado: "" })}
-                                        className="hover:text-green-900 transition-colors"
-                                        title="Quitar filtro"
-                                    >
-                                        <i className="fas fa-times"></i>
-                                    </button>
-                                </span>
-                            )}
-                        </div>
-                    )}
-                    */}
                 </div>
 
                 {/* Filtros avanzados */}

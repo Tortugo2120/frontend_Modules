@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from "react";
-import type { Application, Pager } from "../model/aplicationFilterModel";
+import type { Pager } from "../model/aplicationFilterModel";
 import { FilterAplications } from "../services/AplicationServices";
-import type {ApplicationItem} from "../model/aplicationModel.ts";
+import type {ApplicationBackendItem, ApplicationItem} from "../model/aplicationModel.ts";
 
 interface Filters {
     state?: string;
@@ -33,19 +33,19 @@ const useFilterApplications = () => {
 
     const abortControllerRef = useRef<AbortController | null>(null);
 
-    const transformFilterData = (dataFilter:Application): ApplicationItem=> {
+    const transformFilterData = (dataFilter:ApplicationBackendItem): ApplicationItem=> {
         return {
             id: parseInt(dataFilter.id),
             expediente: dataFilter.numero_expediente,
             nombreSolicitud: dataFilter.nombre_solicitud,
-            descripcionSolicitud: "",
-            precio: 0,
+            descripcionSolicitud: dataFilter.descripcion_solicitud,
+            precio: parseFloat(dataFilter.precio),
             estado: dataFilter.estado,
             fecha: dataFilter.fecha_inicio,
             fechaActualizacion: dataFilter.fecha_actualizacion,
             fechaFin: dataFilter.fecha_fin,
-            encargado: "",
-            participantes: [],
+            encargado: dataFilter.encargado ? dataFilter.encargado : "Sin encargado",
+            participantes: dataFilter.participantes || [],
         }
     }
     useEffect(() => {
