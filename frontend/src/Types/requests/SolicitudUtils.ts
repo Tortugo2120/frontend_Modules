@@ -72,3 +72,43 @@ export function getCategoryOrder(): string[] {
         'Otros Trámites'
     ];
 }
+
+export function shouldShowPaymentDetails(
+    requestType: string,
+    estado: string
+): boolean {
+    // No mostrar pago para solicitudes anuladas
+    if (estado?.toLowerCase() === 'anulada' || estado?.toLowerCase() === 'anulado') {
+        return false;
+    }
+
+    // Tipos que NO requieren mostrar información de pago
+    const requestTypesWithoutPayment = [
+        'Certificado de Trámite en Línea',
+        'Consulta',
+        'Verificación'
+    ];
+
+    if (requestTypesWithoutPayment.some(type => 
+        requestType?.toLowerCase().includes(type.toLowerCase())
+    )) {
+        return false;
+    }
+
+    return true;
+}
+
+export function isPaymentRequired(requestType: string): boolean {
+    // Tipos de solicitudes que SÍ requieren pago
+    const paymentRequiredTypes = [
+        'Matrimonio',
+        'Divorcio',
+        'Acta de Defunción',
+        'Copia de Expediente',
+        'Certificado'
+    ];
+
+    return paymentRequiredTypes.some(type => 
+        requestType?.toLowerCase().includes(type.toLowerCase())
+    );
+}
