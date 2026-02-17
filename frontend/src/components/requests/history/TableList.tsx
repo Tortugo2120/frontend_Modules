@@ -18,7 +18,7 @@ export default function TableList({data}:Props){
         const clases: Record<string, string> = {
             "pendiente": "bg-yellow-100 text-yellow-800",
             "en proceso": "bg-blue-100 text-blue-800",
-            "completado": "bg-green-100 text-green-800",
+            "completada": "bg-green-100 text-green-800",
             "observado": "bg-orange-100 text-orange-800",
             "cancelado": "bg-red-100 text-red-800",
             "anulada": "bg-red-100 text-red-800"
