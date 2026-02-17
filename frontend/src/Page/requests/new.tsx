@@ -21,7 +21,7 @@ import { groupSolicitudesByCategory, getCategoryOrder } from "../../Types/reques
 export default function NewRequest() {
     const [tipoSolicitud, setTipoSolicitud] = useState<number | null>(null);
     const [searchTerm, setSearchTerm] = useState("");
-    const { updateApplicationData, formDataAplication } = ApplicationHandler();
+    const { updateApplicationData, formDataAplication,resetForm } = ApplicationHandler();
     const { user } = Auth();
     const [isSubmitting, setIsSubmitting] = useState(false);
     const { error, createSolicitud } = useCreateAplication();
@@ -61,7 +61,7 @@ export default function NewRequest() {
             const documents = await db.obtenerDocuments();
             //console.log(`Documentos recuperados de IndexedDB: ${documents.length}`);
             //console.log('Preparando para enviar solicitud a la API:', formDataAplication);
-            //console.log(JSON.stringify(formDataAplication, null, 2));
+            console.log(JSON.stringify(formDataAplication, null, 2));
             const response = await createSolicitud(formDataAplication);
 
             if (response?.status) {

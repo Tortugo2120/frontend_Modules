@@ -85,6 +85,7 @@ export interface Participant {
     ubigeoId: string;
     maritalStatus: string;
     rol: ParticipantRol;
+    ctry?: string | null; // null para contrayente, dni del contrayente para testigo
 }
 
 export interface ApplicationData {

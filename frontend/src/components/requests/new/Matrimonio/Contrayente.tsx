@@ -228,8 +228,13 @@ const Contrayente = (props: Solicitud) => {
                 return;
             }
 
-            // Agregar como contrayente
-            addParticipant({ ...data, rol: 'contrayente', documentTypeId: documentTypeMapping[tipoDoc] || 1 });
+            // Agregar como contrayente con ctry null
+            addParticipant({
+                ...data,
+                rol: 'contrayente',
+                documentTypeId: documentTypeMapping[tipoDoc] || 1,
+                ctry: null
+            });
             setAdded(true);
             setError('');
         })();

@@ -22,7 +22,7 @@ export default function History() {
         totalRegistros,
         cambiarPagina
     } = useApplicationHistory();
-    const states = new Map<number, string>([[1, "Pendiente"], [2, "En Proceso"], [3, "Completado"], [4, "Anulada"]]);
+    const states = new Map<number, string>([[1, "Pendiente"], [2, "En Proceso"], [3, "Completada"], [4, "Anulada"]]);
     const typeApplication = new Map<number, string>([[1, "Matrimonio"], [2, "Divorcio"]]);
     const [filtersAvanzados, setFiltersAvanzados] = useState<Map<string, string>>(new Map());
     const [showAlert, setShowAlert] = useState(false);

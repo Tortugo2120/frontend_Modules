@@ -3,7 +3,11 @@ import React, {createContext, type ReactNode, useCallback, useContext, useEffect
 
 interface ApplicationContextType {
     formDataAplication: CreateApplicationPayload;
-    addParticipant: (participant: Omit<Participant, 'rol'> & { rol: ParticipantRol }) => void;
+    addParticipant: (participant: Omit<Participant, 'rol'> &
+        {
+            rol: ParticipantRol;
+            ctry?: string | null;
+        }) => void;
     deleteParticipant: (dni: string) => void;
     updateApplicationData: (data: Partial<CreateApplicationPayload['application']>) => void;
     updateRequisitos: (requisitos: RequisitoEstado[]) => void;
@@ -26,7 +30,10 @@ export const ApplicationProvider: React.FC<{ children: React.ReactNode }> = ({ c
         localStorage.setItem('pending_application', JSON.stringify(formDataAplication));
     }, [formDataAplication]);
 
-    const addParticipant = useCallback((newParticipant: Omit<Participant, 'rol'> & { rol: ParticipantRol }) => {
+    const addParticipant = useCallback((newParticipant: Omit<Participant, 'rol'> & {
+        rol: ParticipantRol;
+        ctry?: string | null;
+    }) => {
         console.log('Agregando participante:', newParticipant);
 
         setFormDataAplication(prev => {
@@ -35,10 +42,19 @@ export const ApplicationProvider: React.FC<{ children: React.ReactNode }> = ({ c
             if (existingIndex >= 0) {
                 // Si ya existe, reemplazar con el nuevo rol
                 const updatedParticipants = [...prev.participants];
-                updatedParticipants[existingIndex] = {
+                const updatedParticipant: Participant = {
                     ...updatedParticipants[existingIndex],
                     ...newParticipant
                 };
+
+                // Asignar ctry según el rol
+                if (newParticipant.rol === 'contrayente') {
+                    updatedParticipant.ctry = null;
+                } else if (newParticipant.rol === 'testigo') {
+                    updatedParticipant.ctry = newParticipant.ctry || null;
+                }
+
+                updatedParticipants[existingIndex] = updatedParticipant;
                 console.log('Participante actualizado:', updatedParticipants[existingIndex]);
 
                 return {
@@ -51,6 +67,12 @@ export const ApplicationProvider: React.FC<{ children: React.ReactNode }> = ({ c
             const newParticipantData: Participant = {
                 ...newParticipant
             };
+
+            if (newParticipant.rol === 'contrayente') {
+                newParticipantData.ctry = null;
+            } else if (newParticipant.rol === 'testigo') {
+                newParticipantData.ctry = newParticipant.ctry || null;
+            }
 
             console.log('Nuevo participante creado:', newParticipantData);
 

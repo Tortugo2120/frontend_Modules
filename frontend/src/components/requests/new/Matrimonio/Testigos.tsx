@@ -114,6 +114,10 @@ const Testigo = (props: Solicitud) => {
     const [testigo1Added, setTestigo1Added] = useState(false);
     const [testigo2Added, setTestigo2Added] = useState(false);
 
+    // Estados para el contrayente seleccionado
+    const [selectedContrayente1, setSelectedContrayente1] = useState('');
+    const [selectedContrayente2, setSelectedContrayente2] = useState('');
+
     // Sincronizar con el estado global del contexto
     useEffect(() => {
         const testigos = formDataAplication.participants.filter((p: Participant) =>
@@ -214,12 +218,20 @@ const Testigo = (props: Solicitud) => {
         const setAdded = testigoNum === 1 ? setTestigo1Added : setTestigo2Added;
         const setError = testigoNum === 1 ? setSearchError1 : setSearchError2;
         const tipoDoc = testigoNum === 1 ? tipoDoc1 : tipoDoc2;
+        const selectedContrayente = testigoNum === 1 ? selectedContrayente1 : selectedContrayente2;
 
         const documentTypeMapping: Record<string, number> = {
             'dni': 1,
             'pas': 2,
             'ced': 3
         };
+
+        // Validar que se haya seleccionado un contrayente
+        if (!selectedContrayente) {
+            setError('Debe seleccionar un contrayente al que respalda este testigo');
+            return;
+        }
+
         handleSubmit((data: TestigoFormData) => {
             // Verificar si ya existe como testigo
             const isDuplicateTestigo = formDataAplication.participants.some((p: Participant) =>
@@ -231,12 +243,17 @@ const Testigo = (props: Solicitud) => {
                 return;
             }
 
-            // Agregar como testigo
-            addParticipant({ ...data, rol: 'testigo', documentTypeId: documentTypeMapping[tipoDoc] || 1 });
+            // Agregar como testigo con el ctry conteniendo el DNI del contrayente
+            addParticipant({
+                ...data,
+                rol: 'testigo',
+                documentTypeId: documentTypeMapping[tipoDoc] || 1,
+                ctry: selectedContrayente
+            });
             setAdded(true);
             setError('');
         })();
-    }, [handleSubmitForm1, handleSubmitForm2, addParticipant, formDataAplication.participants]);
+    }, [handleSubmitForm1, handleSubmitForm2, addParticipant, formDataAplication.participants, tipoDoc1, tipoDoc2, selectedContrayente1, selectedContrayente2]);
 
     // Función para eliminar testigo
     const handleDeleteTestigo = useCallback((cui: string, testigoNum: 1 | 2) => {
@@ -246,10 +263,12 @@ const Testigo = (props: Solicitud) => {
         const setAdded = testigoNum === 1 ? setTestigo1Added : setTestigo2Added;
         const resetForm = testigoNum === 1 ? resetForm1 : resetForm2;
         const resetSearch = testigoNum === 1 ? resetSearch1 : resetSearch2;
+        const setSelectedContrayente = testigoNum === 1 ? setSelectedContrayente1 : setSelectedContrayente2;
 
         setAdded(false);
         resetForm();
         resetSearch();
+        setSelectedContrayente(''); // Limpiar el contrayente seleccionado
     }, [deleteParticipant, resetForm1, resetForm2, resetSearch1, resetSearch2]);
 
     const handleKeyDown = useCallback((e: React.KeyboardEvent<HTMLInputElement>, testigoNum: 1 | 2) => {
@@ -556,6 +575,30 @@ const Testigo = (props: Solicitud) => {
                             <p className="text-red-500 text-xs mt-1">{errorsForm.maritalStatus.message}</p>
                         )}
                     </div>
+
+                    {/* Selector de Contrayente */}
+                    <div className='mb-0 sm:col-span-2 lg:col-span-1'>
+                        <label className="block text-sm font-medium text-gray-700 mb-2">
+                            Contrayente que Respalda <span className="text-red-500">*</span>
+                        </label>
+                        <select
+                            value={testigoNum === 1 ? selectedContrayente1 : selectedContrayente2}
+                            onChange={(e) => testigoNum === 1 ? setSelectedContrayente1(e.target.value) : setSelectedContrayente2(e.target.value)}
+                            className="w-full px-3 sm:px-4 py-2 text-sm sm:text-base border border-gray-300 rounded-lg bg-white outline-0 transition-all focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                        >
+                            <option value="">Seleccione un contrayente</option>
+                            {formDataAplication.participants
+                                .filter((p: Participant) => p.rol === 'contrayente')
+                                .map((contrayente: Participant, index: number) => (
+                                    <option key={contrayente.cui} value={contrayente.cui}>
+                                        {contrayente.names} {contrayente.paternalSurname} - DNI: {contrayente.cui} - Contrayente {index + 1}
+                                    </option>
+                                ))}
+                        </select>
+                        {searchError && !(testigoNum === 1 ? selectedContrayente1 : selectedContrayente2) && (
+                            <p className="text-red-500 text-xs mt-1">Debe seleccionar un contrayente</p>
+                        )}
+                    </div>
                 </div>
 
                 {/* Botón para agregar testigo */}
@@ -563,7 +606,7 @@ const Testigo = (props: Solicitud) => {
                     <button
                         type="button"
                         onClick={() => handleAddTestigo(testigoNum)}
-                        disabled={isAdded}
+                        disabled={isAdded || !(testigoNum === 1 ? selectedContrayente1 : selectedContrayente2)}
                         className="px-4 sm:px-6 py-2 sm:py-2.5 text-sm sm:text-base bg-green-600 text-white rounded-lg hover:bg-green-700 disabled:bg-gray-400 disabled:cursor-not-allowed transition-colors flex items-center gap-2"
                     >
                         <i className="fas fa-user-check"></i>
@@ -651,12 +694,18 @@ const Testigo = (props: Solicitud) => {
                                     <th className="px-4 py-2 text-left text-sm font-semibold text-gray-700">Sexo</th>
                                     <th className="px-4 py-2 text-left text-sm font-semibold text-gray-700">Estado Civil</th>
                                     <th className="px-4 py-2 text-left text-sm font-semibold text-gray-700">Email</th>
+                                    <th className="px-4 py-2 text-left text-sm font-semibold text-gray-700">Contrayente que Respalda</th>
                                     <th className="px-4 py-2 text-left text-sm font-semibold text-gray-700">Rol</th>
                                     <th className="px-4 py-2 text-center text-sm font-semibold text-gray-700">Acciones</th>
                                 </tr>
                             </thead>
                             <tbody>
-                                {formDataAplication.participants.filter((p: Participant) => p.rol === 'testigo').map((testigo: Participant, index: number) => (
+                                {formDataAplication.participants.filter((p: Participant) => p.rol === 'testigo').map((testigo: Participant, index: number) => {
+                                    const contrayente = formDataAplication.participants.find(
+                                        (p: Participant) => p.cui === testigo.ctry && p.rol === 'contrayente'
+                                    );
+
+                                    return (
                                     <tr key={testigo.cui} className="border-t border-gray-200">
                                         <td className="px-4 py-2 text-sm text-gray-700">{testigo.cui}</td>
                                         <td className="px-4 py-2 text-sm text-gray-700">
@@ -667,6 +716,15 @@ const Testigo = (props: Solicitud) => {
                                         </td>
                                         <td className="px-4 py-2 text-sm text-gray-700">{testigo.maritalStatus}</td>
                                         <td className="px-4 py-2 text-sm text-gray-700">{testigo.email}</td>
+                                        <td className="px-4 py-2 text-sm text-gray-700">
+                                            {contrayente ? (
+                                                <span className="text-blue-600 font-medium">
+                                                    {contrayente.names} {contrayente.paternalSurname}
+                                                </span>
+                                            ) : (
+                                                <span className="text-gray-400 italic">No asignado</span>
+                                            )}
+                                        </td>
                                         <td className="px-4 py-2 text-sm text-gray-700">
                                             <span className="px-2 py-1 bg-green-100 text-green-800 text-xs rounded-full">
                                                 {testigo.rol}
@@ -683,7 +741,8 @@ const Testigo = (props: Solicitud) => {
                                             </button>
                                         </td>
                                     </tr>
-                                ))}
+                                    );
+                                })}
                             </tbody>
                         </table>
                     </div>
