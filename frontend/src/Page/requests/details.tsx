@@ -1,6 +1,7 @@
 import { useParams, useNavigate } from "react-router-dom";
 import { useDetailsApplication } from "../../hooks/useApplicationDetails";
 import { ExportApplicationById } from "../../services/AplicationServices";
+import { shouldShowPaymentDetails } from "../../Types/requests/SolicitudUtils";
 import { useState } from "react";
 
 export const Detalles = () => {
@@ -197,28 +198,30 @@ export const Detalles = () => {
             </div>
           </section>
 
-          {/* INFORMACIÓN DE PAGO DINÁMICA */}
-          <section className="mb-4">
-            <div className="bg-info-content text-white px-4 py-2 mb-4">
-              <h2 className="text-lg font-bold">INFORMACIÓN DE PAGO</h2>
-            </div>
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-x-8 gap-y-3">
-              <div className="flex flex-col sm:flex-row sm:gap-2">
-                <span className="font-semibold text-gray-700">Nro. Comprobante:</span>
-                <span>{application.pago.numero_comprobante || "-"}</span>
+          {/* INFORMACIÓN DE PAGO DINÁMICA - Solo se muestra si la solicitud lo requiere */}
+          {shouldShowPaymentDetails(application.nombreSolicitud, application.estado) && (
+            <section className="mb-4">
+              <div className="bg-info-content text-white px-4 py-2 mb-4">
+                <h2 className="text-lg font-bold">INFORMACIÓN DE PAGO</h2>
               </div>
-              <div className="flex flex-col sm:flex-row sm:gap-2">
-                <span className="font-semibold text-gray-700">Estado:</span>
-                <span className={`inline-block px-3 py-1 rounded text-sm font-medium ${application.pago.estado === 'Pendiente' ? 'bg-yellow-100 text-yellow-800' : 'bg-green-100 text-green-800'}`}>
-                  {application.pago.estado}
-                </span>
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-x-8 gap-y-3">
+                <div className="flex flex-col sm:flex-row sm:gap-2">
+                  <span className="font-semibold text-gray-700">Nro. Comprobante:</span>
+                  <span>{application.pago.numero_comprobante || "-"}</span>
+                </div>
+                <div className="flex flex-col sm:flex-row sm:gap-2">
+                  <span className="font-semibold text-gray-700">Estado:</span>
+                  <span className={`inline-block px-3 py-1 rounded text-sm font-medium ${application.pago.estado === 'Pendiente' ? 'bg-yellow-100 text-yellow-800' : 'bg-green-100 text-green-800'}`}>
+                    {application.pago.estado}
+                  </span>
+                </div>
+                <div className="flex flex-col sm:flex-row sm:gap-2">
+                  <span className="font-semibold text-gray-700">Fecha de Pago:</span>
+                  <span>{application.pago.fecha_pago ? new Date(application.pago.fecha_pago).toLocaleDateString() : "-"}</span>
+                </div>
               </div>
-              <div className="flex flex-col sm:flex-row sm:gap-2">
-                <span className="font-semibold text-gray-700">Fecha de Pago:</span>
-                <span>{application.pago.fecha_pago ? new Date(application.pago.fecha_pago).toLocaleDateString() : "-"}</span>
-              </div>
-            </div>
-          </section>
+            </section>
+          )}
         </div>
       </div>
       <div className="sticky bottom-4 z-30 flex justify-end px-4 pb-4">
