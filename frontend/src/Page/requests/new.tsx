@@ -17,11 +17,12 @@ import { db } from "../../model/documentModel.ts";
 import Alert from "../../components/Alert.tsx";
 import CategoryAccordion from "../../components/requests/new/CategoryAccordion";
 import { groupSolicitudesByCategory, getCategoryOrder } from "../../Types/requests/SolicitudUtils.ts";
+import Weddingdetails from "../../components/requests/new/Weddingdetails.tsx";
 
 export default function NewRequest() {
     const [tipoSolicitud, setTipoSolicitud] = useState<number | null>(null);
     const [searchTerm, setSearchTerm] = useState("");
-    const { updateApplicationData, formDataAplication,resetForm } = ApplicationHandler();
+    const { updateApplicationData, formDataAplication, resetForm } = ApplicationHandler();
     const { user } = Auth();
     const [isSubmitting, setIsSubmitting] = useState(false);
     const { error, createSolicitud } = useCreateAplication();
@@ -307,15 +308,25 @@ export default function NewRequest() {
                             {/* Step 5: requisitos */}
                             {currentStep === 5 && (
                                 <div className="p-6 lg:p-6">
-                                    <Requisitos
+                                    <Weddingdetails
                                         tipoSolicitudNombre={selectedRequestType?.nombre_solicitud}
                                         descriptionSolicitud={selectedRequestType?.descripcion}
                                         onValidationChange={(isValid) => updateStepValidation(5, isValid)} />
                                 </div>
                             )}
 
-                            {/* Step 6: confirmacion */}
+                            {/* Step 6: requisitos */}
                             {currentStep === 6 && (
+                                <div className="p-6 lg:p-6">
+                                    <Requisitos
+                                        tipoSolicitudNombre={selectedRequestType?.nombre_solicitud}
+                                        descriptionSolicitud={selectedRequestType?.descripcion}
+                                        onValidationChange={(isValid) => updateStepValidation(6, isValid)} />
+                                </div>
+                            )}
+
+                            {/* Step 7: confirmacion */}
+                            {currentStep === 7 && (
                                 <div className="p-6 lg:p-6">
                                     {isUploadingDocs && (
                                         <div className="mb-6 bg-blue-50 border border-blue-200 rounded-lg p-4">
@@ -360,7 +371,7 @@ export default function NewRequest() {
             </div>
             <NavigationButtons
                 currentStep={currentStep}
-                totalSteps={6}
+                totalSteps={7}
                 canProceed={currentStep === 1 ? !!tipoSolicitud : (stepsValidation[currentStep] || false)}
                 onPrevious={prevStep}
                 onNext={nextStep}

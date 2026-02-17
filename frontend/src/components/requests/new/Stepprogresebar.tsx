@@ -8,8 +8,9 @@ export default function StepProgressBar({ currentStep }: StepProgressBarProps) {
         { number: 2, label: 'N° Exp', fullLabel: 'ediente', shortLabel: 'EXP' },
         { number: 3, label: 'Contrayentes', fullLabel: '', shortLabel: 'Contrayentes' },
         { number: 4, label: 'Testigos', fullLabel: '', shortLabel: 'Testigos' },
-        { number: 5, label: 'Requisitos', fullLabel: '', shortLabel: 'Requisitos' },
-        { number: 6, label: 'Confirmación', fullLabel: '', shortLabel: 'Confirm.' }
+        { number: 5, label: 'Detalles Matrimonio', fullLabel: '', shortLabel: 'Detalles' },
+        { number: 6, label: 'Requisitos', fullLabel: '', shortLabel: 'Requisitos' },
+        { number: 7, label: 'Confirmación', fullLabel: '', shortLabel: 'Confirm.' }
     ];
 
     return (
