@@ -9,6 +9,8 @@ type AdvancedFiltersForm = {
     applicationType: string;
 };
 import { ExportApplicationsExcel } from "../../services/AplicationServices.ts";
+import useTipoSolici from "../../hooks/useTipoSolici.ts";
+import type {Tiposolicitud} from "../../model/typeRequestModel.ts";
 
 export default function History() {
     const {
@@ -23,10 +25,10 @@ export default function History() {
         cambiarPagina
     } = useApplicationHistory();
     const states = new Map<number, string>([[1, "Pendiente"], [2, "En Proceso"], [3, "Completada"], [4, "Anulada"]]);
-    const typeApplication = new Map<number, string>([[1, "Matrimonio"], [2, "Divorcio"]]);
     const [filtersAvanzados, setFiltersAvanzados] = useState<Map<string, string>>(new Map());
     const [showAlert, setShowAlert] = useState(false);
     const [isExportingExcel, setIsExportingExcel] = useState(false);
+    const {tiposolicitud} = useTipoSolici();
 
     // Estado controlado para los inputs de filtros avanzados
     const [advancedForm, setAdvancedForm] = useState<AdvancedFiltersForm>({
@@ -292,9 +294,11 @@ export default function History() {
                             >
                                 <option value="">Seleccionar</option>
                                 {
-                                    Array.from(typeApplication.entries()).map(([key, value]) => (
-                                        <option key={key} value={key}>{value}</option>
-                                    ))
+                                   tiposolicitud.map((tipo:Tiposolicitud) => (
+                                       <option key={tipo.id} value={tipo.id}>
+                                           {tipo.nombre_solicitud} - {tipo.descripcion}
+                                       </option>
+                                   ))
                                 }
                             </select>
                         </div>
