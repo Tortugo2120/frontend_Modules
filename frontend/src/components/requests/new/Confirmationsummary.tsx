@@ -114,7 +114,7 @@ export default function ConfirmationSummary({
                         <i className="fas fa-user-friends text-blue-600"></i>
                         Contrayentes ({contrayentes.length})
                     </h3>
-                    <div className="space-y-4">
+                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-2 gap-4">
                         {contrayentes.map((contrayente: Participant, index: number) => (
                             <div key={contrayente.cui} className="bg-white rounded-lg p-4 shadow-sm">
                                 <h4 className="font-semibold text-gray-800 mb-3 flex items-center gap-2">
@@ -164,7 +164,7 @@ export default function ConfirmationSummary({
                         <i className="fas fa-users text-green-600"></i>
                         Testigos ({testigos.length})
                     </h3>
-                    <div className="space-y-4">
+                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-2 gap-4">
                         {testigos.map((testigo: Participant, index: number) => (
                             <div key={testigo.cui} className="bg-white rounded-lg p-4 shadow-sm">
                                 <h4 className="font-semibold text-gray-800 mb-3 flex items-center gap-2">

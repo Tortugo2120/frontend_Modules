@@ -226,7 +226,7 @@ export const Detalles = () => {
           onClick={handleExport}
           disabled={isExporting}
           tabIndex={0}
-          className="flex items-center gap-2 p-5 bg-green-600 text-xs text-white font-semibold rounded-full shadow hover:bg-green-700 cursor-pointer transition-all duration-200 hover:-translate-y-3 hover:scale-105 disabled:bg-gray-400 disabled:hover:translate-y-0 disabled:hover:scale-100"
+          className="flex items-center gap-2 p-5 bg-green-600 text-xs text-white font-semibold rounded-full shadow hover:bg-green-700 cursor-pointer transition-all duration-200 hover:-translate-y-2 hover:scale-105 disabled:bg-gray-400 disabled:hover:translate-y-0 disabled:hover:scale-100"
         >
           <svg className="fill-current w-4 h-4" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20"><path d="M13 8V2H7v6H2l8 8 8-8h-5zM0 18h20v2H0v-2z" /></svg>
             Descargar PDF

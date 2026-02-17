@@ -1,10 +1,10 @@
-import type { ApplicationItem} from "../../../model/aplicationModel.ts";
-import {Link, useNavigate} from "react-router-dom";
+import type { ApplicationItem } from "../../../model/aplicationModel.ts";
+import { Link, useNavigate } from "react-router-dom";
 
-interface Props{
-    data:ApplicationItem[]
+interface Props {
+    data: ApplicationItem[]
 }
-export default function TableList({data}:Props){
+export default function TableList({ data }: Props) {
     const navigate = useNavigate();
     if (data.length === 0) {
         return (
@@ -138,19 +138,19 @@ export default function TableList({data}:Props){
                             </tr>
                         </thead>
                         <tbody className={"divide-y divide-gray-100"}>
-                        {data.map((item, index) => (
-                            <tr key={`${item.id}-${index}`}>
-                                <td>
-                                    <Link to={`/dashboard/solicitud/detalles/${item.id}`}>
-                                        {item.expediente}
-                                    </Link>
-                                </td>
-                                <td className={"py-3"}>
-                                    <div>
-                                        <p className="text-xs text-gray-500">{item.nombreSolicitud}</p>
-                                        <p className="text-sm font-semibold text-gray-800">{item.descripcionSolicitud}</p>
-                                    </div>
-                                </td>
+                            {data.map((item, index) => (
+                                <tr key={`${item.id}-${index}`} className="hover:bg-indigo-100/50 transition-colors duration-150 border-b border-b-gray-300">
+                                    <td className="px-4 font-mono font-semibold">
+                                        <Link to={`/dashboard/solicitud/detalles/${item.id}`}>
+                                            {item.expediente}
+                                        </Link>
+                                    </td>
+                                    <td className={"py-3"}>
+                                        <div>
+                                            <p className="text-xs text-gray-500">{item.nombreSolicitud}</p>
+                                            <p className="text-sm font-semibold text-gray-800">{item.descripcionSolicitud}</p>
+                                        </div>
+                                    </td>
 
                                     <td className="px-3 text-gray-600 ">
                                         <div className="flex flex-col gap-1">

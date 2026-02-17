@@ -1,10 +1,10 @@
-interface Props{
+interface Props {
     message: string;
-    type?:'info'|'warning'|'error'|'success';
-    onClose?:()=>void;
+    type?: 'info' | 'warning' | 'error' | 'success';
+    onClose?: () => void;
 }
 
-const Alert=({message,type='info',onClose}:Props)=>{
+const Alert = ({ message, type = 'info', onClose }: Props) => {
     const alertStyles = {
         info: 'alert-info',
         success: 'alert-success',
@@ -18,13 +18,13 @@ const Alert=({message,type='info',onClose}:Props)=>{
         warning: 'fa-exclamation-triangle',
         info: 'fa-info-circle'
     };
-    return(
-        <div role="alert" className={`alert ${alertStyles[type]} shadow-lg mb-4`}>
+    return (
+        <div role="alert" className={`alert ${alertStyles[type]} shadow-lg`}>
             <i className={`fas ${icons[type]} text-xl`}></i>
             <span>{message}</span>
             {onClose && (
                 <div className="flex-none">
-                    <button onClick={onClose} className="btn btn-sm btn-ghost">Cerrar</button>
+                    <button onClick={onClose} className="btn btn-sm btn-ghost"><i className="fa-solid fa-x"></i></button>
                 </div>
             )}
         </div>

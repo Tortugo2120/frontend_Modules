@@ -1,5 +1,5 @@
 import { useApplicationHistory } from "../../hooks/useApplicationHistory";
-import {useMemo, useState} from "react";
+import { useMemo, useState } from "react";
 import useFilterApplications from "../../hooks/useFilterApplications.ts";
 import Alert from "../../components/Alert.tsx";
 import TableList from "../../components/requests/history/TableList.tsx";
@@ -35,12 +35,21 @@ export default function History() {
         applicationType: ""
     });
 
-    const {enabled,updateFilter,data,applyFilters,applyQuickState,resetFilters} = useFilterApplications();
+    const { enabled, updateFilter, data, applyFilters, applyQuickState, resetFilters } = useFilterApplications();
+
+    const getQuickStateBtnVariant = (stateLabel: string): string => {
+        const normalized = stateLabel.trim().toLowerCase();
+        if (normalized.includes("pendiente")) return "btn-warning";
+        if (normalized.includes("proceso")) return "btn-info";
+        if (normalized.includes("avanz") || normalized.includes("complet")) return "btn-success";
+        if (normalized.includes("cancel") || normalized.includes("anul")) return "btn-error";
+        return "";
+    };
 
     const stateSelect = (state: string) => {
         console.log("estado seleccionado: ", state);
         applyQuickState(state);
-        console.log("data del estado seleccionado: ",data)
+        console.log("data del estado seleccionado: ", data)
     }
 
     const handleFiltersAvanzadosChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
@@ -78,7 +87,7 @@ export default function History() {
         );
     }, [enabled, data, solicitudes]);
 
-    const aplicarFiltros = () =>{
+    const aplicarFiltros = () => {
         console.log(filtersAvanzados.size);
         console.log(filtersAvanzados);
         if (filtersAvanzados.size <= 0) {
@@ -207,7 +216,7 @@ export default function History() {
                                     value={filtros.busqueda}
                                     onChange={(e) => setFiltros({ busqueda: e.target.value })}
                                     className="w-full pl-10 pr-10 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 outline-none transition-all"
-                                    placeholder="Buscar por número de expediente o DNI..." // 👈 Cambiado
+                                    placeholder="Buscar por número de expediente o DNI..." 
                                 />
                                 <i className="fas fa-search absolute left-3 top-1/2 -translate-y-1/2 text-gray-400"></i>
                                 {filtros.busqueda && (
@@ -223,21 +232,21 @@ export default function History() {
                         </div>
                         <div className={"lg:col-span-2"}>
                             <form className={"flex flex-col md:flex-row gap-2"}>
-                          {
-                              Array.from(states.entries()).map(([key, value]) => (
-                                  <input
-                                      key={key}
-                                      type="radio"
-                                      name="state"
-                                      value={value}
-                                      aria-label={value}
-                                      className="btn flex-1 text-[15px]"
-                                      onChange={(e)=> stateSelect(e.target.value)}
-                                  />
-                              ))
-                          }
+                                {
+                                    Array.from(states.entries()).map(([key, value]) => (
+                                        <input
+                                            key={key}
+                                            type="radio"
+                                            name="state"
+                                            value={value}
+                                            aria-label={value}
+                                            className={`btn btn-outline ${getQuickStateBtnVariant(value)} flex-1 text-md`}
+                                            onChange={(e) => stateSelect(e.target.value)}
+                                        />
+                                    ))
+                                }
                                 <input
-                                    className="btn btn-square flex-1"
+                                    className="btn btn-outline btn-square flex-1"
                                     type="reset"
                                     value="X"
                                     onClick={volverAHistorial}
@@ -303,14 +312,14 @@ export default function History() {
                             Filtros Avanzados
                         </h3>
                     </div>
-                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
                         <div>
                             <label htmlFor={"beginDate"}>Desde</label>
                             <input
                                 type="date"
                                 name="beginDate"
                                 id={"beginDate"}
-                                className={"input input-lg outline-0"}
+                                className={"input w-full input-lg outline-0"}
                                 value={advancedForm.beginDate}
                                 onChange={handleFiltersAvanzadosChange}
                             />
@@ -323,7 +332,7 @@ export default function History() {
                                     type="date"
                                     name="endDate"
                                     id={"endDate"}
-                                    className={"input input-lg outline-0"}
+                                    className={"input w-full input-lg outline-0"}
                                     value={advancedForm.endDate}
                                     onChange={handleFiltersAvanzadosChange}
                                 />
@@ -335,7 +344,7 @@ export default function History() {
                             <select
                                 name={"applicationType"}
                                 id={"applicationType"}
-                                className="select select-lg w-full px-4 py-3 focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 outline-none transition-all"
+                                className="select select-lg w-full px-4 py-3 focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 outline-none transition-all "
                                 value={advancedForm.applicationType}
                                 onChange={handleFiltersAvanzadosChange}
                             >
@@ -347,37 +356,37 @@ export default function History() {
                                 }
                             </select>
                         </div>
-                        <div className={"flex items-end gap-2"}>
-                            <button
-                                type={"button"}
-                                className={"btn btn-primary flex-1 text-[18px] font-medium"}
-                                onClick={aplicarFiltros}
-                            >
-                                Aplicar
-                            </button>
-                            <button
-                                type={"button"}
-                                disabled={isExportingExcel}
-                                className={"btn bg-green-600 flex-1 h-full text-white font-medium hover:bg-green-700 disabled:bg-gray-400"}
-                                onClick={handleExportExcel}
-                            >
-                                {isExportingExcel ? (
-                                    <><i className="fas fa-spinner fa-spin"></i> Exportando...</>
-                                ) : (
-                                    <><i className="fas fa-file-excel"></i> Exportar Excel</>
-                                )}
-                            </button>
-                            <button
-                                type={"button"}
-                                className={"btn btn-outline flex-1 text-[18px] font-medium"}
-                                onClick={volverAHistorial}
-                                disabled={!enabled}
-                                title="Volver a mostrar el historial completo"
-                            >
-                                <i className="fas fa-undo mr-2"></i>
-                                Limpiar
-                            </button>
-                        </div>
+
+                        <button
+                            type={"button"}
+                            className={"btn btn-primary flex-1 text-[18px] font-medium"}
+                            onClick={aplicarFiltros}
+                        >
+                            Aplicar
+                        </button>
+                        <button
+                            type={"button"}
+                            disabled={isExportingExcel}
+                            className={"btn bg-green-600 flex-1 text-white font-medium hover:bg-green-700 disabled:bg-gray-400"}
+                            onClick={handleExportExcel}
+                        >
+                            {isExportingExcel ? (
+                                <><i className="fas fa-spinner fa-spin"></i> Exportando...</>
+                            ) : (
+                                <><i className="fas fa-file-excel "></i> Exportar </>
+                            )}
+                        </button>
+                        <button
+                            type={"button"}
+                            className={"btn btn-outline flex-1 text-[18px] font-medium"}
+                            onClick={volverAHistorial}
+                            disabled={!enabled}
+                            title="Volver a mostrar el historial completo"
+                        >
+                            <i className="fas fa-undo mr-2"></i>
+                            Limpiar
+                        </button>
+
                         {showAlert && (
                             <div className={"col-span-full"}>
                                 <Alert
@@ -462,7 +471,7 @@ export default function History() {
                 </div>
             )}
             {/* Tabla */}
-            <TableList data={tableData}/>
+            <TableList data={tableData} />
         </div >
     );
 }

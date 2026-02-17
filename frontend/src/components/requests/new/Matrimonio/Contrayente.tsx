@@ -291,6 +291,24 @@ const Contrayente = (props: Solicitud) => {
                 <div className='mb-2 flex flex-col md:flex-row items-start gap-4'>
                     <div className={"flex-1 w-full"}>
                         <label className="block text-sm font-medium text-gray-700 mb-2">
+                            Tipo de documento
+                        </label>
+                        <p className="mt-2 text-xs text-gray-500 mb-3 min-h-8">
+                            <i className="fas fa-info-circle mr-1"></i>
+                            <span>Seleccione el tipo de documento</span>
+                        </p>
+                        <select
+                            defaultValue={"dni"}
+                            className={"select outline-0 w-full py-2 sm:py-2.5 text-sm sm:text-base focus:ring-2 focus:ring-blue-500 transition-all bg-white px-3 border border-gray-300 rounded-lg"}
+                            {...registerSearch('documentType')}
+                        >
+                            <option value="dni">DNI</option>
+                            <option value="pas">PASAPORTE</option>
+                            <option value="ced">CEDULA</option>
+                        </select>
+                    </div>
+                    <div className={"flex-1 w-full"}>
+                        <label className="block text-sm font-medium text-gray-700 mb-2">
                             Buscar por Documento
                         </label>
                         <p className="mt-2 text-xs text-gray-500 mb-3 min-h-8">
@@ -347,24 +365,6 @@ const Contrayente = (props: Solicitud) => {
                                 <p className="text-red-500 text-xs mt-1">{searchError}</p>
                             )}
                         </div>
-                    </div>
-                    <div className={"flex-1 w-full"}>
-                        <label className="block text-sm font-medium text-gray-700 mb-2">
-                            Tipo de documento
-                        </label>
-                        <p className="mt-2 text-xs text-gray-500 mb-3 min-h-8">
-                            <i className="fas fa-info-circle mr-1"></i>
-                            <span>Seleccione el tipo de documento</span>
-                        </p>
-                        <select
-                            defaultValue={"dni"}
-                            className={"select outline-0 w-full py-2 sm:py-2.5 text-sm sm:text-base focus:ring-2 focus:ring-blue-500 transition-all bg-white px-3 border border-gray-300 rounded-lg"}
-                            {...registerSearch('documentType')}
-                        >
-                            <option value="dni">DNI</option>
-                            <option value="pas">PASAPORTE</option>
-                            <option value="ced">CEDULA</option>
-                        </select>
                     </div>
                 </div>
 
