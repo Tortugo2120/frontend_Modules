@@ -1,3 +1,5 @@
+import type {ApplicationBackendItem} from "./aplicationModel.ts";
+
 export interface Application {
     id: string;
     id_usuario: string;
@@ -21,7 +23,7 @@ export interface ApiResponse {
     status: boolean;
     code: number;
     message: string;
-    data: Application[];
+    data: ApplicationBackendItem[];
     pager: Pager;
 }
 
