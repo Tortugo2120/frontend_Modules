@@ -63,15 +63,18 @@ const useFilterApplications = () => {
             setError(null);
 
             try {
+                console.log('Enviando filtros al backend:', appliedFilters);
                 const response = await FilterAplications(
                     appliedFilters,
                     controller
                 );
-                console.log(response);
+                console.log('Respuesta del backend:', response);
                 if (response.status) {
                     const dataTransformed = response.data.map(transformFilterData);
                     setData(dataTransformed);
                     setPagination(response.pager);
+                } else {
+                    setError('No se encontraron resultados');
                 }
 
             } catch (err: unknown) {
@@ -80,6 +83,7 @@ const useFilterApplications = () => {
                     return;
                 }
 
+                console.error('Error en FilterAplications:', err);
                 setError("Error al cargar las aplicaciones");
 
             } finally {
@@ -98,10 +102,15 @@ const useFilterApplications = () => {
     }, [appliedFilters,enabled]);
 
     const updateFilter = <K extends keyof Filters>(key: K, value: Filters[K]) => {
-        setDraftFilters(prev => ({
-            ...prev,
-            [key]: value
-        }));
+        console.log('updateFilter llamado con:', key, '=', value);
+        setDraftFilters(prev => {
+            const updated = {
+                ...prev,
+                [key]: value
+            };
+            console.log('draftFilters actualizado a:', updated);
+            return updated;
+        });
     };
 
     const updateFilters = (newFilters: Partial<Filters>) => {
@@ -112,12 +121,16 @@ const useFilterApplications = () => {
     };
 
     const applyFilters = () => {
-        setEnabled(true);
-        setLoading(true);
-        setAppliedFilters({
+        const filtersToApply = {
             ...draftFilters,
             page: 1
-        });
+        };
+        console.log('applyFilters() llamado');
+        console.log('draftFilters estado actual:', draftFilters);
+        console.log('Filtros a aplicar:', filtersToApply);
+        setEnabled(true);
+        setLoading(true);
+        setAppliedFilters(filtersToApply);
     };
 
     const applyQuickState = (state: string) => {

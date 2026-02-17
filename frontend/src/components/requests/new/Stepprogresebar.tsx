@@ -31,7 +31,7 @@ export default function StepProgressBar({ currentStep }: StepProgressBarProps) {
                                     : 'border-gray-500'
                                     }`}
                             >
-                                {step.number}
+                                {step.number}.
                             </span>
 
                             <div className="flex flex-row gap-0 text-center">
