@@ -1,4 +1,4 @@
-import type {CreateApplicationPayload, Participant, ParticipantRol, RequisitoEstado} from "../model/aplicationModel.ts";
+import type {CreateApplicationPayload, Participant, ParticipantRol, RequisitoEstado, MarriageDetails} from "../model/aplicationModel.ts";
 import React, {createContext, type ReactNode, useCallback, useContext, useEffect, useState} from "react";
 
 interface ApplicationContextType {
@@ -11,6 +11,7 @@ interface ApplicationContextType {
     deleteParticipant: (dni: string) => void;
     updateApplicationData: (data: Partial<CreateApplicationPayload['application']>) => void;
     updateRequisitos: (requisitos: RequisitoEstado[]) => void;
+    updateMarriageDetails: (details: Partial<MarriageDetails>) => void;
     resetForm: () => void;
 }
 
@@ -19,10 +20,44 @@ const ApplicationContext = createContext<ApplicationContextType | undefined>(und
 export const ApplicationProvider: React.FC<{ children: React.ReactNode }> = ({ children }: { children: ReactNode }) => {
     const [formDataAplication, setFormDataAplication] = useState<CreateApplicationPayload>(()=>{
         const saved = localStorage.getItem('pending_application');
-        return saved ? JSON.parse(saved) : {
+        if (saved) {
+            try {
+                const parsed = JSON.parse(saved);
+                // Asegurar que marriageDetails esté presente
+                return {
+                    ...parsed,
+                    marriageDetails: parsed.marriageDetails || {
+                        marriageOfficiantId: 0,
+                        marriagePlace: "",
+                        marriageDate: "",
+                        marriageTime: ""
+                    }
+                };
+            } catch (error) {
+                console.error('Error al parsear datos guardados:', error);
+                return {
+                    application: { userId: 0, applicationTypeId: 0, expedientNumber: "" },
+                    participants: [],
+                    requirements: [],
+                    marriageDetails: {
+                        marriageOfficiantId: 0,
+                        marriagePlace: "",
+                        marriageDate: "",
+                        marriageTime: ""
+                    }
+                };
+            }
+        }
+        return {
             application: { userId: 0, applicationTypeId: 0, expedientNumber: "" },
             participants: [],
-            requirements: []
+            requirements: [],
+            marriageDetails: {
+                marriageOfficiantId: 0,
+                marriagePlace: "",
+                marriageDate: "",
+                marriageTime: ""
+            }
         };
     });
 
@@ -97,12 +132,25 @@ export const ApplicationProvider: React.FC<{ children: React.ReactNode }> = ({ c
         }));
     }, []);
 
+    const updateMarriageDetails = useCallback((details: Partial<MarriageDetails>) => {
+        setFormDataAplication(prev => ({
+            ...prev,
+            marriageDetails: { ...prev.marriageDetails, ...details }
+        }));
+    }, []);
+
     const resetForm = useCallback(() => {
         localStorage.removeItem('pending_application');
         setFormDataAplication({
             application: {userId: 0, applicationTypeId: 0, expedientNumber: ""},
             participants: [],
-            requirements: []
+            requirements: [],
+            marriageDetails: {
+                marriageOfficiantId: 0,
+                marriagePlace: "",
+                marriageDate: "",
+                marriageTime: ""
+            }
         });
     }, []);
 
@@ -117,7 +165,7 @@ export const ApplicationProvider: React.FC<{ children: React.ReactNode }> = ({ c
     }, []);
 
     return (
-        <ApplicationContext.Provider value={{ formDataAplication, addParticipant, updateApplicationData, updateRequisitos, resetForm, deleteParticipant }}>
+        <ApplicationContext.Provider value={{ formDataAplication, addParticipant, updateApplicationData, updateRequisitos, updateMarriageDetails, resetForm, deleteParticipant }}>
             {children}
         </ApplicationContext.Provider>
     );

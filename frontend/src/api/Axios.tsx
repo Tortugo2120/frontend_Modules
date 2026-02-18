@@ -22,7 +22,7 @@ apiAxios.interceptors.response.use(
   async (err) => {
     const originalRequest = err.config;
     if (err.response?.status === 401 && !originalRequest._retry){
-      console.log(err.response);
+      //console.log(err.response);
         originalRequest._retry = true;
 
       try {

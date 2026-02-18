@@ -7,6 +7,7 @@ import { testigoSchema, type TestigoFormData } from '../../../../Validations/val
 import { useApplicationContext } from '../../../../context/ApplicationContext.tsx';
 import { z } from "zod";
 import type { Participant } from "../../../../model/aplicationModel.ts";
+import Alert from "../../../Alert.tsx";
 
 interface Solicitud {
     tipoSolicitudNombre?: string;
@@ -20,7 +21,8 @@ type inputSearch = z.infer<typeof searchTypeDocument>;
 const Testigo = (props: Solicitud) => {
     const { tipoSolicitudNombre, descriptionSolicitud, onTestigosChange, onValidationChange } = props;
     const { addParticipant, deleteParticipant, formDataAplication } = useApplicationContext();
-
+    const [showAlert, setShowAlert] = useState(false);
+    const [alertMessage, setAlertMessage] = useState('');
     // Estados para búsqueda de Testigo 1
     const {
         register: register1,
@@ -234,12 +236,39 @@ const Testigo = (props: Solicitud) => {
 
         handleSubmit((data: TestigoFormData) => {
             // Verificar si ya existe como testigo
-            const isDuplicateTestigo = formDataAplication.participants.some((p: Participant) =>
+            const existingTestigo = formDataAplication.participants.find((p: Participant) =>
                 p.cui === data.cui && p.rol === 'testigo'
             );
 
-            if (isDuplicateTestigo) {
+            if (existingTestigo) {
+                // Verificar si el testigo ya está asignado a otro contrayente
+                if (existingTestigo.ctry && existingTestigo.ctry !== selectedContrayente) {
+                    const contrayenteActual = formDataAplication.participants.find(
+                        (p: Participant) => p.cui === existingTestigo.ctry && p.rol === 'contrayente'
+                    );
+                    setShowAlert(true);
+                    setAlertMessage(`Este testigo ya está asignado al contrayente ${contrayenteActual?.names} ${contrayenteActual?.paternalSurname}. ` +
+                        `Un testigo solo puede respaldar a un contrayente.`);
+                    return;
+                }
+
                 setError('Este DNI ya ha sido agregado como testigo');
+                return;
+            }
+
+            // Validar que el contrayente seleccionado no tenga ya un testigo asignado
+            const testigoDelContrayente = formDataAplication.participants.find((p: Participant) =>
+                p.rol === 'testigo' && p.ctry === selectedContrayente
+            );
+
+            if (testigoDelContrayente) {
+                const contrayente = formDataAplication.participants.find(
+                    (p: Participant) => p.cui === selectedContrayente && p.rol === 'contrayente'
+                );
+
+                setShowAlert(true);
+                setAlertMessage( `El contrayente ${contrayente?.names} ${contrayente?.paternalSurname} ya tiene un testigo asignado. ` +
+                    `Cada contrayente solo puede tener un testigo.`);
                 return;
             }
 
@@ -679,6 +708,7 @@ const Testigo = (props: Solicitud) => {
             </div>
 
             {/* Tabla de testigos agregados */}
+            {showAlert && (<Alert message={alertMessage} type={"warning"} onClose={()=>setShowAlert(false)}/>)}
             {formDataAplication.participants.filter((p: Participant) => p.rol === 'testigo').length > 0 && (
                 <div className="mt-6">
                     <h4 className="text-lg font-semibold text-gray-800 mb-4 flex items-center gap-2">
