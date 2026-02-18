@@ -206,7 +206,7 @@ const Weddingdetails = (props: Solicitud) => {
                                 <i className="fas fa-info-circle mr-1"></i>
                                 <span>El tipo de solicitud es Matrimonio Civil</span>
                             </p>
-                            <div className="w-full py-2 sm:py-2.5 text-sm sm:text-base bg-gray-100 px-3 border border-gray-300 rounded-lg text-gray-600 flex items-center">
+                            <div className="w-full py-2 sm:py-2.5 text-sm sm:text-base bg-white px-3 border border-gray-300 rounded-lg text-gray-800 flex items-center">
                                 {tipoSolicitudNombre?.toUpperCase() || 'Matrimonio Civil'}
                             </div>
                         </div>
@@ -220,7 +220,7 @@ const Weddingdetails = (props: Solicitud) => {
                                 <i className="fas fa-info-circle mr-1"></i>
                                 <span>Proporcione una descripción breve del matrimonio</span>
                             </p>
-                            <div className="w-full py-2 sm:py-2.5 text-sm sm:text-base bg-gray-100 px-3 border border-gray-300 rounded-lg text-gray-600 flex items-center">
+                            <div className="w-full py-2 sm:py-2.5 text-sm sm:text-base bg-white px-3 border border-gray-300 rounded-lg text-gray-800 flex items-center">
                                 {descriptionSolicitud?.toUpperCase() || 'Solicitud de Matrimonio Civil'}
                             </div>
                         </div>

@@ -10,7 +10,7 @@ type AdvancedFiltersForm = {
 };
 import { ExportApplicationsExcel } from "../../services/AplicationServices.ts";
 import useTipoSolici from "../../hooks/useTipoSolici.ts";
-import type {Tiposolicitud} from "../../model/typeRequestModel.ts";
+import type { Tiposolicitud } from "../../model/typeRequestModel.ts";
 
 export default function History() {
     const {
@@ -28,7 +28,7 @@ export default function History() {
     const [filtersAvanzados, setFiltersAvanzados] = useState<Map<string, string>>(new Map());
     const [showAlert, setShowAlert] = useState(false);
     const [isExportingExcel, setIsExportingExcel] = useState(false);
-    const {tiposolicitud} = useTipoSolici();
+    const { tiposolicitud } = useTipoSolici();
 
     // Estado controlado para los inputs de filtros avanzados
     const [advancedForm, setAdvancedForm] = useState<AdvancedFiltersForm>({
@@ -208,7 +208,7 @@ export default function History() {
                                     value={filtros.busqueda}
                                     onChange={(e) => setFiltros({ busqueda: e.target.value })}
                                     className="w-full pl-10 pr-10 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 outline-none transition-all"
-                                    placeholder="Buscar por número de expediente o DNI..." 
+                                    placeholder="Buscar por número de expediente o DNI..."
                                 />
                                 <i className="fas fa-search absolute left-3 top-1/2 -translate-y-1/2 text-gray-400"></i>
                                 {filtros.busqueda && (
@@ -292,13 +292,13 @@ export default function History() {
                                 value={advancedForm.applicationType}
                                 onChange={handleFiltersAvanzadosChange}
                             >
-                                <option value="">Seleccionar</option>
+                                <option value="" >Seleccionar</option>
                                 {
-                                   tiposolicitud.map((tipo:Tiposolicitud) => (
-                                       <option key={tipo.id} value={tipo.id}>
-                                           {tipo.nombre_solicitud} - {tipo.descripcion}
-                                       </option>
-                                   ))
+                                    tiposolicitud.map((tipo: Tiposolicitud) => (
+                                        <option key={tipo.id} value={tipo.id} className="border-b border-gray-200 hover:bg-blue-600/30 text-sm">
+                                            {tipo.nombre_solicitud} {tipo.descripcion}
+                                        </option>
+                                    ))
                                 }
                             </select>
                         </div>
