@@ -1,7 +1,27 @@
 import apiAxios from "../api/Axios.tsx";
-import type {RequirementsResponse} from "../model/requerimentsModel.ts";
+import type { RequirementsResponse, RequirementByApplicationResponse } from "../model/requerimentsModel.ts";
 
-export const RequirementsService = async (applicationTypeId:number,condition:string):Promise<RequirementsResponse>=>{
-    const response = await apiAxios.get("/api/v1/requirement/search",{params:{applicationTypeId,condition}});
-    return response.data;
+export const RequirementsService = async (applicationTypeId: number, condition: string): Promise<RequirementsResponse> => {
+    try {
+        const response = await apiAxios.get<RequirementsResponse>("/api/v1/requirement/search", { 
+            params: { applicationTypeId, condition } 
+        });
+        return response.data;
+    } catch (error) {
+        console.error("Error en RequirementsService:", error);
+        throw error;
+    }
+}
+
+export const RequirementsByApplicationId = async (applicationId: number): Promise<RequirementByApplicationResponse> => {
+    try {
+        const response = await apiAxios.get<RequirementByApplicationResponse>(
+            `/api/v1/application/${applicationId}/requirements`
+        );
+        console.log("Respuesta de requirements:", response.data);
+        return response.data;
+    } catch (error) {
+        console.error("Error en RequirementsByApplicationId:", error);
+        throw error;
+    }
 }

@@ -12,3 +12,18 @@ export interface RequirementsResponse {
   message: string;
   data: Requirement[];
 }
+
+export interface RequirementByApplication {
+  id: number | string;
+  nombre_requisito: string;
+  entregado: number;
+  fecha_entrega: string;
+  observacion: string | null;
+}
+
+export interface RequirementByApplicationResponse {
+  status: boolean;
+  code: number;
+  message: string;
+  data: RequirementByApplication[];
+}
