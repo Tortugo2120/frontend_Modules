@@ -99,10 +99,18 @@ export interface RequisitoEstado {
     delivered: number;
 }
 
+export interface MarriageDetails{
+    marriageOfficiantId: number;
+    marriagePlace: string;
+    marriageDate: string;
+    marriageTime: string;
+}
+
 export interface CreateApplicationPayload {
     application: ApplicationData;
     participants: Participant[];
     requirements?: RequisitoEstado[];
+    marriageDetails: MarriageDetails;
 }
 
 export interface AplicationResponse {

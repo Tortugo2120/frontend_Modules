@@ -1,9 +1,6 @@
-import { useState, useCallback, useEffect } from 'react';
-import { usePersonSearch } from '../../../hooks/usePersonSearch.ts';
-import { useForm } from "react-hook-form";
-import { zodResolver } from "@hookform/resolvers/zod";
-import { searchTypeDocument } from "../../../Validations/validationSearchTypeDocument.ts";
-import { z } from "zod";
+import { useState, useEffect } from 'react';
+import { useGetOficiantes } from '../../../hooks/useGetOficiantes';
+import { useApplicationContext } from '../../../context/ApplicationContext';
 
 interface Solicitud {
     tipoSolicitudNombre?: string;
@@ -15,63 +12,51 @@ interface Solicitud {
 interface WeddingDetailsFormData {
     tipoSolicitud?: string;
     nombreSolicitud?: string;
-    dniOficiante: string;
-    nombreOficiante: string;
-    apellidosOficiante: string;
+    oficiante: string;
     fechaBoda: string;
     horaBoda: string;
     direccion: string;
 }
 
-type inputSearch = z.infer<typeof searchTypeDocument>;
 
 const Weddingdetails = (props: Solicitud) => {
     const { tipoSolicitudNombre, descriptionSolicitud, onWeddingDetailsChange, onValidationChange } = props;
 
-    // Estados del formulario
-    const [weddingDetails, setWeddingDetails] = useState<WeddingDetailsFormData>({
+    // Hook del contexto
+    const { formDataAplication, updateMarriageDetails } = useApplicationContext();
+
+    // Hook para obtener oficiantes
+    const { oficiantes, loading: loadingOficiantes, error: errorOficiantes } = useGetOficiantes('oficiante');
+
+    // Estados del formulario - Inicializar con datos del contexto si existen
+    const [weddingDetails, setWeddingDetails] = useState<WeddingDetailsFormData>(() => ({
         tipoSolicitud: 'matrimonio',
         nombreSolicitud: '',
-        dniOficiante: '',
-        nombreOficiante: '',
-        apellidosOficiante: '',
-        fechaBoda: '',
-        horaBoda: '',
-        direccion: ''
-    });
+        oficiante: formDataAplication.marriageDetails?.marriageOfficiantId?.toString() || '',
+        fechaBoda: formDataAplication.marriageDetails?.marriageDate || '',
+        horaBoda: formDataAplication.marriageDetails?.marriageTime || '',
+        direccion: formDataAplication.marriageDetails?.marriagePlace || ''
+    }));
 
-    // Estados para búsqueda de Oficiante
-    const {
-        register: registerSearch,
-        watch: watchSearch,
-        formState: { errors: errorsSearch },
-        reset: resetSearch
-    } = useForm<inputSearch>({
-        resolver: zodResolver(searchTypeDocument),
-        defaultValues: {
-            documentType: 'dni',
-            documentNumber: ''
-        }
-    });
-
-    const tipoDocOficiante = watchSearch('documentType');
-    const numDocOficiante = watchSearch('documentNumber');
-
-    const { fetchPersonSearch, loading } = usePersonSearch();
-
-    const [searchError, setSearchError] = useState('');
-    const [searchSuccess, setSearchSuccess] = useState(false);
     const [isWeddingDetailsValid, setIsWeddingDetailsValid] = useState(false);
 
     // Sincronizar cambios en los detalles del matrimonio
     useEffect(() => {
         const isValid =
-            weddingDetails.dniOficiante !== '' &&
+            weddingDetails.oficiante !== '' &&
             weddingDetails.fechaBoda !== '' &&
             weddingDetails.horaBoda !== '' &&
             weddingDetails.direccion.trim() !== '';
 
         setIsWeddingDetailsValid(isValid);
+
+        // Guardar en el contexto
+        updateMarriageDetails({
+            marriageOfficiantId: weddingDetails.oficiante ? parseInt(weddingDetails.oficiante) : 0,
+            marriagePlace: weddingDetails.direccion,
+            marriageDate: weddingDetails.fechaBoda,
+            marriageTime: weddingDetails.horaBoda
+        });
 
         if (onWeddingDetailsChange) {
             onWeddingDetailsChange(weddingDetails);
@@ -83,81 +68,6 @@ const Weddingdetails = (props: Solicitud) => {
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [weddingDetails]);
 
-    // Función para buscar Oficiante
-    const handleSearchOficiante = useCallback(async () => {
-        const tipoDoc = tipoDocOficiante;
-        const numDoc = numDocOficiante;
-
-        setSearchError('');
-        setSearchSuccess(false);
-
-        try {
-            const documentTypeMapping: Record<string, number> = {
-                'dni': 1,
-                'pas': 2,
-                'ced': 3
-            };
-
-            const documentTypeNumber = documentTypeMapping[tipoDoc] || 1;
-            const response = await fetchPersonSearch(numDoc, documentTypeNumber);
-
-            if (!response || !response.status || !response.data) {
-                setSearchError('No se encontró ningún Oficiante con ese documento');
-                return;
-            }
-
-            const personData = response.data;
-
-            // Llenar los datos del Oficiante
-            setWeddingDetails(prev => ({
-                ...prev,
-                dniOficiante: numDoc,
-                nombreOficiante: personData.name || '',
-                apellidosOficiante: `${personData.paternalSurname || ''} ${personData.maternalSurname || ''}`.trim()
-            }));
-
-            setSearchSuccess(true);
-            resetSearch();
-            setTimeout(() => setSearchSuccess(false), 2000);
-        } catch (error: any) {
-            console.error('Error al buscar Oficiante:', error);
-            setSearchError(error.response?.data?.message || 'Error al buscar Oficiante');
-        }
-    }, [tipoDocOficiante, numDocOficiante, fetchPersonSearch, resetSearch]);
-
-    // Función para limpiar búsqueda
-    const handleClearSearch = useCallback(() => {
-        setSearchError('');
-        setSearchSuccess(false);
-        setWeddingDetails(prev => ({
-            ...prev,
-            dniOficiante: '',
-            nombreOficiante: '',
-            apellidosOficiante: ''
-        }));
-        resetSearch();
-    }, [resetSearch]);
-
-    const handleKeyDown = useCallback((e: React.KeyboardEvent<HTMLInputElement>) => {
-        if (e.key === 'Enter') {
-            e.preventDefault();
-            handleSearchOficiante();
-        }
-    }, [handleSearchOficiante]);
-
-    const handleDocumentInput = useCallback((e: React.FormEvent<HTMLInputElement>, tipoDoc: string) => {
-        const input = e.currentTarget;
-        const value = input.value;
-
-        if (tipoDoc === 'dni' || tipoDoc === 'ced') {
-            const numericValue = value.replace(/\D/g, '');
-            if (value !== numericValue) {
-                input.value = numericValue;
-                const event = new Event('input', { bubbles: true });
-                input.dispatchEvent(event);
-            }
-        }
-    }, []);
 
     const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
         const { name, value } = e.target;
@@ -225,119 +135,47 @@ const Weddingdetails = (props: Solicitud) => {
                             </div>
                         </div>
                     </div>
-                    {/* Buscador de Oficial */}
+                    {/* Selector de Oficial o Sacerdote */}
                     <div className='border-t border-gray-200 pt-4'>
                         <label className="block text-sm font-medium text-gray-700 mb-2">
                             Oficial o Sacerdote <span className="text-red-500">*</span>
                         </label>
                         <p className="text-xs text-gray-500 mb-3 min-h-8">
                             <i className="fas fa-info-circle mr-1"></i>
-                            <span>Busque al Oficial o Sacerdote por documento de identidad</span>
+                            <span>Seleccione el oficiante que oficiará el matrimonio</span>
                         </p>
 
-                        <div className='mb-4 flex flex-col md:flex-row items-start gap-4'>
-                            <div className="flex-1 w-full">
-                                <label className="block text-sm font-medium text-gray-700 mb-2">
-                                    Tipo de documento
-                                </label>
-                                <select
-                                    defaultValue="dni"
-                                    className="select outline-0 w-full py-2 sm:py-2.5 text-sm sm:text-base focus:ring-2 focus:ring-blue-500 transition-all bg-white px-3 border border-gray-300 rounded-lg"
-                                    {...registerSearch('documentType')}
-                                >
-                                    <option value="dni">DNI</option>
-                                    <option value="pas">PASAPORTE</option>
-                                    <option value="ced">CEDULA</option>
-                                </select>
-                            </div>
-                            <div className="flex-1 w-full">
-                                <label className="block text-sm font-medium text-gray-700 mb-2">
-                                    Buscar por Documento
-                                </label>
-                                <div className="relative">
-                                    <div className="absolute inset-y-0 left-0 pl-3 sm:pl-4 flex items-center pointer-events-none">
-                                        <i className="fas fa-search text-gray-400 text-sm"></i>
-                                    </div>
-                                    <input
-                                        type="text"
-                                        onKeyDown={handleKeyDown}
-                                        onInput={(e) => handleDocumentInput(e, tipoDocOficiante)}
-                                        className={`w-full pl-9 sm:pl-11 pr-20 sm:pr-24 py-2 sm:py-2.5 text-sm sm:text-base border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-0 transition-all ${
-                                            searchSuccess
-                                                ? 'border-green-500 bg-green-50'
-                                                : searchError
-                                                    ? 'border-red-300 bg-red-50'
-                                                    : 'border-gray-300'
-                                        }`}
-                                        {...registerSearch('documentNumber')}
-                                        placeholder={tipoDocOficiante === 'dni' ? "8 dígitos" : tipoDocOficiante === 'pas' ? "Pasaporte" : "Cédula"}
-                                        maxLength={tipoDocOficiante === 'dni' ? 8 : tipoDocOficiante === 'ced' ? 10 : 20}
-                                    />
-                                    {numDocOficiante && numDocOficiante.length > 0 && (
-                                        <button
-                                            type="button"
-                                            onClick={handleClearSearch}
-                                            className="absolute inset-y-0 right-12 sm:right-16 pr-2 flex items-center text-gray-400 hover:text-gray-600 transition-colors"
-                                            title="Limpiar"
-                                        >
-                                            <i className="fas fa-times text-sm"></i>
-                                        </button>
-                                    )}
-                                    <button
-                                        type="button"
-                                        onClick={handleSearchOficiante}
-                                        disabled={!!errorsSearch.documentNumber || !numDocOficiante || numDocOficiante.length === 0}
-                                        className="cursor-pointer absolute inset-y-0 right-0 pr-3 sm:pr-4 flex items-center text-blue-600 hover:text-blue-700 disabled:text-gray-400 disabled:cursor-not-allowed transition-colors"
-                                        title="Buscar"
-                                    >
-                                        {loading ? (
-                                            <i className="fas fa-spinner fa-spin text-sm"></i>
-                                        ) : (
-                                            <i className="fas fa-arrow-right text-sm"></i>
-                                        )}
-                                    </button>
-                                </div>
-                                <div className='h-4 sm:h-5 p-1'>
-                                    {errorsSearch.documentNumber && (
-                                        <p className="text-red-500 text-xs mt-1">{errorsSearch.documentNumber.message}</p>
-                                    )}
-                                    {searchError && (
-                                        <p className="text-red-500 text-xs mt-1">{searchError}</p>
-                                    )}
-                                </div>
-                            </div>
-                        </div>
-
-                        {/* Datos del Oficial seleccionado */}
-                        {weddingDetails.dniOficiante && (
-                            <div className="bg-green-50 border-2 border-green-200 rounded-lg p-4 mb-4">
-                                <div className="flex justify-between items-start">
-                                    <div>
-                                        <p className="text-sm text-gray-600">
-                                            <span className="font-semibold">DNI:</span> {weddingDetails.dniOficiante}
-                                        </p>
-                                        <p className="text-sm text-gray-600">
-                                            <span className="font-semibold">Nombre:</span> {weddingDetails.nombreOficiante}
-                                        </p>
-                                        <p className="text-sm text-gray-600">
-                                            <span className="font-semibold">Apellidos:</span> {weddingDetails.apellidosOficiante}
-                                        </p>
-                                    </div>
-                                    <button
-                                        type="button"
-                                        onClick={handleClearSearch}
-                                        className="text-red-600 hover:text-red-800 font-semibold text-sm"
-                                    >
-                                        Cambiar
-                                    </button>
-                                </div>
+                        {errorOficiantes && (
+                            <div className="mb-3 p-3 bg-red-50 border border-red-200 rounded-lg">
+                                <p className="text-sm text-red-600 flex items-center gap-2">
+                                    <i className="fas fa-exclamation-circle"></i>
+                                    {errorOficiantes}
+                                </p>
                             </div>
                         )}
 
-                        {!weddingDetails.dniOficiante && (
-                            <p className="text-sm text-gray-500 italic">
-                                Busca un oficial o sacerdote por su documento
-                            </p>
+                        <select
+                            name="oficiante"
+                            value={weddingDetails.oficiante}
+                            onChange={handleInputChange}
+                            disabled={loadingOficiantes}
+                            className="w-full px-3 sm:px-4 py-2 sm:py-2.5 text-sm sm:text-base border border-gray-300 rounded-lg bg-white outline-0 transition-all focus:ring-2 focus:ring-blue-500 focus:border-transparent disabled:bg-gray-100 disabled:cursor-not-allowed"
+                        >
+                            <option value="">
+                                {loadingOficiantes ? 'Cargando oficiantes...' : 'Seleccione un oficiante'}
+                            </option>
+                            {oficiantes.map((oficiante) => (
+                                <option key={oficiante.id} value={oficiante.id}>
+                                    {oficiante.full_name}
+                                </option>
+                            ))}
+                        </select>
+
+                        {loadingOficiantes && (
+                            <div className="mt-2 flex items-center gap-2 text-sm text-gray-500">
+                                <i className="fas fa-spinner fa-spin"></i>
+                                <span>Cargando oficiantes...</span>
+                            </div>
                         )}
                     </div>
 
@@ -410,7 +248,13 @@ const Weddingdetails = (props: Solicitud) => {
                 <div className="space-y-2 text-sm text-gray-600">
                     <p><span className="font-semibold">Tipo de Solicitud:</span> {tipoSolicitudNombre?.toUpperCase()}</p>
                     <p><span className="font-semibold">Descripción:</span> {descriptionSolicitud?.toUpperCase()}</p>
-                    <p><span className="font-semibold">Oficial/Sacerdote:</span> {weddingDetails.nombreOficiante ? `${weddingDetails.nombreOficiante} ${weddingDetails.apellidosOficiante}` : '-'}</p>
+                    <p>
+                        <span className="font-semibold">Oficial/Sacerdote:</span>{' '}
+                        {weddingDetails.oficiante
+                            ? oficiantes.find(o => o.id === weddingDetails.oficiante)?.full_name || weddingDetails.oficiante
+                            : '-'
+                        }
+                    </p>
                     <p><span className="font-semibold">Fecha y Hora:</span> {weddingDetails.fechaBoda ? `${weddingDetails.fechaBoda} a las ${weddingDetails.horaBoda || '--:--'}` : '-'}</p>
                     <p><span className="font-semibold">Dirección:</span> {weddingDetails.direccion || '-'}</p>
                 </div>
