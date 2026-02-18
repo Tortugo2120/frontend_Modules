@@ -11,7 +11,7 @@ interface RequirementsDisplayProps {
 }
 
 export const RequirementsDisplay = ({ requirements }: RequirementsDisplayProps) => {
-    
+
     const [checkedIds, setCheckedIds] = useState<Set<string | number>>(new Set());
     const [archivos, setArchivos] = useState<Map<string | number, ArchivoRequisito>>(new Map());
 
@@ -55,6 +55,9 @@ export const RequirementsDisplay = ({ requirements }: RequirementsDisplayProps) 
     const completados = safeRequirements.filter(r => r && r.entregado === 1);
     const pendientes = safeRequirements.filter(r => r && r.entregado === 0);
 
+    // Total completados = los del backend + los pendientes marcados por el usuario
+    const totalCompletados = completados.length + checkedIds.size;
+
     const formatearFecha = (fecha: string): string => {
         try {
             const date = new Date(fecha);
@@ -72,7 +75,7 @@ export const RequirementsDisplay = ({ requirements }: RequirementsDisplayProps) 
 
     const getProgressPercentage = (): number => {
         if (safeRequirements.length === 0) return 0;
-        return Math.round((completados.length / safeRequirements.length) * 100);
+        return Math.round((totalCompletados / safeRequirements.length) * 100);
     };
 
     return (
@@ -83,7 +86,7 @@ export const RequirementsDisplay = ({ requirements }: RequirementsDisplayProps) 
                     <div>
                         <h3 className="text-lg font-bold text-gray-900">Resumen de Entregas</h3>
                         <p className="text-sm text-gray-600 mt-1">
-                            {completados.length} de {safeRequirements.length} requerimientos completados
+                            {totalCompletados} de {safeRequirements.length} requerimientos completados
                         </p>
                     </div>
                     <div className="text-right">
@@ -238,7 +241,6 @@ export const RequirementsDisplay = ({ requirements }: RequirementsDisplayProps) 
                                         </div>
                                     </div>
 
-                                    {/* Sección de adjunto — visible solo si checkbox está activo */}
                                     {isChecked && (
                                         <div className="mt-4 pt-4 border-t border-blue-200">
                                             {!archivo ? (
@@ -254,6 +256,9 @@ export const RequirementsDisplay = ({ requirements }: RequirementsDisplayProps) 
                                                         Adjuntar documento
                                                     </span>
                                                     <span className="text-xs text-gray-500">PDF, JPG, PNG, DOCX</span>
+                                                    <span className='text-xs font-black text-red-800'>
+                                                        opcional*
+                                                    </span>
                                                 </label>
                                             ) : (
                                                 <div className="flex items-center justify-between bg-white rounded-lg border border-blue-200 px-4 py-2">
