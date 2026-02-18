@@ -35,12 +35,12 @@ export const Detalles = () => {
 
   return (
     <div className="min-h-screen bg-blue-300/40 p-2 md:p-2">
-      <div className="flex justify-between items-center mx-4 mb-4 sticky top-20 z-20">
+      <div className="flex justify-end items-end mx-4 mb-4 sticky top-24 z-10">
         <button
           onClick={() => navigate(-1)}
-          className="flex items-center gap-2 px-4 py-2 bg-white text-info-content font-semibold rounded shadow hover:bg-gray-100 cursor-pointer transition-colors"
-        >
-          <span>←</span> Volver
+          className="btn btn-soft btn-secondary border-secondary gap-2">
+          <i className="fas fa-times mr-2"></i>
+          Cerrar
         </button>
       </div>
       <div className="max-w-5xl mx-auto bg-white shadow-lg">
@@ -198,7 +198,6 @@ export const Detalles = () => {
             </div>
           </section>
 
-          {/* INFORMACIÓN DE PAGO DINÁMICA - Solo se muestra si la solicitud lo requiere */}
           {shouldShowPaymentDetails(application.nombreSolicitud, application.estado) && (
             <section className="mb-4">
               <div className="bg-info-content text-white px-4 py-2 mb-4">
@@ -232,7 +231,7 @@ export const Detalles = () => {
           className="flex items-center gap-2 p-5 bg-green-600 text-xs text-white font-semibold rounded-full shadow hover:bg-green-700 cursor-pointer transition-all duration-200 hover:-translate-y-2 hover:scale-105 disabled:bg-gray-400 disabled:hover:translate-y-0 disabled:hover:scale-100"
         >
           <svg className="fill-current w-4 h-4" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20"><path d="M13 8V2H7v6H2l8 8 8-8h-5zM0 18h20v2H0v-2z" /></svg>
-            Descargar PDF
+          Descargar PDF
         </button>
       </div>
     </div>

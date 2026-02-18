@@ -201,18 +201,18 @@ export default function TableList({ data }: Props) {
                                     <td className="pr-4">
                                         <div className="flex items-center justify-center gap-2">
                                             <button
-                                                onClick={() => navigate(`/dashboard/solicitud/detalles/${item.id}`)}
-                                                className="btn btn-sm btn-circle btn-ghost text-indigo-600 hover:bg-indigo-100 transition-colors"
-                                                title="Ver detalles"
-                                            >
-                                                <i className="fas fa-eye"></i>
-                                            </button>
-                                            <button
                                                 onClick={() => navigate(`/dashboard/actualizar/requerimientos/${item.id}`)}
                                                 className="btn btn-sm btn-circle btn-ghost text-amber-600 hover:bg-amber-100 transition-colors"
                                                 title="Editar solicitud"
                                             >
                                                 <i className="fas fa-pen-to-square"></i>
+                                            </button>
+                                            <button
+                                                onClick={() => navigate(`/dashboard/solicitud/detalles/${item.id}`)}
+                                                className="btn btn-sm btn-circle btn-ghost text-indigo-600 hover:bg-indigo-100 transition-colors"
+                                                title="Ver detalles"
+                                            >
+                                                <i className="fas fa-eye"></i>
                                             </button>
                                         </div>
                                     </td>

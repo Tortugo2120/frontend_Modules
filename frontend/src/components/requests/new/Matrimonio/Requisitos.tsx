@@ -529,7 +529,6 @@ const RequisitosMatrimonio = ({
                                                                 )}
 
                                                                 <span className='text-xs font-black text-red-800'>
-
                                                                     opcional*
                                                                 </span>
                                                             </div>

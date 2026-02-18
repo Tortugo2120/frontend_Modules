@@ -120,22 +120,25 @@ const Update = () => {
 
             {/* Header */}
             <div className="">
-                <button
-                    onClick={() => navigate(-1)}
-                    className="flex items-center gap-2 px-4 py-2 bg-white text-info-content font-semibold rounded shadow hover:bg-gray-100 cursor-pointer transition-colors mb-4"
-                >
-                    <span>←</span> Volver
-                </button>
 
-                <div className="bg-white rounded-t-lg shadow-lg p-6">
-                    <div className="flex items-center gap-4">
-                        <div className="w-12 h-12 bg-indigo-100 rounded-lg flex items-center justify-center">
-                            <i className="fas fa-list-check text-indigo-600 text-xl"></i>
+                <div className="bg-white rounded-t-lg shadow-lg p-6 pb-2 border-b border-gray-200">
+                    <div className="flex justify-between items-center gap-4">
+                        <div className="flex items-center gap-4">
+                            <div className="w-12 h-12 bg-indigo-100 rounded-lg flex items-center justify-center">
+                                <i className="fas fa-list-check text-indigo-600 text-xl"></i>
+                            </div>
+                            <div>
+                                <h1 className="text-3xl font-bold text-gray-900">Actualizar requerimientos de la Solicitud</h1>
+                                <p className="text-gray-600 mt-1">Revisa el estado de los requerimientos para esta solicitud</p>
+                            </div>
                         </div>
-                        <div>
-                            <h1 className="text-3xl font-bold text-gray-900">Requerimientos de la Solicitud</h1>
-                            <p className="text-gray-600 mt-1">Revisa el estado de los requerimientos para esta solicitud</p>
-                        </div>
+                        <button
+                            onClick={() => navigate(-1)}
+                            className="btn btn-soft btn-secondary border-secondary gap-2"
+                        >
+                            <i className="fas fa-times mr-2"></i>
+                            Cerrar
+                        </button>
                     </div>
                 </div>
             </div>
@@ -192,6 +195,7 @@ const Update = () => {
                         onClick={() => navigate(-1)}
                         className="btn btn-outline"
                         disabled={isUpdating || isUploading}
+                        className="btn btn-soft btn-secondary border-secondary gap-2"
                     >
                         <i className="fas fa-times mr-2"></i>
                         Cerrar

@@ -100,6 +100,9 @@ export const RequirementsDisplay = ({ requirements, onRequirementsChange }: Requ
     const completados = safeRequirements.filter(r => r && r.entregado === 1);
     const pendientes = safeRequirements.filter(r => r && r.entregado === 0);
 
+    // Total completados = los del backend + los pendientes marcados por el usuario
+    const totalCompletados = completados.length + checkedIds.size;
+
     const formatearFecha = (fecha: string): string => {
         try {
             const date = new Date(fecha);
@@ -117,7 +120,7 @@ export const RequirementsDisplay = ({ requirements, onRequirementsChange }: Requ
 
     const getProgressPercentage = (): number => {
         if (safeRequirements.length === 0) return 0;
-        return Math.round((completados.length / safeRequirements.length) * 100);
+        return Math.round((totalCompletados / safeRequirements.length) * 100);
     };
 
     return (
@@ -128,7 +131,7 @@ export const RequirementsDisplay = ({ requirements, onRequirementsChange }: Requ
                     <div>
                         <h3 className="text-lg font-bold text-gray-900">Resumen de Entregas</h3>
                         <p className="text-sm text-gray-600 mt-1">
-                            {completados.length} de {safeRequirements.length} requerimientos completados
+                            {totalCompletados} de {safeRequirements.length} requerimientos completados
                         </p>
                     </div>
                     <div className="text-right">
@@ -142,7 +145,7 @@ export const RequirementsDisplay = ({ requirements, onRequirementsChange }: Requ
                 {/* Barra de progreso */}
                 <div className="w-full bg-gray-300 rounded-full h-3 overflow-hidden">
                     <div
-                        className="bg-linear-to-r from-green-400 to-green-500 h-full rounded-full transition-all duration-300"
+                        className="bg-linear-to-r from-blue-500 to-purple-600 h-full rounded-full transition-all duration-300"
                         style={{ width: `${getProgressPercentage()}%` }}
                     ></div>
                 </div>
@@ -299,6 +302,9 @@ export const RequirementsDisplay = ({ requirements, onRequirementsChange }: Requ
                                                         Adjuntar documento (Opcional)
                                                     </span>
                                                     <span className="text-xs text-gray-500">PDF, JPG, PNG, DOCX</span>
+                                                    <span className='text-xs font-black text-red-800'>
+                                                        opcional*
+                                                    </span>
                                                 </label>
                                             ) : (
                                                 <div className="flex items-center justify-between bg-white rounded-lg border border-blue-200 px-4 py-2">
