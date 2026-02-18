@@ -27,3 +27,9 @@ export interface RequirementByApplicationResponse {
   message: string;
   data: RequirementByApplication[];
 }
+
+export interface RequieremntUpdate{
+  requirementId: number;
+  delivered: number;
+  observation: string | null;
+}

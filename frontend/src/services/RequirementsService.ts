@@ -1,5 +1,9 @@
 import apiAxios from "../api/Axios.tsx";
-import type { RequirementsResponse, RequirementByApplicationResponse } from "../model/requerimentsModel.ts";
+import type {
+    RequirementsResponse,
+    RequirementByApplicationResponse,
+    RequieremntUpdate
+} from "../model/requerimentsModel.ts";
 
 export const RequirementsService = async (applicationTypeId: number, condition: string): Promise<RequirementsResponse> => {
     try {
@@ -24,4 +28,12 @@ export const RequirementsByApplicationId = async (applicationId: number): Promis
         console.error("Error en RequirementsByApplicationId:", error);
         throw error;
     }
+}
+
+export const UpdateRequirementsByApplicationId = async (requirementUpdate:RequieremntUpdate[],id_solicitud:number)=> {
+    const response = await apiAxios.post(`/api/v1/application/${id_solicitud}/requirements`, {
+        requirements: requirementUpdate
+    });
+
+    return response.data;
 }
