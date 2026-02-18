@@ -193,7 +193,6 @@ const Update = () => {
                 <div className="mt-6 flex gap-3 justify-end">
                     <button
                         onClick={() => navigate(-1)}
-                        className="btn btn-outline"
                         disabled={isUpdating || isUploading}
                         className="btn btn-soft btn-secondary border-secondary gap-2"
                     >
