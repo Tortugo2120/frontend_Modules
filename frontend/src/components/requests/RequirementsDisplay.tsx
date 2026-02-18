@@ -1,19 +1,56 @@
-import { useState } from "react";
+import { useState, useEffect, useRef } from "react";
 import type { RequirementByApplication } from "../../model/requerimentsModel.ts";
 
 interface ArchivoRequisito {
     nombre: string;
-    tamaño: number;
+    filesize: number;
+    file: File;
+}
+
+export interface RequirementUpdate {
+    requirementId: number;
+    delivered: number;
+    observation: string | null;
+    file?: File;
 }
 
 interface RequirementsDisplayProps {
     requirements: RequirementByApplication[];
+    onRequirementsChange?: (updates: RequirementUpdate[]) => void;
 }
 
-export const RequirementsDisplay = ({ requirements }: RequirementsDisplayProps) => {
+export const RequirementsDisplay = ({ requirements, onRequirementsChange }: RequirementsDisplayProps) => {
 
     const [checkedIds, setCheckedIds] = useState<Set<string | number>>(new Set());
     const [archivos, setArchivos] = useState<Map<string | number, ArchivoRequisito>>(new Map());
+    const [observaciones, setObservaciones] = useState<Map<string | number, string>>(new Map());
+
+    // Usar useRef para mantener la referencia actualizada de la función
+    const onRequirementsChangeRef = useRef(onRequirementsChange);
+
+    useEffect(() => {
+        onRequirementsChangeRef.current = onRequirementsChange;
+    }, [onRequirementsChange]);
+
+    // Emitir cambios al padre cuando cambian los datos
+    useEffect(() => {
+        if (onRequirementsChangeRef.current) {
+            const updates: RequirementUpdate[] = Array.from(checkedIds).map(id => {
+                const requirement = requirements.find(r => r.id === id);
+                const archivo = archivos.get(id);
+                const observacion = observaciones.get(id) || null;
+
+                return {
+                    requirementId: requirement?.id_requisito ? Number(requirement.id_requisito) : Number(id),
+                    delivered: 1,
+                    observation: observacion,
+                    file: archivo?.file
+                };
+            });
+
+            onRequirementsChangeRef.current(updates);
+        }
+    }, [checkedIds, archivos, observaciones, requirements]);
 
     const handleCheckboxChange = (id: string | number) => {
         setCheckedIds(prev => {
@@ -37,7 +74,15 @@ export const RequirementsDisplay = ({ requirements }: RequirementsDisplayProps) 
         if (!file) return;
         setArchivos(prev => {
             const next = new Map(prev);
-            next.set(id, { nombre: file.name, tamaño: file.size });
+            next.set(id, { nombre: file.name, filesize: file.size, file });
+            return next;
+        });
+    };
+
+    const handleObservacionChange = (id: string | number, value: string) => {
+        setObservaciones(prev => {
+            const next = new Map(prev);
+            next.set(id, value);
             return next;
         });
     };
@@ -241,8 +286,9 @@ export const RequirementsDisplay = ({ requirements }: RequirementsDisplayProps) 
                                         </div>
                                     </div>
 
+                                    {/* Sección de adjunto — visible solo si checkbox está activo */}
                                     {isChecked && (
-                                        <div className="mt-4 pt-4 border-t border-blue-200">
+                                        <div className="mt-4 pt-4 border-t border-blue-200 space-y-3">
                                             {!archivo ? (
                                                 <label className="cursor-pointer flex items-center gap-2 w-fit">
                                                     <input
@@ -253,7 +299,7 @@ export const RequirementsDisplay = ({ requirements }: RequirementsDisplayProps) 
                                                     />
                                                     <span className="inline-flex items-center gap-2 px-4 py-2 bg-blue-600 text-white text-sm font-medium rounded-lg hover:bg-blue-700 transition-colors">
                                                         <i className="fas fa-paperclip"></i>
-                                                        Adjuntar documento
+                                                        Adjuntar documento (Opcional)
                                                     </span>
                                                     <span className="text-xs text-gray-500">PDF, JPG, PNG, DOCX</span>
                                                     <span className='text-xs font-black text-red-800'>
@@ -266,7 +312,7 @@ export const RequirementsDisplay = ({ requirements }: RequirementsDisplayProps) 
                                                         <i className="fas fa-file text-blue-500 shrink-0"></i>
                                                         <div className="min-w-0">
                                                             <p className="text-sm font-medium text-gray-900 truncate">{archivo.nombre}</p>
-                                                            <p className="text-xs text-gray-500">{formatearTamaño(archivo.tamaño)}</p>
+                                                            <p className="text-xs text-gray-500">{formatearTamaño(archivo.filesize)}</p>
                                                         </div>
                                                     </div>
                                                     <label className="ml-3 cursor-pointer shrink-0">
@@ -287,6 +333,20 @@ export const RequirementsDisplay = ({ requirements }: RequirementsDisplayProps) 
                                                     </button>
                                                 </div>
                                             )}
+
+                                            {/* Campo de observación */}
+                                            <div>
+                                                <label className="block text-sm font-medium text-gray-700 mb-2">
+                                                    Observación (Opcional)
+                                                </label>
+                                                <textarea
+                                                    value={observaciones.get(requisito.id) || ''}
+                                                    onChange={(e) => handleObservacionChange(requisito.id, e.target.value)}
+                                                    placeholder="Agregar una observación sobre este requerimiento..."
+                                                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm resize-none"
+                                                    rows={2}
+                                                />
+                                            </div>
                                         </div>
                                     )}
                                 </div>

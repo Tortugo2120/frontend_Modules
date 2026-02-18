@@ -15,6 +15,7 @@ export interface RequirementsResponse {
 
 export interface RequirementByApplication {
   id: number | string;
+  id_requisito: number | string;
   nombre_requisito: string;
   entregado: number;
   fecha_entrega: string;
@@ -26,4 +27,10 @@ export interface RequirementByApplicationResponse {
   code: number;
   message: string;
   data: RequirementByApplication[];
+}
+
+export interface RequieremntUpdate{
+  requirementId: number;
+  delivered: number;
+  observation: string | null;
 }
