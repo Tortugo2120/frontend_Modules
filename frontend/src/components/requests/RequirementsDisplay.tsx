@@ -1,10 +1,54 @@
+import { useState } from "react";
 import type { RequirementByApplication } from "../../model/requerimentsModel.ts";
+
+interface ArchivoRequisito {
+    nombre: string;
+    tamaño: number;
+}
 
 interface RequirementsDisplayProps {
     requirements: RequirementByApplication[];
 }
 
 export const RequirementsDisplay = ({ requirements }: RequirementsDisplayProps) => {
+    
+    const [checkedIds, setCheckedIds] = useState<Set<string | number>>(new Set());
+    const [archivos, setArchivos] = useState<Map<string | number, ArchivoRequisito>>(new Map());
+
+    const handleCheckboxChange = (id: string | number) => {
+        setCheckedIds(prev => {
+            const next = new Set(prev);
+            if (next.has(id)) {
+                next.delete(id);
+                setArchivos(prevArchivos => {
+                    const nextArchivos = new Map(prevArchivos);
+                    nextArchivos.delete(id);
+                    return nextArchivos;
+                });
+            } else {
+                next.add(id);
+            }
+            return next;
+        });
+    };
+
+    const handleFileChange = (id: string | number, e: React.ChangeEvent<HTMLInputElement>) => {
+        const file = e.target.files?.[0];
+        if (!file) return;
+        setArchivos(prev => {
+            const next = new Map(prev);
+            next.set(id, { nombre: file.name, tamaño: file.size });
+            return next;
+        });
+    };
+
+    const formatearTamaño = (bytes: number): string => {
+        if (bytes === 0) return "0 Bytes";
+        const k = 1024;
+        const sizes = ["Bytes", "KB", "MB"];
+        const i = Math.floor(Math.log(bytes) / Math.log(k));
+        return Math.round(bytes / Math.pow(k, i) * 100) / 100 + " " + sizes[i];
+    };
 
     const safeRequirements = Array.isArray(requirements) ? requirements : [];
 
@@ -136,46 +180,113 @@ export const RequirementsDisplay = ({ requirements }: RequirementsDisplayProps) 
             {/* Requerimientos Pendientes */}
             {pendientes.length > 0 && (
                 <div className="space-y-3">
-                    <div className="flex items-center gap-2">
-                        <i className="fas fa-hourglass text-yellow-600 text-lg"></i>
-                        <h4 className="text-lg font-semibold text-gray-900">
-                            Requerimientos Pendientes ({pendientes.length})
-                        </h4>
+                    <div className="flex justify-between gap-2">
+                        <div className="flex flex-row items-center">
+                            <i className="fas fa-hourglass text-yellow-600 text-lg"></i>
+                            <h4 className="text-lg font-semibold text-gray-900">
+                                Requerimientos Pendientes ({pendientes.length})
+                            </h4>
+                        </div>
+                        <span className="badge badge-warning gap-2 shrink-0 mr-4">
+                            <i className="fas fa-clock text-sm"></i>
+                            Pendientes
+                        </span>
                     </div>
                     <div className="space-y-3">
-                        {pendientes.map((requisito) => (
-                            <div
-                                key={requisito.id}
-                                className="bg-white border border-yellow-200 rounded-lg p-4 hover:shadow-md transition-shadow"
-                            >
-                                <div className="flex items-start justify-between gap-4">
-                                    <div className="flex-1">
-                                        <div className="flex items-start gap-3">
-                                            <i className="fas fa-circle-notch text-yellow-500 text-lg mt-1"></i>
-                                            <div className="flex-1">
-                                                <h5 className="font-semibold text-gray-900">
-                                                    {requisito.nombre_requisito}
-                                                </h5>
-                                                <div className="mt-2 space-y-1 text-sm text-gray-600">
-                                                    <p>
-                                                        <span className="font-medium">Última actualización:</span> {formatearFecha(requisito.fecha_entrega)}
-                                                    </p>
-                                                    {requisito.observacion && requisito.observacion.trim() !== "" && (
+                        {pendientes.map((requisito) => {
+                            const isChecked = checkedIds.has(requisito.id);
+                            const archivo = archivos.get(requisito.id);
+                            return (
+                                <div
+                                    key={requisito.id}
+                                    className={`bg-white border rounded-lg p-4 hover:shadow-md transition-all ${isChecked ? "border-blue-300 bg-blue-50/30" : "border-yellow-200"}`}
+                                >
+                                    <div className="flex items-start justify-between gap-4">
+                                        <div className="flex-1">
+                                            <div className="flex items-start gap-3">
+                                                <i className="fas fa-circle-notch text-yellow-500 text-lg mt-1"></i>
+                                                <div className="flex-1">
+                                                    <h5 className="font-semibold text-gray-900">
+                                                        {requisito.nombre_requisito}
+                                                    </h5>
+                                                    <div className="mt-2 space-y-1 text-sm text-gray-600">
                                                         <p>
-                                                            <span className="font-medium">Observación:</span> {requisito.observacion}
+                                                            <span className="font-medium">Última actualización:</span> {formatearFecha(requisito.fecha_entrega)}
                                                         </p>
-                                                    )}
+                                                        {requisito.observacion && requisito.observacion.trim() !== "" && (
+                                                            <p>
+                                                                <span className="font-medium">Observación:</span> {requisito.observacion}
+                                                            </p>
+                                                        )}
+                                                    </div>
                                                 </div>
                                             </div>
                                         </div>
+
+                                        {/* Checkbox de entregado */}
+                                        <div className="flex flex-col items-end gap-2 shrink-0">
+                                            <label className="flex items-center gap-2 cursor-pointer select-none">
+                                                <span className="text-sm font-medium text-gray-600">¿Entregado?</span>
+                                                <input
+                                                    type="checkbox"
+                                                    id={`requisito-${requisito.id}`}
+                                                    checked={isChecked}
+                                                    onChange={() => handleCheckboxChange(requisito.id)}
+                                                    className="w-5 h-5 text-blue-600 bg-white border-gray-300 rounded focus:ring-blue-500 focus:ring-2 cursor-pointer"
+                                                />
+                                            </label>
+                                        </div>
                                     </div>
-                                    <span className="badge badge-warning gap-2 shrink-0">
-                                        <i className="fas fa-clock text-sm"></i>
-                                        Pendiente
-                                    </span>
+
+                                    {/* Sección de adjunto — visible solo si checkbox está activo */}
+                                    {isChecked && (
+                                        <div className="mt-4 pt-4 border-t border-blue-200">
+                                            {!archivo ? (
+                                                <label className="cursor-pointer flex items-center gap-2 w-fit">
+                                                    <input
+                                                        type="file"
+                                                        className="hidden"
+                                                        accept=".pdf,.jpg,.jpeg,.png,.docx"
+                                                        onChange={(e) => handleFileChange(requisito.id, e)}
+                                                    />
+                                                    <span className="inline-flex items-center gap-2 px-4 py-2 bg-blue-600 text-white text-sm font-medium rounded-lg hover:bg-blue-700 transition-colors">
+                                                        <i className="fas fa-paperclip"></i>
+                                                        Adjuntar documento
+                                                    </span>
+                                                    <span className="text-xs text-gray-500">PDF, JPG, PNG, DOCX</span>
+                                                </label>
+                                            ) : (
+                                                <div className="flex items-center justify-between bg-white rounded-lg border border-blue-200 px-4 py-2">
+                                                    <div className="flex items-center gap-2 min-w-0">
+                                                        <i className="fas fa-file text-blue-500 shrink-0"></i>
+                                                        <div className="min-w-0">
+                                                            <p className="text-sm font-medium text-gray-900 truncate">{archivo.nombre}</p>
+                                                            <p className="text-xs text-gray-500">{formatearTamaño(archivo.tamaño)}</p>
+                                                        </div>
+                                                    </div>
+                                                    <label className="ml-3 cursor-pointer shrink-0">
+                                                        <input
+                                                            type="file"
+                                                            className="hidden"
+                                                            accept=".pdf,.jpg,.jpeg,.png,.docx"
+                                                            onChange={(e) => handleFileChange(requisito.id, e)}
+                                                        />
+                                                        <span className="text-xs text-blue-600 hover:underline">Cambiar</span>
+                                                    </label>
+                                                    <button
+                                                        onClick={() => setArchivos(prev => { const n = new Map(prev); n.delete(requisito.id); return n; })}
+                                                        className="ml-2 text-red-400 hover:text-red-600 text-xs shrink-0"
+                                                        title="Quitar archivo"
+                                                    >
+                                                        <i className="fas fa-times"></i>
+                                                    </button>
+                                                </div>
+                                            )}
+                                        </div>
+                                    )}
                                 </div>
-                            </div>
-                        ))}
+                            );
+                        })}
                     </div>
                 </div>
             )}
