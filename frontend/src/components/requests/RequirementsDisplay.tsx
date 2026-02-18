@@ -100,7 +100,7 @@ export const RequirementsDisplay = ({ requirements }: RequirementsDisplayProps) 
                 {/* Barra de progreso */}
                 <div className="w-full bg-gray-300 rounded-full h-3 overflow-hidden">
                     <div
-                        className="bg-linear-to-r from-green-400 to-green-500 h-full rounded-full transition-all duration-300"
+                        className="bg-linear-to-r from-blue-500 to-purple-600 h-full rounded-full transition-all duration-300"
                         style={{ width: `${getProgressPercentage()}%` }}
                     ></div>
                 </div>
