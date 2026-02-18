@@ -1,11 +1,11 @@
 import { useParams, useNavigate } from "react-router-dom";
 import { useState } from "react";
-import { useGetRequirementsByApplication } from "../../hooks/useGetRequirementsByApplication.ts";
-import { useUpdateRequeriments } from "../../hooks/useUpdateRequeriments.ts";
-import { useUploadDocuments } from "../../hooks/useUploadDocuments.ts";
-import { RequirementsDisplay } from "../../components/requests/RequirementsDisplay.tsx";
-import type { RequirementUpdate } from "../../components/requests/RequirementsDisplay.tsx";
-import type { RequieremntUpdate } from "../../model/requerimentsModel.ts";
+import { useGetRequirementsByApplication } from "../../../hooks/useGetRequirementsByApplication.ts";
+import { useUpdateRequeriments } from "../../../hooks/useUpdateRequeriments.ts";
+import { useUploadDocuments } from "../../../hooks/useUploadDocuments.ts";
+import { RequirementsDisplay } from "../../../components/requests/update/RequirementsDisplay.tsx";
+import type { RequirementUpdate } from "../../../components/requests/update/RequirementsDisplay.tsx";
+import type { RequieremntUpdate } from "../../../model/requerimentsModel.ts";
 
 const Update = () => {
     const { id } = useParams<{ id: string }>();
