@@ -39,12 +39,30 @@ const Weddingdetails = (props: Solicitud) => {
     }));
 
     const [isWeddingDetailsValid, setIsWeddingDetailsValid] = useState(false);
+    const [dateError, setDateError] = useState<string>('');
+
+    // Función para validar que la fecha no sea pasada
+    const validateDate = (fecha: string): boolean => {
+        if (!fecha) return false;
+
+        const fechaSeleccionada = new Date(fecha);
+        const hoy = new Date();
+
+        // Establecer la hora a 00:00:00 para comparar solo las fechas
+        hoy.setHours(0, 0, 0, 0);
+        fechaSeleccionada.setHours(0, 0, 0, 0);
+
+        return fechaSeleccionada >= hoy;
+    };
 
     // Sincronizar cambios en los detalles del matrimonio
     useEffect(() => {
+        const isFechaValida = validateDate(weddingDetails.fechaBoda);
+
         const isValid =
             weddingDetails.oficiante !== '' &&
             weddingDetails.fechaBoda !== '' &&
+            isFechaValida &&
             weddingDetails.horaBoda !== '' &&
             weddingDetails.direccion.trim() !== '';
 
@@ -71,6 +89,16 @@ const Weddingdetails = (props: Solicitud) => {
 
     const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
         const { name, value } = e.target;
+
+        // Validar fecha si el campo es fechaBoda
+        if (name === 'fechaBoda') {
+            if (value && !validateDate(value)) {
+                setDateError('La fecha de casamiento no puede ser una fecha pasada. Por favor, seleccione una fecha actual o futura.');
+            } else {
+                setDateError('');
+            }
+        }
+
         setWeddingDetails(prev => ({
             ...prev,
             [name]: value
@@ -188,15 +216,24 @@ const Weddingdetails = (props: Solicitud) => {
                             </label>
                             <p className="text-xs text-gray-500 mb-3 min-h-8">
                                 <i className="fas fa-info-circle mr-1"></i>
-                                <span>Seleccione la fecha del evento</span>
+                                <span>Seleccione la fecha del evento (no puede ser una fecha pasada)</span>
                             </p>
                             <input
                                 type="date"
                                 name="fechaBoda"
                                 value={weddingDetails.fechaBoda}
                                 onChange={handleInputChange}
-                                className="w-full px-3 sm:px-4 py-2 text-sm sm:text-base border border-gray-300 rounded-lg bg-white outline-0 transition-all focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                                min={new Date().toISOString().split('T')[0]}
+                                className={`w-full px-3 sm:px-4 py-2 text-sm sm:text-base border rounded-lg bg-white outline-0 transition-all focus:ring-2 focus:ring-blue-500 focus:border-transparent ${
+                                    dateError ? 'border-red-500' : 'border-gray-300'
+                                }`}
                             />
+                            {dateError && (
+                                <p className="text-red-500 text-xs mt-1 flex items-start gap-1">
+                                    <i className="fas fa-exclamation-circle mt-0.5"></i>
+                                    <span>{dateError}</span>
+                                </p>
+                            )}
                         </div>
 
                         {/* Hora de la Boda */}

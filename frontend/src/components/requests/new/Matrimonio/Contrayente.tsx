@@ -55,7 +55,8 @@ const Contrayente = (props: Solicitud) => {
         handleSubmit: handleSubmitForm1,
         formState: { errors: formErrors1 },
         setValue: setValueForm1,
-        reset: resetForm1
+        reset: resetForm1,
+        watch: watchForm1
     } = useForm<ContrayenteFormData>({
         resolver: zodResolver(contrayenteSchema),
         defaultValues: {
@@ -80,7 +81,8 @@ const Contrayente = (props: Solicitud) => {
         handleSubmit: handleSubmitForm2,
         formState: { errors: formErrors2 },
         setValue: setValueForm2,
-        reset: resetForm2
+        reset: resetForm2,
+        watch: watchForm2
     } = useForm<ContrayenteFormData>({
         resolver: zodResolver(contrayenteSchema),
         defaultValues: {
@@ -113,6 +115,56 @@ const Contrayente = (props: Solicitud) => {
 
     const [contrayente1Added, setContrayente1Added] = useState(false);
     const [contrayente2Added, setContrayente2Added] = useState(false);
+    const [sameGenderError, setSameGenderError] = useState('');
+
+    // Estados para detectar si el formulario ha sido modificado
+    const [isForm1Modified, setIsForm1Modified] = useState(false);
+    const [isForm2Modified, setIsForm2Modified] = useState(false);
+
+    // Cargar datos desde localStorage al montar el componente
+    useEffect(() => {
+        const contrayentes = formDataAplication.participants.filter((p: Participant) =>
+            p.rol === 'contrayente'
+        );
+
+        // Llenar formulario del contrayente 1 si existe en localStorage
+        if (contrayentes.length >= 1) {
+            const contrayente1 = contrayentes[0];
+            setValueForm1('cui', contrayente1.cui);
+            setValueForm1('documentTypeId', contrayente1.documentTypeId);
+            setValueForm1('names', contrayente1.names);
+            setValueForm1('paternalSurname', contrayente1.paternalSurname);
+            setValueForm1('maternalSurname', contrayente1.maternalSurname || '');
+            setValueForm1('birthdate', contrayente1.birthdate);
+            setValueForm1('gender', contrayente1.gender);
+            setValueForm1('address', contrayente1.address);
+            setValueForm1('email', contrayente1.email || '');
+            setValueForm1('phone', contrayente1.phone || '');
+            setValueForm1('ubigeoId', contrayente1.ubigeoId);
+            setValueForm1('maritalStatus', contrayente1.maritalStatus as 'Single' | 'CASADO' | 'Divorced' | 'Widowed');
+            setContrayente1Added(true);
+        }
+
+        // Llenar formulario del contrayente 2 si existe en localStorage
+        if (contrayentes.length >= 2) {
+            const contrayente2 = contrayentes[1];
+            setValueForm2('cui', contrayente2.cui);
+            setValueForm2('documentTypeId', contrayente2.documentTypeId);
+            setValueForm2('names', contrayente2.names);
+            setValueForm2('paternalSurname', contrayente2.paternalSurname);
+            setValueForm2('maternalSurname', contrayente2.maternalSurname || '');
+            setValueForm2('birthdate', contrayente2.birthdate);
+            setValueForm2('gender', contrayente2.gender);
+            setValueForm2('address', contrayente2.address);
+            setValueForm2('email', contrayente2.email || '');
+            setValueForm2('phone', contrayente2.phone || '');
+            setValueForm2('ubigeoId', contrayente2.ubigeoId);
+            setValueForm2('maritalStatus', contrayente2.maritalStatus as 'Single' | 'CASADO' | 'Divorced' | 'Widowed');
+            setContrayente2Added(true);
+        }
+        // Solo ejecutar al montar el componente
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, []);
 
     // Sincronizar con el estado global del contexto
     useEffect(() => {
@@ -136,6 +188,26 @@ const Contrayente = (props: Solicitud) => {
         }
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [contrayente1Added, contrayente2Added]);
+
+    // Detectar cambios en el formulario 1 para habilitar el botón de edición
+    useEffect(() => {
+        const subscription = watchForm1(() => {
+            if (contrayente1Added) {
+                setIsForm1Modified(true);
+            }
+        });
+        return () => subscription.unsubscribe();
+    }, [watchForm1, contrayente1Added]);
+
+    // Detectar cambios en el formulario 2 para habilitar el botón de edición
+    useEffect(() => {
+        const subscription = watchForm2(() => {
+            if (contrayente2Added) {
+                setIsForm2Modified(true);
+            }
+        });
+        return () => subscription.unsubscribe();
+    }, [watchForm2, contrayente2Added]);
 
     // Función para buscar persona
     const handleSearchContrayente = useCallback(async (contrayenteNum: 1 | 2) => {
@@ -210,6 +282,7 @@ const Contrayente = (props: Solicitud) => {
         const handleSubmit = contrayenteNum === 1 ? handleSubmitForm1 : handleSubmitForm2;
         const setAdded = contrayenteNum === 1 ? setContrayente1Added : setContrayente2Added;
         const setError = contrayenteNum === 1 ? setSearchError1 : setSearchError2;
+        const setModified = contrayenteNum === 1 ? setIsForm1Modified : setIsForm2Modified;
         const tipoDoc = contrayenteNum === 1 ? tipoDoc1 : tipoDoc2;
 
         const documentTypeMapping: Record<string, number> = {
@@ -228,6 +301,28 @@ const Contrayente = (props: Solicitud) => {
                 return;
             }
 
+            // Validar que los contrayentes sean de sexo diferente
+            const contrayentes = formDataAplication.participants.filter((p: Participant) =>
+                p.rol === 'contrayente'
+            );
+
+            if (contrayentes.length > 0) {
+                const otroContrayente = contrayentes[0];
+                if (otroContrayente.gender === data.gender) {
+                    setSameGenderError('Los contrayentes deben ser de sexo diferente (hombre y mujer)');
+                    setError('Los contrayentes deben ser de sexo diferente (hombre y mujer)');
+
+                    // Limpiar el error después de 5 segundos
+                    setTimeout(() => {
+                        setSameGenderError('');
+                    }, 5000);
+                    return;
+                }
+            }
+
+            // Limpiar error de mismo sexo si existe
+            setSameGenderError('');
+
             // Agregar como contrayente con ctry null
             addParticipant({
                 ...data,
@@ -236,6 +331,7 @@ const Contrayente = (props: Solicitud) => {
                 ctry: null
             });
             setAdded(true);
+            setModified(false); // Resetear el flag de modificación
             setError('');
         })();
     }, [handleSubmitForm1, handleSubmitForm2, addParticipant, formDataAplication.participants, tipoDoc1, tipoDoc2]);
@@ -285,7 +381,8 @@ const Contrayente = (props: Solicitud) => {
         errorsForm: any,
         searchError: string,
         searchSuccess: boolean,
-        isAdded: boolean
+        isAdded: boolean,
+        isModified: boolean
     ) => {
         const tipoDoc = watchSearch('documentType');
         const numDoc = watchSearch('documentNumber');
@@ -565,11 +662,17 @@ const Contrayente = (props: Solicitud) => {
                     <button
                         type="button"
                         onClick={() => handleAddContrayente(contrayenteNum)}
-                        disabled={isAdded}
+                        disabled={isAdded && !isModified}
                         className="px-4 sm:px-6 py-2 sm:py-2.5 text-sm sm:text-base bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:bg-gray-400 disabled:cursor-not-allowed transition-colors flex items-center gap-2"
                     >
-                        <i className="fas fa-plus-circle"></i>
-                        <span>{isAdded ? 'Contrayente Agregado' : 'Agregar Contrayente'}</span>
+                        <i className={isAdded && !isModified ? "fas fa-check-circle" : isModified ? "fas fa-save" : "fas fa-plus-circle"}></i>
+                        <span>
+                            {isAdded && !isModified
+                                ? 'Contrayente Agregado'
+                                : isModified
+                                    ? 'Actualizar Contrayente'
+                                    : 'Agregar Contrayente'}
+                        </span>
                     </button>
                 </div>
             </div>
@@ -597,11 +700,24 @@ const Contrayente = (props: Solicitud) => {
                 )}
             </div>
 
+            {/* Alerta de error de mismo sexo */}
+            {sameGenderError && (
+                <div className="alert alert-error shadow-lg">
+                    <div className="flex items-center gap-3">
+                        <i className="fas fa-exclamation-circle text-xl"></i>
+                        <div>
+                            <h3 className="font-bold">Error de validación</h3>
+                            <div className="text-sm">{sameGenderError}</div>
+                        </div>
+                    </div>
+                </div>
+            )}
+
             {/* Contrayente 1 */}
             <div className="bg-blue-50 p-4 rounded-lg border border-blue-200">
                 <h4 className="text-lg font-bold text-gray-800 mb-4 flex items-center gap-2">
                     <i className="fas fa-user-circle text-blue-600"></i>
-                    Contrayente 1
+                    Datos del Novio
                 </h4>
                 {renderContrayenteForm(
                     1,
@@ -612,7 +728,8 @@ const Contrayente = (props: Solicitud) => {
                     formErrors1,
                     searchError1,
                     searchSuccess1,
-                    contrayente1Added
+                    contrayente1Added,
+                    isForm1Modified
                 )}
             </div>
 
@@ -622,7 +739,7 @@ const Contrayente = (props: Solicitud) => {
             <div className="bg-pink-50 p-4 rounded-lg border border-pink-200">
                 <h4 className="text-lg font-bold text-gray-800 mb-4 flex items-center gap-2">
                     <i className="fas fa-user-circle text-pink-600"></i>
-                    Contrayente 2
+                    Datos de la Novia
                 </h4>
                 {renderContrayenteForm(
                     2,
@@ -633,7 +750,8 @@ const Contrayente = (props: Solicitud) => {
                     formErrors2,
                     searchError2,
                     searchSuccess2,
-                    contrayente2Added
+                    contrayente2Added,
+                    isForm2Modified
                 )}
             </div>
 
@@ -696,3 +814,5 @@ const Contrayente = (props: Solicitud) => {
 };
 
 export default Contrayente;
+
+

@@ -120,6 +120,57 @@ const Testigo = (props: Solicitud) => {
     const [selectedContrayente1, setSelectedContrayente1] = useState('');
     const [selectedContrayente2, setSelectedContrayente2] = useState('');
 
+    // Cargar datos desde localStorage al montar el componente
+    useEffect(() => {
+        const testigos = formDataAplication.participants.filter((p: Participant) =>
+            p.rol === 'testigo'
+        );
+
+        // Llenar formulario del testigo 1 si existe en localStorage
+        if (testigos.length >= 1) {
+            const testigo1 = testigos[0];
+            setValueForm1('cui', testigo1.cui);
+            setValueForm1('documentTypeId', testigo1.documentTypeId);
+            setValueForm1('names', testigo1.names);
+            setValueForm1('paternalSurname', testigo1.paternalSurname);
+            setValueForm1('maternalSurname', testigo1.maternalSurname || '');
+            setValueForm1('birthdate', testigo1.birthdate);
+            setValueForm1('gender', testigo1.gender);
+            setValueForm1('address', testigo1.address);
+            setValueForm1('email', testigo1.email || '');
+            setValueForm1('phone', testigo1.phone || '');
+            setValueForm1('ubigeoId', testigo1.ubigeoId);
+            setValueForm1('maritalStatus', testigo1.maritalStatus);
+            setTestigo1Added(true);
+            if (testigo1.ctry) {
+                setSelectedContrayente1(testigo1.ctry);
+            }
+        }
+
+        // Llenar formulario del testigo 2 si existe en localStorage
+        if (testigos.length >= 2) {
+            const testigo2 = testigos[1];
+            setValueForm2('cui', testigo2.cui);
+            setValueForm2('documentTypeId', testigo2.documentTypeId);
+            setValueForm2('names', testigo2.names);
+            setValueForm2('paternalSurname', testigo2.paternalSurname);
+            setValueForm2('maternalSurname', testigo2.maternalSurname || '');
+            setValueForm2('birthdate', testigo2.birthdate);
+            setValueForm2('gender', testigo2.gender);
+            setValueForm2('address', testigo2.address);
+            setValueForm2('email', testigo2.email || '');
+            setValueForm2('phone', testigo2.phone || '');
+            setValueForm2('ubigeoId', testigo2.ubigeoId);
+            setValueForm2('maritalStatus', testigo2.maritalStatus);
+            setTestigo2Added(true);
+            if (testigo2.ctry) {
+                setSelectedContrayente2(testigo2.ctry);
+            }
+        }
+        // Solo ejecutar al montar el componente
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, []);
+
     // Sincronizar con el estado global del contexto
     useEffect(() => {
         const testigos = formDataAplication.participants.filter((p: Participant) =>
@@ -429,7 +480,6 @@ const Testigo = (props: Solicitud) => {
                         <input
                             type="text"
                             {...registerForm('cui')}
-                            className="w-full px-3 sm:px-4 py-2 text-sm sm:text-base border border-gray-300 rounded-lg bg-white outline-0 transition-all focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                             placeholder="CUI"
                             maxLength={8}
                         />
