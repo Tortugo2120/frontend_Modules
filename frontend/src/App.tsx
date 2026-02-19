@@ -41,14 +41,14 @@ function App() {
                         <Route path={"Home"} element={<Home />} />
                         <Route path={"solicitud/new"} element={<NewRequest />} />
                         <Route path={"solicitud/history"} element={<History />} />
-                        <Route path={"solicitud/detalles/:id"} element={<Detalles />} />
+                        <Route path={"solicitud/detalles"} element={<Detalles />} />
                         
                         {/* Rutas de actualización */}
-                        <Route path={"actualizar/requerimientos/:id"} element={<Update />} />
-                        <Route path={"actualizar/testigos/:id"} element={<Testigos_update />} />
-                        <Route path={"actualizar/matrimonio/:id"} element={<DetallesMatrimonio_update />} />
-                        <Route path={"actualizar/pagos/:id"} element={<Pagos_update />} />
-                        <Route path={"actualizar/:id"} element={<Update_Page />} />
+                        <Route path={"actualizar/requerimientos"} element={<Update />} />
+                        <Route path={"actualizar/testigos"} element={<Testigos_update />} />
+                        <Route path={"actualizar/matrimonio"} element={<DetallesMatrimonio_update />} />
+                        <Route path={"actualizar/pagos"} element={<Pagos_update />} />
+                        <Route path={"actualizar"} element={<Update_Page />} />
 
                         <Route path={"documentos/emitir"} element={<EmitirDocumentos />} />
                         <Route path={"documentos/ver"} element={<VerDocumento />} />

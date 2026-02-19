@@ -1,4 +1,4 @@
-import { useParams, useNavigate } from "react-router-dom";
+import { useLocation, useNavigate } from "react-router-dom";
 import { useDetailsApplication } from "../../hooks/useApplicationDetails";
 
 const ACTION_CARDS = [
@@ -8,7 +8,7 @@ const ACTION_CARDS = [
         description: "Agregar o modificar los testigos de la solicitud",
         icon: "fa-users",
         color: "indigo",
-        route: (id: string) => `/dashboard/actualizar/testigos/${id}`,
+        path: "/dashboard/actualizar/testigos",
     },
     {
         key: "requerimientos",
@@ -16,7 +16,7 @@ const ACTION_CARDS = [
         description: "Revisar y actualizar el estado de los requisitos",
         icon: "fa-clipboard-list",
         color: "blue",
-        route: (id: string) => `/dashboard/actualizar/requerimientos/${id}`,
+        path: "/dashboard/actualizar/requerimientos",
     },
     {
         key: "matrimonio",
@@ -24,7 +24,7 @@ const ACTION_CARDS = [
         description: "Editar la información del acto matrimonial",
         icon: "fa-ring",
         color: "pink",
-        route: (id: string) => `/dashboard/actualizar/matrimonio/${id}`,
+        path: "/dashboard/actualizar/matrimonio",
     },
     {
         key: "pagos",
@@ -32,7 +32,7 @@ const ACTION_CARDS = [
         description: "Confirmar y registrar los pagos asociados",
         icon: "fa-credit-card",
         color: "green",
-        route: (id: string) => `/dashboard/actualizar/pagos/${id}`,
+        path: "/dashboard/actualizar/pagos",
     },
 ];
 
@@ -54,7 +54,8 @@ const formatFecha = (fecha: string | null) =>
     fecha ? new Date(fecha).toLocaleDateString("es-PE", { day: "2-digit", month: "short", year: "numeric" }) : "—";
 
 const Update_Page = () => {
-    const { id } = useParams<{ id: string }>();
+    const location = useLocation();
+    const id = (location.state as { id?: string })?.id;
     const navigate = useNavigate();
     const { application, loading } = useDetailsApplication(id);
 
@@ -65,27 +66,22 @@ const Update_Page = () => {
     const pagado = application?.pago?.pagado === "1";
 
     return (
-        <div className="min-h-screen bg-gray-50 p-6">
+        <div className="min-h-screen bg-blue-100 p-6">
             {/* Header */}
-            <div className="flex items-center justify-between mb-6">
+            <div className="flex items-center justify-between mb-4">
                 <div>
                     <div className="flex items-center gap-2 text-md text-gray-400 mb-2">
-                        <button onClick={() => navigate(-1)} className="hover:text-indigo-600 transition-colors">
+                        <button onClick={() => navigate(-1)} className="hover:text-indigo-600 cursor-pointer transition-colors">
                             <i className="fas fa-arrow-left mr-1"></i>Volver
                         </button>
                         <span>/</span>
                         <span>Actualizar Solicitud</span>
                     </div>
-                    <h1 className="text-2xl font-bold text-gray-800">
-                        <i className="fas fa-file-pen mr-2 text-indigo-500"></i>
-                        Actualizar Solicitud
-                        <span className="ml-2 text-sm font-normal text-gray-400">{application?.expediente}</span>
-                    </h1>
                 </div>
             </div>
 
             {/* Resumen de la solicitud */}
-            <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6 mb-6">
+            <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6 mb-4">
                 {loading ? (
                     <div className="flex items-center justify-center h-28 gap-3 text-gray-400">
                         <span className="loading loading-spinner loading-md text-indigo-500"></span>
@@ -93,10 +89,15 @@ const Update_Page = () => {
                     </div>
                 ) : application ? (
                     <div>
+                        <h1 className="text-2xl text-center font-bold border-b border-gray-200 pb-4 mb-4 text-gray-800">
+                            <i className="fas fa-file-pen mr-2 text-indigo-500"></i>
+                            Actualizar Solicitud
+
+                        </h1>
                         {/* Título y estado */}
                         <div className="flex flex-wrap items-start justify-between gap-3 mb-4">
                             <div>
-                                <span className={`text-xs font-semibold px-3 py-1 rounded-full ${estadoClasses[application.estado] ?? "bg-gray-100 text-gray-600"}`}>
+                                <span className={`text-xs font-semibold px-3 py-1 rounded-full ${estadoClasses[application.estado] ?? "bg-blue-600 text-white"}`}>
                                     {application.estado}
                                 </span>
                                 <h2 className="text-xl font-bold text-gray-900 mt-2">{application.nombreSolicitud}</h2>
@@ -104,29 +105,29 @@ const Update_Page = () => {
                             </div>
                             <div className="text-right">
                                 <p className="text-2xl font-bold text-green-600">S/ {application.precio.toFixed(2)}</p>
-                                <p className="text-xs text-gray-400">N° expediente: <span className="font-semibold text-gray-600">{application.expediente}</span></p>
+                                <p className="text-md text-gray-400">N° expediente: <span className="font-semibold text-gray-600">{application.expediente}</span></p>
                             </div>
                         </div>
 
                         {/* Datos rápidos */}
                         <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
                             <div className="bg-gray-50 rounded-xl p-3">
-                                <p className="text-xs text-gray-400 font-medium uppercase tracking-wide">Inicio</p>
-                                <p className="text-sm font-semibold text-gray-700 mt-0.5">{formatFecha(application.fechaInicio)}</p>
+                                <p className="text-lg text-gray-800 font-bold uppercase tracking-wide">Inicio:</p>
+                                <p className="text-base font-semibold text-gray-800 mt-0.5">{formatFecha(application.fechaInicio)}</p>
                             </div>
                             <div className="bg-gray-50 rounded-xl p-3">
-                                <p className="text-xs text-gray-400 font-medium uppercase tracking-wide">Encargado</p>
-                                <p className="text-sm font-semibold text-gray-700 mt-0.5 truncate">{application.encargado}</p>
+                                <p className="text-lg text-gray-800 font-bold uppercase tracking-wide">Encargado:</p>
+                                <p className="text-base font-semibold text-gray-800 mt-0.5 truncate">{application.encargado}</p>
                             </div>
                             <div className="bg-gray-50 rounded-xl p-3">
-                                <p className="text-xs text-gray-400 font-medium uppercase tracking-wide">Requerimientos</p>
-                                <p className="text-sm font-semibold text-gray-700 mt-0.5">
+                                <p className="text-lg text-gray-800 font-bold uppercase tracking-wide">Requerimientos:</p>
+                                <p className="text-base font-semibold text-gray-800 mt-0.5">
                                     <span className="text-green-600">{reqEntregados}</span>/{reqTotal} entregados
                                 </p>
                             </div>
                             <div className="bg-gray-50 rounded-xl p-3">
-                                <p className="text-xs text-gray-400 font-medium uppercase tracking-wide">Pago</p>
-                                <p className={`text-sm font-semibold mt-0.5 ${pagado ? "text-green-600" : "text-yellow-600"}`}>
+                                <p className="text-lg text-gray-800 font-bold uppercase tracking-wide">Pago:</p>
+                                <p className={`text-base font-semibold mt-0.5 ${pagado ? "text-green-600" : "text-yellow-600"}`}>
                                     <i className={`fas ${pagado ? "fa-check-circle" : "fa-clock"} mr-1`}></i>
                                     {pagado ? "Pagado" : "Pendiente"}
                                 </p>
@@ -136,27 +137,27 @@ const Update_Page = () => {
                         {/* Participantes */}
                         {(contrayentes.length > 0 || testigos.length > 0) && (
                             <div className="mt-4 pt-4 border-t border-gray-300">
-                                <p className="text-xs font-semibold text-gray-400 uppercase tracking-wide mb-2">Participantes</p>
+                                <p className="text-lg font-semibold text-gray-800 uppercase tracking-wide mb-2">
+                                    <i className="fas fa-user-friends text-indigo-400 mr-1.5"></i>Participantes</p>
                                 <div className="grid grid-cols-2 gap-2">
                                     <div className="flex flex-col">
-                                        <span className="text-md font-semibold text-indigo-600">Contrayentes</span>
+                                        <span className="text-lg font-semibold text-indigo-600">Prometidos:</span>
                                         <div className="flex items-center flex-wrap gap-2 mt-1">
-
                                             {contrayentes.map((p, i) => (
-                                                <span key={i} className="inline-flex items-center gap-1.5 bg-indigo-50 text-indigo-700 text-xs font-medium px-3 py-1 rounded-full">
+                                                <span key={i} className="inline-flex items-center gap-1.5 bg-indigo-50 text-indigo-700 text-base font-medium px-3 py-1 rounded-full">
                                                     <i className="fas fa-user text-indigo-400"></i>{p.nombre}
                                                 </span>
                                             ))}
                                         </div>
                                     </div>
                                     <div className="flex flex-col">
-                                        <span className="text-md font-semibold text-green-600">Testigos</span>
+                                        <span className="text-lg font-semibold text-green-600">Testigos:</span>
                                         <div className="flex items-center flex-wrap gap-2 mt-1">
-                                        {testigos.map((p, i) => (
-                                            <span key={i} className="inline-flex items-center gap-1.5 bg-gray-100 text-green-600 text-xs font-medium px-3 py-1 rounded-full">
-                                                <i className="fas fa-user-friends text-green-400"></i>{p.nombre}
-                                            </span>
-                                        ))}
+                                            {testigos.map((p, i) => (
+                                                <span key={i} className="inline-flex items-center gap-1.5 bg-gray-100 text-green-600 text-base font-medium px-3 py-1 rounded-full">
+                                                    <i className="fas fa-user-friends text-green-400"></i>{p.nombre}
+                                                </span>
+                                            ))}
                                         </div>
                                     </div>
                                 </div>
@@ -166,31 +167,31 @@ const Update_Page = () => {
                         {/* Detalles del Matrimonio */}
                         {application.matrimonio && (
                             <div className="mt-4 pt-4 border-t border-gray-300">
-                                <p className="text-xs font-semibold text-gray-400 uppercase tracking-wide mb-3">
+                                <p className="text-lg font-semibold text-gray-800 uppercase tracking-wide mb-3">
                                     <i className="fas fa-ring text-pink-400 mr-1.5"></i>Detalles del Matrimonio
                                 </p>
                                 <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
                                     <div className="bg-pink-50 rounded-xl p-3">
-                                        <p className="text-xs text-gray-400 font-medium uppercase tracking-wide">Fecha</p>
-                                        <p className="text-sm font-semibold text-gray-700 mt-0.5">
+                                        <p className="text-lg text-pink-500 font-bold uppercase tracking-wide">Fecha:</p>
+                                        <p className="text-base font-semibold text-gray-800 mt-0.5">
                                             {new Date(application.matrimonio.fecha).toLocaleDateString("es-PE", { day: "2-digit", month: "short", year: "numeric" })}
                                         </p>
                                     </div>
                                     <div className="bg-pink-50 rounded-xl p-3">
-                                        <p className="text-xs text-gray-400 font-medium uppercase tracking-wide">Hora</p>
-                                        <p className="text-sm font-semibold text-gray-700 mt-0.5">
+                                        <p className="text-lg text-pink-500 font-bold uppercase tracking-wide">Hora:</p>
+                                        <p className="text-base font-semibold text-gray-800 mt-0.5">
                                             {application.matrimonio.hora.slice(0, 5)}
                                         </p>
                                     </div>
                                     <div className="bg-pink-50 rounded-xl p-3">
-                                        <p className="text-xs text-gray-400 font-medium uppercase tracking-wide">Dirección</p>
-                                        <p className="text-sm font-semibold text-gray-700 mt-0.5 truncate">
+                                        <p className="text-lg text-pink-500 font-bold uppercase tracking-wide">Dirección:</p>
+                                        <p className="text-base font-semibold text-gray-800 mt-0.5 truncate">
                                             {application.matrimonio.direccion}
                                         </p>
                                     </div>
                                     <div className="bg-pink-50 rounded-xl p-3">
-                                        <p className="text-xs text-gray-400 font-medium uppercase tracking-wide">Oficiante</p>
-                                        <p className="text-sm font-semibold text-gray-700 mt-0.5 truncate">
+                                        <p className="text-lg text-pink-500 font-bold uppercase tracking-wide">Oficiante:</p>
+                                        <p className="text-base font-semibold text-gray-800 mt-0.5 truncate">
                                             {application.matrimonio.oficiante}
                                         </p>
                                     </div>
@@ -204,22 +205,24 @@ const Update_Page = () => {
             </div>
 
             {/* Tarjetas de acción */}
-            <p className="text-xs font-semibold text-gray-400 uppercase tracking-widest mb-3">Selecciona una sección para editar</p>
+            <p className="text-xl font-semibold text-gray-800 text-shadow-xl/30 text-center uppercase tracking-widest mb-3">Seleccione una sección para editar</p>
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
                 {ACTION_CARDS.map(card => {
                     const c = colorMap[card.color];
                     return (
                         <button
                             key={card.key}
-                            onClick={() => id && navigate(card.route(id))}
-                            className={`group text-left bg-white border border-gray-200 rounded-2xl p-5 shadow-sm hover:shadow-md transition-all duration-200 ${c.bg}`}
+                            onClick={() => id && navigate(card.path, { state: { id } })}
+                            className={`group text-left bg-white border border-gray-200 rounded-2xl p-5 shadow-sm hover:shadow-md transition-all duration-200 cursor-pointer ${c.bg}`}
                         >
-                            <div className={`w-11 h-11 rounded-xl ${c.iconBg} flex items-center justify-center mb-4 group-hover:scale-110 transition-transform duration-200`}>
-                                <i className={`fas ${card.icon} ${c.iconText} text-lg`}></i>
+                            <div className="flex items-center mb-4">
+                                <div className={`w-11 h-11 rounded-xl ${c.iconBg} flex items-center justify-center group-hover:scale-110 transition-transform duration-200`}>
+                                    <i className={`fas ${card.icon} ${c.iconText} text-lg`}></i>
+                                </div>
+                                <h3 className="font-semibold text-gray-800 text-lg ml-4">{card.label}</h3>
                             </div>
-                            <h3 className="font-semibold text-gray-800 text-sm mb-1">{card.label}</h3>
-                            <p className="text-xs text-gray-400 leading-relaxed mb-4">{card.description}</p>
-                            <span className={`inline-flex items-center gap-1.5 text-xs font-medium px-3 py-1 rounded-full ${c.badge}`}>
+                            <p className="text-base text-gray-400 leading-relaxed mb-4">{card.description}</p>
+                            <span className={`inline-flex items-center gap-1.5 text-sm font-medium px-3 py-1 rounded-full ${c.badge}`}>
                                 Editar <i className="fas fa-arrow-right text-xs"></i>
                             </span>
                         </button>
