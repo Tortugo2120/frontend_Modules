@@ -9,17 +9,18 @@ interface ApplicantFormProps {
 }
 
 export default function ApplicantForm({
-    tipoSolicitudNombre,
-    descriptionSolicitud,
-    onValidationChange,
-}: ApplicantFormProps) {
+                                          tipoSolicitudNombre,
+                                          descriptionSolicitud,
+                                          onValidationChange,
+                                      }: ApplicantFormProps) {
     const { formDataAplication, updateApplicationData } = ApplicationHandler();
     const {
         setSearchValue,
         isChecking,
         error,
         exists,
-        clearCache
+        clearCache,
+        reset
     } = useValidateExpediente(500);
 
     // Estado para número de expediente
@@ -28,48 +29,63 @@ export default function ApplicantForm({
     });
     const [expedientError, setExpedientError] = useState<string>('');
     const [backendValidated, setBackendValidated] = useState<boolean>(false);
+    const [localValidationPassed, setLocalValidationPassed] = useState<boolean>(false);
 
-    // Validación de longitud en tiempo real (sin debounce)
-    const handleExpedientInput = useCallback((e: React.FormEvent<HTMLInputElement>) => {
-        const value = (e.target as HTMLInputElement).value.trim().toUpperCase();
+    // Validaciones locales del input (longitud y caracteres permitidos)
+    const handleExpedientInput = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
+        let value = e.target.value.toUpperCase();
+
+        // Permitir solo letras, números y guiones
+        value = value.replace(/[^A-Z0-9-]/g, '');
+
         setExpedientNumber(value);
+        setBackendValidated(false);
 
-        // Validaciones locales inmediatas
-        let localError = '';
+        // Resetear todos los estados del hook cuando cambia el valor
+        reset();
+
+        // Validaciones locales
+        let localError: string;
+        let validationPassed = false;
+
         if (value.length === 0) {
             localError = 'El número de expediente es obligatorio';
         } else if (value.length < 3) {
             localError = 'El número de expediente debe tener al menos 3 caracteres';
+        } else if (value.length > 20) {
+            localError = 'El número de expediente no puede exceder 20 caracteres';
+        } else {
+            // Validaciones locales pasadas
+            validationPassed = true;
+            localError = '';
         }
 
         setExpedientError(localError);
-        setBackendValidated(false);
-    }, []);
+        setLocalValidationPassed(validationPassed);
+    }, [reset]);
 
-    // Dispara la búsqueda en el backend cuando el usuario deja de escribir
-    const handleExpedientChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
-        const value = e.target.value.trim().toUpperCase();
-
-        // Solo buscar si el valor tiene al menos 3 caracteres
-        if (value.length >= 3) {
-            setSearchValue(value);
+    // Validación del backend cuando se hace clic en el botón
+    const handleValidateClick = useCallback(() => {
+        if (!localValidationPassed || expedientNumber.length < 3) {
+            return;
         }
-    }, [setSearchValue]);
+        // Llamar al backend para validar
+        setSearchValue(expedientNumber);
+    }, [expedientNumber, localValidationPassed, setSearchValue]);
 
     // Maneja los resultados de la validación del backend
     useEffect(() => {
+        // No hacer nada si el expediente está vacío o es muy corto
         if (expedientNumber.length < 3) {
-            setBackendValidated(false);
             return;
         }
 
+        // Si está verificando, mostrar estado de carga
         if (isChecking) {
-            setExpedientError('Verificando disponibilidad...');
-            setBackendValidated(false);
             return;
         }
 
-        // Verificar el resultado del backend primero
+        // Verificar el resultado del backend solo si existe un resultado
         if (exists !== null && exists !== undefined) {
             if (exists) {
                 // El expediente ya existe (status: false, code: 409)
@@ -85,11 +101,10 @@ export default function ApplicantForm({
             return;
         }
 
-        // Solo mostrar error de conexión si hay un error real y no hay resultado
+        // Mostrar error de conexión solo si hay un error real
         if (error) {
             setExpedientError('Error al verificar el expediente. Intente nuevamente.');
             setBackendValidated(false);
-            return;
         }
     }, [isChecking, error, exists, expedientNumber, updateApplicationData]);
 
@@ -149,42 +164,69 @@ export default function ApplicantForm({
                         </p>
 
                         <div className="w-full max-w-lg">
-                            <input
-                                type="text"
-                                value={expedientNumber}
-                                onInput={handleExpedientInput}
-                                onChange={handleExpedientChange}
-                                className={`w-full px-4 py-3 text-sm sm:text-base border-2 rounded-lg font-bold uppercase outline-0 transition-all focus:ring-2 focus:ring-blue-500 ${
-                                    isChecking
-                                        ? 'border-yellow-500 bg-yellow-50'
-                                        : expedientError
-                                            ? 'border-red-500 bg-red-50'
-                                            : backendValidated
-                                                ? 'border-green-500 bg-green-50'
-                                                : 'border-gray-300 bg-white'
-                                }`}
-                                placeholder="EJ: EXP-2026-001"
-                                maxLength={20}
-                            />
-                            
+                            <div className="join w-full">
+                                <input
+                                    type="text"
+                                    value={expedientNumber}
+                                    onChange={handleExpedientInput}
+                                    className={`join-item input input-bordered w-full font-bold uppercase outline-0 ${
+                                        isChecking
+                                            ? 'input-warning'
+                                            : expedientError && expedientNumber.length > 0
+                                                ? 'input-error'
+                                                : backendValidated
+                                                    ? 'input-success'
+                                                    : ''
+                                    }`}
+                                    placeholder="EJ: EXP-2026-001"
+                                    maxLength={20}
+                                />
+                                <button
+                                    className="btn btn-primary join-item"
+                                    type="button"
+                                    onClick={handleValidateClick}
+                                    disabled={!localValidationPassed || isChecking || backendValidated}
+                                >
+                                    {isChecking ? (
+                                        <>
+                                            <span className="loading loading-spinner loading-sm"></span>
+                                            Verificando
+                                        </>
+                                    ) : backendValidated ? (
+                                        <>
+                                            <i className="fas fa-check"></i>
+                                            Validado
+                                        </>
+                                    ) : (
+                                        <>
+                                            <i className="fas fa-search"></i>
+                                            Validar
+                                        </>
+                                    )}
+                                </button>
+                            </div>
+
+                            {/* Mensajes de validación local */}
+                            {expedientError && expedientNumber.length > 0 && !isChecking && (
+                                <p className="text-error text-xs mt-2 flex items-center gap-1">
+                                    <i className="fas fa-exclamation-circle"></i>
+                                    {expedientError}
+                                </p>
+                            )}
+
+                            {/* Mensaje de verificación en proceso */}
                             {isChecking && (
-                                <p className="text-yellow-600 text-xs mt-2 flex items-center gap-1">
+                                <p className="text-warning text-xs mt-2 flex items-center gap-1">
                                     <i className="fas fa-spinner fa-spin"></i>
                                     Verificando disponibilidad del expediente...
                                 </p>
                             )}
 
-                            {expedientError && !isChecking && (
-                                <p className="text-red-500 text-xs mt-2 flex items-center gap-1">
-                                    <i className="fas fa-exclamation-circle"></i>
-                                    {expedientError}
-                                </p>
-                            )}
-                            
+                            {/* Mensaje de éxito */}
                             {backendValidated && !isChecking && !expedientError && (
-                                <p className="text-green-600 text-xs mt-2 flex items-center gap-1">
+                                <p className="text-success text-xs mt-2 flex items-center gap-1">
                                     <i className="fas fa-check-circle"></i>
-                                    Expediente verificado correctamente
+                                    Expediente disponible y verificado correctamente
                                 </p>
                             )}
                         </div>
