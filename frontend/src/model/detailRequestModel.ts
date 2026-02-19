@@ -28,6 +28,13 @@ export interface PagoDetalle {
     fecha_pago: string | null;
 }
 
+export interface MatrimonioDetalle {
+    fecha: string;
+    hora: string;
+    direccion: string;
+    oficiante: string;
+}
+
 
 export interface ApplicationBackendDetail {
     id: string;
@@ -43,7 +50,7 @@ export interface ApplicationBackendDetail {
     participantes: ParticipanteDetalle[];
     requisitos: RequisitoDetalle[];
     pago: PagoDetalle;
-    matrimonio: any | null;
+    matrimonio: MatrimonioDetalle | null;
 }
 
 
@@ -68,4 +75,5 @@ export interface ApplicationDetailItem {
     participantes: ParticipanteDetalle[];
     requisitos: RequisitoDetalle[];
     pago: PagoDetalle;
+    matrimonio: MatrimonioDetalle | null;
 }

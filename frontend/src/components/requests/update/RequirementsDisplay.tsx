@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef } from "react";
-import type { RequirementByApplication } from "../../model/requerimentsModel.ts";
+import type { RequirementByApplication } from "../../../model/requerimentsModel.ts";
 
 interface ArchivoRequisito {
     nombre: string;
@@ -286,7 +286,7 @@ export const RequirementsDisplay = ({ requirements, onRequirementsChange }: Requ
                                         </div>
                                     </div>
 
-                                    {/* Sección de adjunto — visible solo si checkbox está activo */}
+                                    {/* Sección de adjunto */}
                                     {isChecked && (
                                         <div className="mt-4 pt-4 border-t border-blue-200 space-y-3">
                                             {!archivo ? (
@@ -301,10 +301,12 @@ export const RequirementsDisplay = ({ requirements, onRequirementsChange }: Requ
                                                         <i className="fas fa-paperclip"></i>
                                                         Adjuntar documento (Opcional)
                                                     </span>
-                                                    <span className="text-xs text-gray-500">PDF, JPG, PNG, DOCX</span>
-                                                    <span className='text-xs font-black text-red-800'>
-                                                        opcional*
-                                                    </span>
+                                                    <div className="flex flex-col gap-1">
+                                                        <span className='text-xs font-black text-red-800'>
+                                                            opcional*
+                                                        </span>
+                                                        <span className="text-xs text-gray-500">Menor a 5MB</span>
+                                                    </div>
                                                 </label>
                                             ) : (
                                                 <div className="flex items-center justify-between bg-white rounded-lg border border-blue-200 px-4 py-2">

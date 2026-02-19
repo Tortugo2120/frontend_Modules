@@ -20,7 +20,8 @@ const transformDetalleSolicitud = (backendData: ApplicationBackendDetail): Appli
         encargado: backendData.encargado,
         participantes: backendData.participantes || [],
         requisitos: backendData.requisitos || [],
-        pago: backendData.pago
+        pago: backendData.pago,
+        matrimonio: backendData.matrimonio ?? null
     };
 };
 

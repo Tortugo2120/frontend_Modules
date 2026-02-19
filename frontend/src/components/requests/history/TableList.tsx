@@ -201,7 +201,7 @@ export default function TableList({ data }: Props) {
                                     <td className="pr-4">
                                         <div className="flex items-center justify-center gap-2">
                                             <button
-                                                onClick={() => navigate(`/dashboard/actualizar/requerimientos/${item.id}`)}
+                                                onClick={() => navigate(`/dashboard/actualizar/${item.id}`)}
                                                 className="btn btn-sm btn-circle btn-ghost text-amber-600 hover:bg-amber-100 transition-colors"
                                                 title="Editar solicitud"
                                             >

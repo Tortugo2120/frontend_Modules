@@ -198,6 +198,33 @@ export const Detalles = () => {
             </div>
           </section>
 
+          {/* DETALLES DEL MATRIMONIO */}
+          {application.matrimonio && (
+            <section className="mb-8">
+              <div className="bg-info-content text-white px-4 py-2 mb-4">
+                <h2 className="text-lg font-bold">DETALLES DEL MATRIMONIO</h2>
+              </div>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-x-8 gap-y-3">
+                <div className="flex flex-col sm:flex-row sm:gap-2">
+                  <span className="font-semibold text-gray-700">Fecha:</span>
+                  <span>{new Date(application.matrimonio.fecha).toLocaleDateString("es-PE", { day: "2-digit", month: "long", year: "numeric" })}</span>
+                </div>
+                <div className="flex flex-col sm:flex-row sm:gap-2">
+                  <span className="font-semibold text-gray-700">Hora:</span>
+                  <span>{application.matrimonio.hora.slice(0, 5)}</span>
+                </div>
+                <div className="flex flex-col sm:flex-row sm:gap-2">
+                  <span className="font-semibold text-gray-700">Dirección:</span>
+                  <span>{application.matrimonio.direccion}</span>
+                </div>
+                <div className="flex flex-col sm:flex-row sm:gap-2">
+                  <span className="font-semibold text-gray-700">Oficiante:</span>
+                  <span>{application.matrimonio.oficiante}</span>
+                </div>
+              </div>
+            </section>
+          )}
+
           {shouldShowPaymentDetails(application.nombreSolicitud, application.estado) && (
             <section className="mb-4">
               <div className="bg-info-content text-white px-4 py-2 mb-4">
