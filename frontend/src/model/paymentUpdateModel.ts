@@ -1,9 +1,9 @@
 // Payload para actualizar el pago de una solicitud
 export interface PaymentUpdatePayload {
     numero_comprobante: string;
-    pagado: '0' | '1';
     estado: string;
     fecha_pago: string;
+    pagado?: '0' | '1'; // Opcional: indica si el pago está confirmado
 }
 
 // Respuesta del backend al actualizar el pago
