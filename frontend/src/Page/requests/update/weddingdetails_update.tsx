@@ -46,15 +46,21 @@ const DetallesMatrimonio_update = () => {
   useEffect(() => {
     if (!application?.matrimonio) return;
     const m = application.matrimonio;
-    setValue('fecha', m.fecha || '', { shouldDirty: true });
+
+    // Formatear la fecha para el input date (YYYY-MM-DD)
+    const fechaFormateada = m.fecha ? m.fecha.split(' ')[0] : '';
+    setValue('fecha', fechaFormateada, { shouldDirty: true });
     setValue('hora', m.hora || '', { shouldDirty: true });
     setValue('direccion', m.direccion || '', { shouldDirty: true });
 
-    if (oficiantes.length > 0) {
-      const match = oficiantes.find(o => o.id === m.oficiante || o.full_name === m.oficiante);
-      setValue('oficianteId', match ? match.id : '', { shouldDirty: true });
+    // Buscar el oficiante por nombre completo
+    if (oficiantes.length > 0 && m.oficiante) {
+      const match = oficiantes.find(o => o.full_name === m.oficiante);
+      if (match) {
+        setValue('oficianteId', match.id, { shouldDirty: true });
+      }
     }
-  }, [application, oficiantes]);
+  }, [application, oficiantes, setValue]);
 
   const onSubmit = (data: WeddingFormData) => {
     if (!applicationId) {
@@ -196,7 +202,7 @@ const DetallesMatrimonio_update = () => {
                   className="w-full px-3 py-2 text-base border border-gray-300 rounded-lg bg-white outline-0 focus:ring-2 focus:ring-pink-500 disabled:bg-gray-100"
                 >
                   <option value="">
-                    {loadingOficiantes ? 'Cargando...' : 'Seleccione un oficiante'}
+                    {loadingOficiantes ? 'Cargando oficiantes...' : 'Seleccione un oficiante'}
                   </option>
                   {oficiantes.map(o => (
                     <option key={o.id} value={o.id}>{o.full_name}</option>

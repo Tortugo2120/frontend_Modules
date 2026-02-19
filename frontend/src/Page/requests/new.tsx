@@ -62,7 +62,7 @@ export default function NewRequest() {
             const documents = await db.obtenerDocuments();
             //console.log(`Documentos recuperados de IndexedDB: ${documents.length}`);
             //console.log('Preparando para enviar solicitud a la API:', formDataAplication);
-            //console.log(JSON.stringify(formDataAplication, null, 2));
+            console.log(JSON.stringify(formDataAplication, null, 2));
             const response = await createSolicitud(formDataAplication);
 
             if (response?.status) {
