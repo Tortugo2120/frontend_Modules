@@ -26,7 +26,7 @@ export const updatePaymentByApplicationId = async (
 ): Promise<UpdatePaymentResponse> => {
     try {
         const response = await apiAxios.put<UpdatePaymentResponse>(
-            `/api/v1/application/${applicationId}/payment`,
+            `/api/v1/application/payment/${applicationId}`,
             payload
         );
         return response.data;
