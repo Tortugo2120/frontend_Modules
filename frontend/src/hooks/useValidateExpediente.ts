@@ -100,6 +100,15 @@ export const useValidateExpediente = (delay: number = 500) => {
     cache.current.clear();
     setExists(null);
     setError(null);
+    setIsChecking(false);
+  }, []);
+
+  // Resetear todos los estados (útil cuando se cambia el input)
+  const reset = useCallback(() => {
+    setExists(null);
+    setError(null);
+    setIsChecking(false);
+    setSearchValue('');
   }, []);
 
   // Invalidar una entrada específica de la caché
@@ -126,6 +135,7 @@ export const useValidateExpediente = (delay: number = 500) => {
     error,
     exists,
     clearCache,
+    reset,
     invalidateCache,
     cleanExpiredCache
   };

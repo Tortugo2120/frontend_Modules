@@ -97,14 +97,14 @@ export default function NewRequest() {
                         setTimeout(() => {
                             setShowAlert(false);
                             navigate('/dashboard/solicitud/history');
-                        }, 3000);
+                        }, 2000);
                     } else {
                         console.warn('Algunos documentos fallaron:', uploadResult.message);
                         mostrarAlert(`Solicitud creada pero algunos documentos fallaron no se pudieron subir`, 'warning');
                         setTimeout(() => {
                             setShowAlert(false);
                             navigate('/dashboard/solicitud/history');
-                        }, 3000);
+                        }, 2000);
                         return;
                     }
                 } else {

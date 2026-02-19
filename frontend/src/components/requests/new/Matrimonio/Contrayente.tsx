@@ -7,6 +7,7 @@ import { contrayenteSchema, type ContrayenteFormData } from '../../../../Validat
 import { useApplicationContext } from '../../../../context/ApplicationContext.tsx';
 import { z } from "zod";
 import type { Participant } from "../../../../model/aplicationModel.ts";
+import Alert from '../../../Alert.tsx';
 
 interface Solicitud {
     tipoSolicitudNombre?: string;
@@ -310,13 +311,10 @@ const Contrayente = (props: Solicitud) => {
                 const otroContrayente = contrayentes[0];
                 if (otroContrayente.gender === data.gender) {
                     setSameGenderError('Los contrayentes deben ser de sexo diferente (hombre y mujer)');
-                    setError('Los contrayentes deben ser de sexo diferente (hombre y mujer)');
-
-                    // Limpiar el error después de 5 segundos
-                    setTimeout(() => {
-                        setSameGenderError('');
-                    }, 5000);
                     return;
+                } else {
+                    // Limpiar error si los géneros son diferentes
+                    setSameGenderError('');
                 }
             }
 
@@ -702,15 +700,11 @@ const Contrayente = (props: Solicitud) => {
 
             {/* Alerta de error de mismo sexo */}
             {sameGenderError && (
-                <div className="alert alert-error shadow-lg">
-                    <div className="flex items-center gap-3">
-                        <i className="fas fa-exclamation-circle text-xl"></i>
-                        <div>
-                            <h3 className="font-bold">Error de validación</h3>
-                            <div className="text-sm">{sameGenderError}</div>
-                        </div>
-                    </div>
-                </div>
+                <Alert
+                    type="warning"
+                    message={sameGenderError}
+                    onClose={() => setSameGenderError('')}
+                />
             )}
 
             {/* Contrayente 1 */}
@@ -754,7 +748,14 @@ const Contrayente = (props: Solicitud) => {
                     isForm2Modified
                 )}
             </div>
-
+            {/* Alerta de error de mismo sexo */}
+            {sameGenderError && (
+                <Alert
+                    type="warning"
+                    message={sameGenderError}
+                    onClose={() => setSameGenderError('')}
+                />
+            )}
             {/* Tabla de contrayentes agregados */}
             {formDataAplication.participants.filter((p: Participant) => p.rol === 'contrayente').length > 0 && (
                 <div className="mt-6">

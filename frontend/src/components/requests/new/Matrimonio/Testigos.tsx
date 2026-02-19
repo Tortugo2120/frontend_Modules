@@ -479,6 +479,7 @@ const Testigo = (props: Solicitud) => {
                         </label>
                         <input
                             type="text"
+                            className='w-full px-3 sm:px-4 py-2 text-sm sm:text-base border border-gray-300 rounded-lg bg-white outline-0 transition-all focus:ring-2 focus:ring-blue-500 focus:border-transparent'
                             {...registerForm('cui')}
                             placeholder="CUI"
                             maxLength={8}

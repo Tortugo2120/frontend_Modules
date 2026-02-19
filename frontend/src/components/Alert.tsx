@@ -21,7 +21,7 @@ const Alert = ({ message, type = 'info', onClose }: Props) => {
     return (
         <div role="alert" className={`alert ${alertStyles[type]} shadow-lg`}>
             <i className={`fas ${icons[type]} text-xl`}></i>
-            <span>{message}</span>
+            <span className={"text-[18px]"}>{message}</span>
             {onClose && (
                 <div className="flex-none">
                     <button onClick={onClose} className="btn btn-sm btn-ghost"><i className="fa-solid fa-x"></i></button>
