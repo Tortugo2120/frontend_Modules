@@ -36,9 +36,9 @@ const fillFormFromParticipant = (
 ) => {
     const parts = p.nombre.trim().split(' ');
 
-    const names = parts.slice(0, parts.length - 2).join(' ') || parts[0] || '';
-    const paternalSurname = parts[parts.length - 2] || '';
-    const maternalSurname = parts[parts.length - 1] || '';
+    const paternalSurname = parts[0] || '';
+    const maternalSurname = parts.length >= 2 ? parts[1] : '';
+    const names = parts.length >= 3 ? parts.slice(2).join(' ') : '';
 
     const docTypeMap: Record<string, number> = { DNI: 1, PASAPORTE: 2, CEDULA: 3 };
     setValue('documentTypeId', docTypeMap[p.tipo_identificacion?.toUpperCase()] ?? 1);
@@ -52,13 +52,10 @@ const fillFormFromParticipant = (
     setValue('address', p.direccion || '');
     setValue('email', p.correo || '');
     setValue('phone', p.telefono || '');
-    // ubigeo_completo e.g. "150101 - Lima..."
-    const ubigeo = p.ubigeo_completo?.split(' ')[0] || '';
+    const ubigeo = p.ubigeo;
     setValue('ubigeoId', ubigeo);
     setValue('maritalStatus', p.estado_civil as any || undefined);
 };
-
-/* ─── Sub form for one witness ─────────────────────────────── */
 
 interface WitnessFormBlockProps {
     registerForm: any;
@@ -257,7 +254,7 @@ const WitnessFormBlock = ({
     );
 };
 
-/* ─── Main page ─────────────────────────────────────────────── */
+
 
 const Testigos_update = () => {
     const location = useLocation();
@@ -288,13 +285,13 @@ const Testigos_update = () => {
     const [searchOk2, setSearchOk2] = useState(false);
     const [alert, setAlert] = useState<{ type: 'success' | 'error'; msg: string } | null>(null);
 
-    /* ── Pre-fill forms from API data ── */
+    /* ── Carga de datos de testigos ── */
     useEffect(() => {
         if (!application) return;
         const testigos = application.participantes.filter(p => p.rol === 'TESTIGO');
         if (testigos[0]) fillFormFromParticipant(testigos[0], sVal1);
         if (testigos[1]) fillFormFromParticipant(testigos[1], sVal2);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
+
     }, [application]);
 
     /* ── Search handler ── */
@@ -339,7 +336,7 @@ const Testigos_update = () => {
         else { resetSearch2(); resetF2(); setSearchErr2(''); setSearchOk2(false); }
     }, [resetSearch1, resetSearch2, resetF1, resetF2]);
 
-    /* ── Save ── */
+    /* Guardar */
     const handleSave = () => {
         let formOneData: TestigoFormData | null = null;
         let formTwoData: TestigoFormData | null = null;
@@ -347,7 +344,7 @@ const Testigos_update = () => {
 
         const trySubmit = () => {
             if (pendingForms > 0) return;
-            if (!formOneData || !formTwoData) return; // validation failed
+            if (!formOneData || !formTwoData) return;
 
             if (!applicationId) {
                 setAlert({ type: 'error', msg: 'No se encontró el ID de la solicitud' }); return;
@@ -386,7 +383,7 @@ const Testigos_update = () => {
         hSub2((data) => { formTwoData = data; pendingForms--; trySubmit(); })();
     };
 
-    /* ─── Render ─── */
+
     if (loadingDetail) {
         return (
             <div className="min-h-screen bg-blue-300/40 flex items-center justify-center">

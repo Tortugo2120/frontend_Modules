@@ -11,6 +11,7 @@ export interface ParticipanteDetalle {
     telefono: string;
     correo: string;
     ubigeo_completo: string;
+    ubigeo:number
 }
 
 

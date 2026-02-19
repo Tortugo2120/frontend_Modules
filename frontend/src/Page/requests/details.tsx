@@ -178,6 +178,7 @@ export const Detalles = () => {
                     <th className="border border-gray-300 px-4 py-2 text-left">Requisito</th>
                     <th className="border border-gray-300 px-4 py-2 text-left">Estado</th>
                     <th className="border border-gray-300 px-4 py-2 text-left">Fecha Entrega</th>
+                    <th className="border border-gray-300 px-4 py-2 text-left">Observaciones</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -192,6 +193,7 @@ export const Detalles = () => {
                       <td className="border border-gray-300 px-4 py-3 text-sm">
                         {req.fecha_entrega ? new Date(req.fecha_entrega).toLocaleDateString() : "-"}
                       </td>
+                      <td className="border border-gray-300 px-4 py-3 text-sm">{req.observacion}</td>
                     </tr>
                   ))}
                 </tbody>
