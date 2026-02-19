@@ -21,13 +21,18 @@ export const uploadPaymentEvidence = async (
 };
 
 export const updatePaymentByApplicationId = async (
-    applicationId: number,
+    paymentId: number | string,
     payload: PaymentUpdatePayload
 ): Promise<UpdatePaymentResponse> => {
     try {
         const response = await apiAxios.put<UpdatePaymentResponse>(
-            `/api/v1/application/${applicationId}/payment`,
-            payload
+            `/api/v1/payment/${paymentId}`,
+            {
+                paymentReceiptNumber: payload.numero_comprobante,
+                paymentDate: payload.fecha_pago,
+                paymentStatus: payload.estado,
+                paid: payload.pagado
+            }
         );
         return response.data;
     } catch (error) {

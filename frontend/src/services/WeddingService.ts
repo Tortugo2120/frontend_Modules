@@ -7,7 +7,7 @@ export const updateWeddingByApplicationId = async (
 ): Promise<UpdateWeddingResponse> => {
     try {
         const response = await apiAxios.put<UpdateWeddingResponse>(
-            `/api/v1/application/${applicationId}/wedding`,
+            `/api/v1/application/${applicationId}/marriage-details`,
             payload
         );
         return response.data;

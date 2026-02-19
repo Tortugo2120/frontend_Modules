@@ -217,10 +217,14 @@ const Update_Page = () => {
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
                 {ACTION_CARDS.map(card => {
                     const c = colorMap[card.color];
+                    // Si es la tarjeta de pagos, enviar el id del pago y de la solicitud
+                    const stateToSend = card.key === "pagos"
+                        ? { id, paymentId: application?.pago?.id.toString() }
+                        : { id };
                     return (
                         <button
                             key={card.key}
-                            onClick={() => id && navigate(card.path, { state: { id } })}
+                            onClick={() => id && navigate(card.path, { state: stateToSend })}
                             className={`group text-left bg-white border border-gray-200 rounded-2xl p-5 shadow-sm hover:shadow-md transition-all duration-200 cursor-pointer ${c.bg}`}
                         >
                             <div className="flex items-center mb-4">

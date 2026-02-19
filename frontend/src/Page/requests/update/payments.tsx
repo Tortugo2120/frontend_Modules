@@ -2,30 +2,10 @@ import { useEffect, useState } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
-import { z } from 'zod';
 import { useDetailsApplication } from '../../../hooks/useApplicationDetails.ts';
 import { useUpdatePayment } from '../../../hooks/useUpdatePayment.ts';
 import { uploadPaymentEvidence } from '../../../services/PaymentUpdateService.ts';
-
-const paymentSchema = z.object({
-    pagado: z.enum(['0', '1'], { message: 'Seleccione el estado de pago' }),
-    estado: z.string().min(1, 'El estado es obligatorio'),
-    numero_comprobante: z.string().optional(),
-    fecha_pago: z.string().optional(),
-}).superRefine((val, ctx) => {
-    if (val.pagado === '1') {
-        if (!val.numero_comprobante || val.numero_comprobante.trim().length === 0) {
-            ctx.addIssue({ code: z.ZodIssueCode.custom, message: 'El número de comprobante es obligatorio si el pago está confirmado', path: ['numero_comprobante'] });
-        }
-        if (!val.fecha_pago || val.fecha_pago.trim().length === 0) {
-            ctx.addIssue({ code: z.ZodIssueCode.custom, message: 'La fecha de pago es obligatoria si el pago está confirmado', path: ['fecha_pago'] });
-        }
-    }
-});
-
-type PaymentFormData = z.infer<typeof paymentSchema>;
-
-const ESTADOS = ['Pendiente', 'En Proceso', 'Completado', 'Anulado'];
+import { paymentSchema, type PaymentFormData } from '../../../Validations/validationPayment.ts';
 
 const estadoBadge: Record<string, string> = {
     Pendiente:   'bg-yellow-100 text-yellow-700 border-yellow-200',
@@ -37,7 +17,7 @@ const estadoBadge: Record<string, string> = {
 const Pagos = () => {
     const location = useLocation();
     const navigate = useNavigate();
-    const id = (location.state as { id?: string })?.id;
+    const { id } = (location.state as { id?: string; paymentId?: string }) || {};
     const applicationId = id ? parseInt(id, 10) : null;
 
     const { application, loading: loadingDetail } = useDetailsApplication(id);
@@ -46,6 +26,9 @@ const Pagos = () => {
     const [alert, setAlert] = useState<{ type: 'success' | 'error'; msg: string } | null>(null);
     const [evidenceFile, setEvidenceFile] = useState<File | null>(null);
     const [isUploadingEvidence, setIsUploadingEvidence] = useState(false);
+
+    // Obtener el ID del pago desde application.pago.id
+    const paymentId = application?.pago?.id;
 
     const {
         register,
@@ -66,18 +49,25 @@ const Pagos = () => {
         setValue('pagado', (p.pagado === '1' ? '1' : '0') as '0' | '1', { shouldDirty: true });
         setValue('estado', p.estado || 'Pendiente', { shouldDirty: true });
         setValue('numero_comprobante', p.numero_comprobante || '', { shouldDirty: true });
-        setValue('fecha_pago', p.fecha_pago || '', { shouldDirty: true });
 
+        // Formatear fecha para el input tipo date (YYYY-MM-DD)
+        const fechaPago = p.fecha_pago || '';
+        const fechaFormateada = fechaPago ? fechaPago.split(' ')[0] : '';
+        setValue('fecha_pago', fechaFormateada, { shouldDirty: true });
     }, [application]);
 
     const onSubmit = (data: PaymentFormData) => {
-        if (!applicationId) {
-            setAlert({ type: 'error', msg: 'No se encontró el ID de la solicitud' });
+        if (!paymentId) {
+            setAlert({ type: 'error', msg: 'No se encontró el ID del pago' });
             return;
         }
-        updatePayment(applicationId, {
+
+        // Si el pago está marcado como "1" (pagado), cambiar automáticamente el estado a "Completado"
+        const estadoFinal = data.pagado === '1' ? 'Completado' : data.estado;
+
+        updatePayment(paymentId, {
             pagado: data.pagado,
-            estado: data.estado,
+            estado: estadoFinal,
             numero_comprobante: data.numero_comprobante || '',
             fecha_pago: data.fecha_pago || '',
         })
@@ -87,12 +77,13 @@ const Pagos = () => {
                     return;
                 }
                 // Upload evidence file if provided
-                if (evidenceFile) {
+                if (evidenceFile && applicationId) {
                     setIsUploadingEvidence(true);
                     try {
-                        await uploadPaymentEvidence(applicationId, evidenceFile);
-                    } catch (e: any) {
-                        setAlert({ type: 'error', msg: e.message || 'Pago guardado, pero no se pudo subir la evidencia' });
+                        await uploadPaymentEvidence(applicationId as number, evidenceFile);
+                    } catch (e: unknown) {
+                        const error = e as Error;
+                        setAlert({ type: 'error', msg: error.message || 'Pago guardado, pero no se pudo subir la evidencia' });
                         setIsUploadingEvidence(false);
                         return;
                     }
@@ -187,7 +178,7 @@ const Pagos = () => {
                         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
 
                             {/* Pagado */}
-                            <div>
+                            <div className="lg:col-span-3">
                                 <label className="block text-base font-medium text-gray-700 mb-1">
                                     ¿Pago confirmado? <span className="text-red-500">*</span>
                                 </label>
@@ -201,25 +192,8 @@ const Pagos = () => {
                                 {errors.pagado && <p className="text-red-500 text-xs mt-1">{errors.pagado.message}</p>}
                             </div>
 
-                            {/* Estado */}
-                            <div>
-                                <label className="block text-base font-medium text-gray-700 mb-1">
-                                    Estado <span className="text-red-500">*</span>
-                                </label>
-                                <select
-                                    {...register('estado')}
-                                    className="w-full px-3 py-2 text-base border border-gray-300 rounded-lg bg-white outline-0 focus:ring-2 focus:ring-green-500"
-                                >
-                                    <option value="">Seleccione un estado</option>
-                                    {ESTADOS.map(e => (
-                                        <option key={e} value={e}>{e}</option>
-                                    ))}
-                                </select>
-                                {errors.estado && <p className="text-red-500 text-xs mt-1">{errors.estado.message}</p>}
-                            </div>
-
-                            {/* Número de Comprobante */}
-                            <div>
+                            {/* Número de Comprobante - Solo habilitado cuando pagado === '1' */}
+                            <div className="sm:col-span-2 lg:col-span-1">
                                 <label className="block text-base font-medium text-gray-700 mb-1">
                                     N° de Comprobante
                                     {pagadoValue === '1' && <span className="text-red-500"> *</span>}
@@ -228,13 +202,20 @@ const Pagos = () => {
                                     type="text"
                                     {...register('numero_comprobante')}
                                     placeholder="Ej: 001-0000123"
-                                    className={`w-full px-3 py-2 text-base border rounded-lg bg-white outline-0 focus:ring-2 focus:ring-green-500 transition-all ${errors.numero_comprobante ? 'border-red-300 bg-red-50' : 'border-gray-300'}`}
+                                    disabled={pagadoValue !== '1'}
+                                    className={`w-full px-3 py-2 text-base border rounded-lg outline-0 focus:ring-2 focus:ring-green-500 transition-all ${
+                                        pagadoValue !== '1' 
+                                            ? 'bg-gray-100 text-gray-400 cursor-not-allowed' 
+                                            : errors.numero_comprobante 
+                                                ? 'border-red-300 bg-red-50' 
+                                                : 'border-gray-300 bg-white'
+                                    }`}
                                 />
                                 {errors.numero_comprobante && <p className="text-red-500 text-xs mt-1">{errors.numero_comprobante.message}</p>}
                             </div>
 
-                            {/* Fecha de Pago */}
-                            <div>
+                            {/* Fecha de Pago - Solo habilitado cuando pagado === '1' */}
+                            <div className="sm:col-span-2 lg:col-span-2">
                                 <label className="block text-base font-medium text-gray-700 mb-1">
                                     Fecha de Pago
                                     {pagadoValue === '1' && <span className="text-red-500"> *</span>}
@@ -242,7 +223,14 @@ const Pagos = () => {
                                 <input
                                     type="date"
                                     {...register('fecha_pago')}
-                                    className={`w-full px-3 py-2 text-base border rounded-lg bg-white outline-0 focus:ring-2 focus:ring-green-500 transition-all ${errors.fecha_pago ? 'border-red-300 bg-red-50' : 'border-gray-300'}`}
+                                    disabled={pagadoValue !== '1'}
+                                    className={`w-full px-3 py-2 text-base border rounded-lg outline-0 focus:ring-2 focus:ring-green-500 transition-all ${
+                                        pagadoValue !== '1'
+                                            ? 'bg-gray-100 text-gray-400 cursor-not-allowed'
+                                            : errors.fecha_pago
+                                                ? 'border-red-300 bg-red-50'
+                                                : 'border-gray-300 bg-white'
+                                    }`}
                                 />
                                 {errors.fecha_pago && <p className="text-red-500 text-xs mt-1">{errors.fecha_pago.message}</p>}
                             </div>

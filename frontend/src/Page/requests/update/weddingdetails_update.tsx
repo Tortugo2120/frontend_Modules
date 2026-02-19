@@ -67,10 +67,10 @@ const DetallesMatrimonio_update = () => {
       return;
     }
     updateWedding(applicationId, {
-      fecha: data.fecha,
-      hora: data.hora,
-      direccion: data.direccion,
-      oficianteId: data.oficianteId,
+      marriageDate: data.fecha,
+      marriageTime: data.hora,
+      marriagePlace: data.direccion,
+      marriageOfficiantId: data.oficianteId,
     })
       .then(res => {
         if (res.status) {
@@ -85,7 +85,7 @@ const DetallesMatrimonio_update = () => {
       });
   };
 
-  /* ─── Loading ─── */
+  /* ─── Cargando ─── */
   if (loadingDetail) {
     return (
       <div className="min-h-screen bg-blue-300/40 flex items-center justify-center">
@@ -103,7 +103,7 @@ const DetallesMatrimonio_update = () => {
   return (
     <div className="min-h-screen bg-blue-300/40 p-4 sm:p-6">
 
-      {/* Alert toast */}
+      {/* Alerta toast */}
       {alert && (
         <div className="fixed top-4 right-4 z-50">
           <div className={`alert shadow-lg ${alert.type === 'success' ? 'alert-success' : 'alert-error'}`}>

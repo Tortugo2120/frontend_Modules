@@ -23,6 +23,7 @@ export interface RequisitoDetalle {
 }
 
 export interface PagoDetalle {
+    id: number;
     numero_comprobante: string | null;
     pagado: string; // Recibido como "0" o "1"
     estado: string;

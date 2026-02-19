@@ -8,7 +8,7 @@ export const useUpdatePayment = () => {
     const [updateSuccess, setUpdateSuccess] = useState(false);
 
     const updatePayment = async (
-        applicationId: number,
+        applicationId: number | string,
         payload: PaymentUpdatePayload
     ): Promise<UpdatePaymentResponse> => {
         setIsUpdating(true);
