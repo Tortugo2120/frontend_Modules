@@ -187,13 +187,13 @@ export const RequirementsDisplay = ({ requirements, onRequirementsChange }: Requ
                             Requerimientos Entregados ({completados.length})
                         </h4>
                     </div>
-                    <div className="space-y-3">
+                    <div className="">
                         {completados.map((requisito) => (
                             <div
                                 key={requisito.id}
-                                className="bg-white border border-green-200 rounded-lg p-4 hover:shadow-md transition-shadow"
+                                className="bg-white border border-green-200 p-4 hover:shadow-md transition-shadow"
                             >
-                                <div className="flex items-start justify-between gap-4">
+                                <div className="flex items-center justify-between gap-4">
                                     <div className="flex-1">
                                         <div className="flex items-start gap-3">
                                             <i className="fas fa-check-circle text-green-500 text-lg mt-1"></i>
@@ -215,7 +215,7 @@ export const RequirementsDisplay = ({ requirements, onRequirementsChange }: Requ
                                         </div>
                                     </div>
                                     <span className="badge badge-success gap-2 shrink-0">
-                                        <i className="fas fa-check text-sm"></i>
+                                        <i className="fa-regular fa-square-check text-sm"></i>
                                         Entregado
                                     </span>
                                 </div>
@@ -240,16 +240,16 @@ export const RequirementsDisplay = ({ requirements, onRequirementsChange }: Requ
                             Pendientes
                         </span>
                     </div>
-                    <div className="space-y-3">
+                    <div className="">
                         {pendientes.map((requisito) => {
                             const isChecked = checkedIds.has(requisito.id);
                             const archivo = archivos.get(requisito.id);
                             return (
                                 <div
                                     key={requisito.id}
-                                    className={`bg-white border rounded-lg p-4 hover:shadow-md transition-all ${isChecked ? "border-blue-300 bg-blue-50/30" : "border-yellow-200"}`}
+                                    className={`bg-white border p-4 hover:shadow-md transition-all ${isChecked ? "border-blue-300 bg-blue-50/30" : "border-yellow-200"}`}
                                 >
-                                    <div className="flex items-start justify-between gap-4">
+                                    <div className="flex items-center justify-between gap-4">
                                         <div className="flex-1">
                                             <div className="flex items-start gap-3">
                                                 <i className="fas fa-circle-notch text-yellow-500 text-lg mt-1"></i>
@@ -274,7 +274,7 @@ export const RequirementsDisplay = ({ requirements, onRequirementsChange }: Requ
                                         {/* Checkbox de entregado */}
                                         <div className="flex flex-col items-end gap-2 shrink-0">
                                             <label className="flex items-center gap-2 cursor-pointer select-none">
-                                                <span className="text-sm font-medium text-gray-600">¿Entregado?</span>
+                                                <span className="text-sm font-medium text-gray-600">Entregar</span>
                                                 <input
                                                     type="checkbox"
                                                     id={`requisito-${requisito.id}`}

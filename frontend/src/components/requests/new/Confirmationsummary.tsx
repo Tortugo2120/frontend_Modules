@@ -1,5 +1,6 @@
 import type { CreateApplicationPayload } from "../../../model/aplicationModel.ts";
 import type { Participant } from "../../../model/aplicationModel.ts";
+import { useGetOficiantes } from "../../../hooks/useGetOficiantes.ts";
 
 interface ConfirmationSummaryProps {
     tipoSolicitud: number | null;
@@ -25,6 +26,23 @@ export default function ConfirmationSummary({
     // Extraer contrayentes y testigos
     const contrayentes = applicationData.participants.filter(p => p.rol === 'contrayente');
     const testigos = applicationData.participants.filter(p => p.rol === 'testigo');
+
+    // Resolver nombre del oficiante
+    const { oficiantes } = useGetOficiantes('oficiante');
+    const marriageDetails = applicationData.marriageDetails;
+    const oficianteEncontrado = oficiantes.find(
+        o => String(o.id) === String(marriageDetails?.marriageOfficiantId)
+    );
+
+    // Formatear fecha
+    const formatearFecha = (dateString?: string) => {
+        if (!dateString) return 'No especificada';
+        if (dateString.includes('-') && dateString.split('-')[0].length === 4) {
+            const [year, month, day] = dateString.split('-');
+            return `${day}/${month}/${year}`;
+        }
+        return dateString;
+    };
 
     return (
         <div className="animate-fadeIn">
@@ -112,14 +130,14 @@ export default function ConfirmationSummary({
                 <div className="mt-6 bg-linear-to-br from-blue-50 to-blue-100 rounded-xl p-6 border border-blue-200">
                     <h3 className="text-lg font-bold text-gray-900 mb-4 flex items-center gap-2">
                         <i className="fas fa-user-friends text-blue-600"></i>
-                        Contrayentes ({contrayentes.length})
+                        Novios ({contrayentes.length})
                     </h3>
                     <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-2 gap-4">
                         {contrayentes.map((contrayente: Participant, index: number) => (
                             <div key={contrayente.cui} className="bg-white rounded-lg p-4 shadow-sm">
                                 <h4 className="font-semibold text-gray-800 mb-3 flex items-center gap-2">
                                     <i className="fas fa-user-circle text-blue-500"></i>
-                                    Contrayente {index + 1}
+                                    Novio {index + 1}
                                 </h4>
                                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                                     <div>
@@ -203,6 +221,48 @@ export default function ConfirmationSummary({
                                 </div>
                             </div>
                         ))}
+                    </div>
+                </div>
+            )}
+
+            {/* Sección de Detalles del Matrimonio */}
+            {marriageDetails && (marriageDetails.marriageDate || marriageDetails.marriagePlace || marriageDetails.marriageTime || marriageDetails.marriageOfficiantId) && (
+                <div className="mt-6 bg-linear-to-br from-purple-50 to-pink-50 rounded-xl p-6 border border-purple-200">
+                    <h3 className="text-lg font-bold text-gray-900 mb-4 flex items-center gap-2">
+                        <i className="fas fa-ring text-purple-600"></i>
+                        Detalles del Matrimonio
+                    </h3>
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                        <div className="bg-white rounded-lg p-4 shadow-sm flex items-start gap-3">
+                            <i className="fas fa-calendar-alt text-purple-500 mt-0.5"></i>
+                            <div>
+                                <span className="text-xs text-gray-500">Fecha del Matrimonio:</span>
+                                <p className="text-sm font-medium text-gray-900">{formatearFecha(marriageDetails.marriageDate)}</p>
+                            </div>
+                        </div>
+                        <div className="bg-white rounded-lg p-4 shadow-sm flex items-start gap-3">
+                            <i className="fas fa-clock text-purple-500 mt-0.5"></i>
+                            <div>
+                                <span className="text-xs text-gray-500">Hora del Matrimonio:</span>
+                                <p className="text-sm font-medium text-gray-900">{marriageDetails.marriageTime || 'No especificada'}</p>
+                            </div>
+                        </div>
+                        <div className="bg-white rounded-lg p-4 shadow-sm flex items-start gap-3 ">
+                            <i className="fas fa-map-marker-alt text-purple-500 mt-0.5"></i>
+                            <div>
+                                <span className="text-xs text-gray-500">Lugar del Matrimonio:</span>
+                                <p className="text-sm font-medium text-gray-900">{marriageDetails.marriagePlace || 'No especificado'}</p>
+                            </div>
+                        </div>
+                        <div className="bg-white rounded-lg p-4 shadow-sm flex items-start gap-3">
+                            <i className="fas fa-user-tie text-purple-500 mt-0.5"></i>
+                            <div>
+                                <span className="text-xs text-gray-500">Oficiante:</span>
+                                <p className="text-sm font-medium text-gray-900">
+                                    {oficianteEncontrado ? oficianteEncontrado.full_name : (marriageDetails.marriageOfficiantId ? `ID: ${marriageDetails.marriageOfficiantId}` : 'No asignado')}
+                                </p>
+                            </div>
+                        </div>
                     </div>
                 </div>
             )}

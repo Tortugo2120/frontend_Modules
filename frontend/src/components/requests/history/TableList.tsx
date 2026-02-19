@@ -58,7 +58,8 @@ export default function TableList({ data }: Props) {
                             {/* Header de la card */}
                             <div className="flex items-center justify-between mb-3">
                                 <Link
-                                    to={`/dashboard/solicitud/detalles/${item.id}`}
+                                    to="/dashboard/solicitud/detalles"
+                                    state={{ id: item.id }}
                                     className="font-mono font-bold text-indigo-700 text-sm hover:underline"
                                 >
                                     {item.expediente}
@@ -103,14 +104,14 @@ export default function TableList({ data }: Props) {
                                 </div>
                                 <div className="flex items-center gap-1">
                                     <button
-                                        onClick={() => navigate(`/dashboard/solicitud/detalles/${item.id}`)}
+                                        onClick={() => navigate('/dashboard/solicitud/detalles', { state: { id: item.id } })}
                                         className="btn btn-sm btn-circle btn-ghost text-indigo-600 hover:bg-indigo-100"
                                         title="Ver detalles"
                                     >
                                         <i className="fas fa-eye text-sm"></i>
                                     </button>
                                     <button
-                                        onClick={() => console.log("Editar solicitud", item.id)}
+                                        onClick={() => navigate('/dashboard/actualizar', { state: { id: item.id } })}
                                         className="btn btn-sm btn-circle btn-ghost text-amber-600 hover:bg-amber-100"
                                         title="Editar solicitud"
                                     >
@@ -141,7 +142,7 @@ export default function TableList({ data }: Props) {
                             {data.map((item, index) => (
                                 <tr key={`${item.id}-${index}`} className="hover:bg-indigo-100/50 transition-colors duration-150 border-b border-b-gray-300">
                                     <td className="px-3 py-3 text-md font-mono font-bold ">
-                                        <Link to={`/dashboard/solicitud/detalles/${item.id}`}>
+                                        <Link to="/dashboard/solicitud/detalles" state={{ id: item.id }}>
                                             {item.expediente}
                                         </Link>
                                     </td>
@@ -201,14 +202,14 @@ export default function TableList({ data }: Props) {
                                     <td className="pr-4">
                                         <div className="flex items-center justify-center gap-2">
                                             <button
-                                                onClick={() => navigate(`/dashboard/actualizar/${item.id}`)}
+                                                onClick={() => navigate('/dashboard/actualizar', { state: { id: item.id } })}
                                                 className="btn btn-sm btn-circle btn-ghost text-amber-600 hover:bg-amber-100 transition-colors"
                                                 title="Editar solicitud"
                                             >
                                                 <i className="fas fa-pen-to-square"></i>
                                             </button>
                                             <button
-                                                onClick={() => navigate(`/dashboard/solicitud/detalles/${item.id}`)}
+                                                onClick={() => navigate('/dashboard/solicitud/detalles', { state: { id: item.id } })}
                                                 className="btn btn-sm btn-circle btn-ghost text-indigo-600 hover:bg-indigo-100 transition-colors"
                                                 title="Ver detalles"
                                             >

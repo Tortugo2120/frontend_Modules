@@ -1,4 +1,4 @@
-import { useParams, useNavigate } from "react-router-dom";
+import { useLocation, useNavigate } from "react-router-dom";
 import { useState } from "react";
 import { useGetRequirementsByApplication } from "../../../hooks/useGetRequirementsByApplication.ts";
 import { useUpdateRequeriments } from "../../../hooks/useUpdateRequeriments.ts";
@@ -8,7 +8,8 @@ import type { RequirementUpdate } from "../../../components/requests/update/Requ
 import type { RequieremntUpdate } from "../../../model/requerimentsModel.ts";
 
 const Update = () => {
-    const { id } = useParams<{ id: string }>();
+    const location = useLocation();
+    const id = (location.state as { id?: string })?.id;
     const navigate = useNavigate();
     const applicationId = id ? parseInt(id, 10) : null;
     const { requirements, loading, error } = useGetRequirementsByApplication(applicationId);
@@ -197,7 +198,7 @@ const Update = () => {
                         className="btn btn-soft btn-secondary border-secondary gap-2"
                     >
                         <i className="fas fa-times mr-2"></i>
-                        Cerrar
+                        Cancelar
                     </button>
                     <button
                         onClick={handleSaveChanges}

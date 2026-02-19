@@ -528,9 +528,12 @@ const RequisitosMatrimonio = ({
                                                                     </span>
                                                                 )}
 
-                                                                <span className='text-xs font-black text-red-800'>
-                                                                    opcional*
-                                                                </span>
+                                                                <div className="flex flex-col gap-1">
+                                                                    <span className='text-xs font-black text-red-800'>
+                                                                        opcional*
+                                                                    </span>
+                                                                    <span className="text-xs text-gray-500">Menor a 5MB</span>
+                                                                </div>
                                                             </div>
 
                                                             {/* Lista de archivos adjuntos al requisito */}

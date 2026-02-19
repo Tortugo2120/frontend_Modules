@@ -1,11 +1,12 @@
-import { useParams, useNavigate } from "react-router-dom";
+import { useLocation, useNavigate } from "react-router-dom";
 import { useDetailsApplication } from "../../hooks/useApplicationDetails";
 import { ExportApplicationById } from "../../services/AplicationServices";
 import { shouldShowPaymentDetails } from "../../Types/requests/SolicitudUtils";
 import { useState } from "react";
 
 export const Detalles = () => {
-  const { id } = useParams<{ id: string }>();
+  const location = useLocation();
+  const id = (location.state as { id?: string })?.id;
   const navigate = useNavigate();
   const { application, loading, error } = useDetailsApplication(id);
   const [isExporting, setIsExporting] = useState(false);
