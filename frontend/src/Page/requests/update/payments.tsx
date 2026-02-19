@@ -5,6 +5,7 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import { useDetailsApplication } from '../../../hooks/useApplicationDetails.ts';
 import { useUpdatePayment } from '../../../hooks/useUpdatePayment.ts';
+import { uploadPaymentEvidence } from '../../../services/PaymentUpdateService.ts';
 
 const paymentSchema = z.object({
     pagado: z.enum(['0', '1'], { message: 'Seleccione el estado de pago' }),
@@ -43,6 +44,8 @@ const Pagos = () => {
     const { updatePayment, isUpdating } = useUpdatePayment();
 
     const [alert, setAlert] = useState<{ type: 'success' | 'error'; msg: string } | null>(null);
+    const [evidenceFile, setEvidenceFile] = useState<File | null>(null);
+    const [isUploadingEvidence, setIsUploadingEvidence] = useState(false);
 
     const {
         register,
@@ -78,13 +81,25 @@ const Pagos = () => {
             numero_comprobante: data.numero_comprobante || '',
             fecha_pago: data.fecha_pago || '',
         })
-            .then(res => {
-                if (res.status) {
-                    setAlert({ type: 'success', msg: 'Pago actualizado correctamente' });
-                    setTimeout(() => { setAlert(null); navigate(-1); }, 2500);
-                } else {
+            .then(async res => {
+                if (!res.status) {
                     setAlert({ type: 'error', msg: res.message || 'Error al actualizar el pago' });
+                    return;
                 }
+                // Upload evidence file if provided
+                if (evidenceFile) {
+                    setIsUploadingEvidence(true);
+                    try {
+                        await uploadPaymentEvidence(applicationId, evidenceFile);
+                    } catch (e: any) {
+                        setAlert({ type: 'error', msg: e.message || 'Pago guardado, pero no se pudo subir la evidencia' });
+                        setIsUploadingEvidence(false);
+                        return;
+                    }
+                    setIsUploadingEvidence(false);
+                }
+                setAlert({ type: 'success', msg: 'Pago actualizado correctamente' });
+                setTimeout(() => { setAlert(null); navigate(-1); }, 2500);
             })
             .catch((e: Error) => {
                 setAlert({ type: 'error', msg: e.message || 'Error al actualizar el pago' });
@@ -232,6 +247,57 @@ const Pagos = () => {
                                 {errors.fecha_pago && <p className="text-red-500 text-xs mt-1">{errors.fecha_pago.message}</p>}
                             </div>
 
+                            {/* Evidencia del comprobante */}
+                            <div className="sm:col-span-2 lg:col-span-3">
+                                <label className="block text-base font-medium text-gray-700 mb-1">
+                                    Comprobante / Evidencia de Pago
+                                    <span className="ml-2 text-xs font-normal text-gray-400">(PDF, JPG, PNG — máx. 5 MB)</span>
+                                </label>
+                                <div
+                                    className={`relative flex flex-col items-center justify-center gap-2 border-2 border-dashed rounded-lg p-5 cursor-pointer transition-all ${
+                                        evidenceFile
+                                            ? 'border-green-400 bg-green-50'
+                                            : 'border-gray-300 bg-white hover:border-green-400 hover:bg-green-50'
+                                    }`}
+                                    onClick={() => document.getElementById('evidence-input')?.click()}
+                                >
+                                    <input
+                                        id="evidence-input"
+                                        type="file"
+                                        accept=".pdf,.jpg,.jpeg,.png"
+                                        className="hidden"
+                                        onChange={(e) => {
+                                            const file = e.target.files?.[0] ?? null;
+                                            if (file && file.size > 5 * 1024 * 1024) {
+                                                setAlert({ type: 'error', msg: 'El archivo no puede superar los 5 MB' });
+                                                return;
+                                            }
+                                            setEvidenceFile(file);
+                                        }}
+                                    />
+                                    {evidenceFile ? (
+                                        <>
+                                            <i className="fas fa-file-check text-3xl text-green-500"></i>
+                                            <span className="text-sm font-medium text-green-700">{evidenceFile.name}</span>
+                                            <span className="text-xs text-gray-400">{(evidenceFile.size / 1024).toFixed(1)} KB</span>
+                                            <button
+                                                type="button"
+                                                onClick={(e) => { e.stopPropagation(); setEvidenceFile(null); }}
+                                                className="absolute top-2 right-3 text-gray-400 hover:text-red-500 transition-colors text-sm"
+                                                title="Quitar archivo"
+                                            >
+                                                <i className="fas fa-times"></i>
+                                            </button>
+                                        </>
+                                    ) : (
+                                        <>
+                                            <i className="fas fa-cloud-upload-alt text-3xl text-gray-400"></i>
+                                            <span className="text-sm text-gray-500">Haz clic o arrastra el archivo aquí</span>
+                                        </>
+                                    )}
+                                </div>
+                            </div>
+
                         </div>
 
                         {/* Información */}
@@ -248,19 +314,21 @@ const Pagos = () => {
                         <button
                             type="button"
                             onClick={() => navigate(-1)}
-                            disabled={isUpdating}
+                            disabled={isUpdating || isUploadingEvidence}
                             className="btn btn-soft btn-secondary border-secondary gap-2"
                         >
                             <i className="fas fa-times mr-1"></i> Cancelar
                         </button>
                         <button
                             type="submit"
-                            disabled={isUpdating}
+                            disabled={isUpdating || isUploadingEvidence}
                             className="btn btn-primary text-white gap-2"
                         >
                             {isUpdating
                                 ? <><span className="loading loading-spinner loading-sm"></span> Guardando...</>
-                                : <><i className="fas fa-save mr-1"></i> Guardar Cambios</>}
+                                : isUploadingEvidence
+                                    ? <><span className="loading loading-spinner loading-sm"></span> Subiendo evidencia...</>
+                                    : <><i className="fas fa-save mr-1"></i> Guardar Cambios</>}
                         </button>
                     </div>
                 </div>

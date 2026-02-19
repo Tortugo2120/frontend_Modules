@@ -66,13 +66,13 @@ const Update_Page = () => {
     const pagado = application?.pago?.pagado === "1";
 
     return (
-        <div className="min-h-screen bg-blue-100 p-6">
+        <div className="min-h-screen bg-blue-100 p-3 sm:p-6">
             {/* Header */}
             <div className="flex items-center justify-between mb-4">
                 <div>
-                    <div className="flex items-center gap-2 text-md text-gray-400 mb-2">
+                    <div className="flex items-center gap-2 text-gray-700 mb-2">
                         <button onClick={() => navigate(-1)} className="hover:text-indigo-600 cursor-pointer transition-colors">
-                            <i className="fas fa-arrow-left mr-1"></i>Volver
+                            <i className="fas fa-angle-left mr-1"></i>Volver
                         </button>
                         <span>/</span>
                         <span>Actualizar Solicitud</span>
@@ -81,7 +81,7 @@ const Update_Page = () => {
             </div>
 
             {/* Resumen de la solicitud */}
-            <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6 mb-4">
+            <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-4 sm:p-6 mb-4">
                 {loading ? (
                     <div className="flex items-center justify-center h-28 gap-3 text-gray-400">
                         <span className="loading loading-spinner loading-md text-indigo-500"></span>
@@ -89,44 +89,44 @@ const Update_Page = () => {
                     </div>
                 ) : application ? (
                     <div>
-                        <h1 className="text-2xl text-center font-bold border-b border-gray-200 pb-4 mb-4 text-gray-800">
+                        <h1 className="text-lg sm:text-2xl text-center font-bold border-b border-gray-200 pb-4 mb-4 text-gray-800">
                             <i className="fas fa-file-pen mr-2 text-indigo-500"></i>
                             Actualizar Solicitud
 
                         </h1>
                         {/* Título y estado */}
-                        <div className="flex flex-wrap items-start justify-between gap-3 mb-4">
+                        <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-2 sm:gap-3 mb-4">
                             <div>
                                 <span className={`text-xs font-semibold px-3 py-1 rounded-full ${estadoClasses[application.estado] ?? "bg-blue-600 text-white"}`}>
                                     {application.estado}
                                 </span>
-                                <h2 className="text-xl font-bold text-gray-900 mt-2">{application.nombreSolicitud}</h2>
-                                <p className="text-sm text-gray-500 mt-0.5">{application.descripcionSolicitud}</p>
+                                <h2 className="text-base sm:text-xl font-bold text-gray-900 mt-1.5 sm:mt-2">{application.nombreSolicitud}</h2>
+                                <p className="text-xs sm:text-sm text-gray-500 mt-0.5">{application.descripcionSolicitud}</p>
                             </div>
-                            <div className="text-right">
-                                <p className="text-2xl font-bold text-green-600">S/ {application.precio.toFixed(2)}</p>
-                                <p className="text-md text-gray-400">N° expediente: <span className="font-semibold text-gray-600">{application.expediente}</span></p>
+                            <div className="sm:text-right">
+                                <p className="text-xl sm:text-2xl font-bold text-green-600">S/ {application.precio.toFixed(2)}</p>
+                                <p className="text-xs sm:text-sm text-gray-400">N° expediente: <span className="font-semibold text-gray-600">{application.expediente}</span></p>
                             </div>
                         </div>
 
                         {/* Datos rápidos */}
-                        <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
-                            <div className="bg-gray-50 rounded-xl p-3">
-                                <p className="text-lg text-gray-800 font-bold uppercase tracking-wide">Inicio:</p>
+                        <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 sm:gap-3">
+                            <div className="bg-gray-50 rounded-xl p-2 sm:p-3">
+                                <p className="text-base sm:text-lg text-gray-800 font-bold uppercase tracking-wide">Inicio:</p>
                                 <p className="text-base font-semibold text-gray-800 mt-0.5">{formatFecha(application.fechaInicio)}</p>
                             </div>
-                            <div className="bg-gray-50 rounded-xl p-3">
-                                <p className="text-lg text-gray-800 font-bold uppercase tracking-wide">Encargado:</p>
+                            <div className="bg-gray-50 rounded-xl p-2 sm:p-3">
+                                <p className="text-base sm:text-lg text-gray-800 font-bold uppercase tracking-wide">Encargado:</p>
                                 <p className="text-base font-semibold text-gray-800 mt-0.5 truncate">{application.encargado}</p>
                             </div>
-                            <div className="bg-gray-50 rounded-xl p-3">
-                                <p className="text-lg text-gray-800 font-bold uppercase tracking-wide">Requerimientos:</p>
+                            <div className="bg-gray-50 rounded-xl p-2 sm:p-3">
+                                <p className="text-base sm:text-lg text-gray-800 font-bold uppercase tracking-wide">Requerimientos:</p>
                                 <p className="text-base font-semibold text-gray-800 mt-0.5">
                                     <span className="text-green-600">{reqEntregados}</span>/{reqTotal} entregados
                                 </p>
                             </div>
-                            <div className="bg-gray-50 rounded-xl p-3">
-                                <p className="text-lg text-gray-800 font-bold uppercase tracking-wide">Pago:</p>
+                            <div className="bg-gray-50 rounded-xl p-2 sm:p-3">
+                                <p className="text-base sm:text-lg text-gray-800 font-bold uppercase tracking-wide">Pago:</p>
                                 <p className={`text-base font-semibold mt-0.5 ${pagado ? "text-green-600" : "text-yellow-600"}`}>
                                     <i className={`fas ${pagado ? "fa-check-circle" : "fa-clock"} mr-1`}></i>
                                     {pagado ? "Pagado" : "Pendiente"}
@@ -137,15 +137,15 @@ const Update_Page = () => {
                         {/* Participantes */}
                         {(contrayentes.length > 0 || testigos.length > 0) && (
                             <div className="mt-4 pt-4 border-t border-gray-300">
-                                <p className="text-lg font-semibold text-gray-800 uppercase tracking-wide mb-2">
+                                <p className="text-base sm:text-lg font-semibold text-gray-800 uppercase tracking-wide mb-2">
                                     <i className="fas fa-user-friends text-indigo-400 mr-1.5"></i>Participantes</p>
-                                <div className="grid grid-cols-2 gap-2">
+                                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                                     <div className="flex flex-col">
                                         <span className="text-lg font-semibold text-indigo-600">Prometidos:</span>
                                         <div className="flex items-center flex-wrap gap-2 mt-1">
                                             {contrayentes.map((p, i) => (
                                                 <span key={i} className="inline-flex items-center gap-1.5 bg-indigo-50 text-indigo-700 text-base font-medium px-3 py-1 rounded-full">
-                                                    <i className="fas fa-user text-indigo-400"></i>{p.nombre}
+                                                    <i className="fas fa-user text-indigo-400"></i>{p.nombre} - {p.numero_identificacion}
                                                 </span>
                                             ))}
                                         </div>
@@ -155,7 +155,7 @@ const Update_Page = () => {
                                         <div className="flex items-center flex-wrap gap-2 mt-1">
                                             {testigos.map((p, i) => (
                                                 <span key={i} className="inline-flex items-center gap-1.5 bg-gray-100 text-green-600 text-base font-medium px-3 py-1 rounded-full">
-                                                    <i className="fas fa-user-friends text-green-400"></i>{p.nombre}
+                                                    <i className="fas fa-user-friends text-green-400"></i>{p.nombre} - {p.numero_identificacion}
                                                 </span>
                                             ))}
                                         </div>
@@ -172,25 +172,33 @@ const Update_Page = () => {
                                 </p>
                                 <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
                                     <div className="bg-pink-50 rounded-xl p-3">
-                                        <p className="text-lg text-pink-500 font-bold uppercase tracking-wide">Fecha:</p>
+                                        <p className="text-lg text-pink-500 font-bold uppercase tracking-wide">
+                                            <i className="fas fa-calendar mr-1"></i>
+                                            Fecha:</p>
                                         <p className="text-base font-semibold text-gray-800 mt-0.5">
                                             {new Date(application.matrimonio.fecha).toLocaleDateString("es-PE", { day: "2-digit", month: "short", year: "numeric" })}
                                         </p>
                                     </div>
                                     <div className="bg-pink-50 rounded-xl p-3">
-                                        <p className="text-lg text-pink-500 font-bold uppercase tracking-wide">Hora:</p>
+                                        <p className="text-lg text-pink-500 font-bold uppercase tracking-wide">
+                                            <i className="fas fa-clock mr-1"></i>
+                                            Hora:</p>
                                         <p className="text-base font-semibold text-gray-800 mt-0.5">
                                             {application.matrimonio.hora.slice(0, 5)}
                                         </p>
                                     </div>
                                     <div className="bg-pink-50 rounded-xl p-3">
-                                        <p className="text-lg text-pink-500 font-bold uppercase tracking-wide">Dirección:</p>
+                                        <p className="text-lg text-pink-500 font-bold uppercase tracking-wide">
+                                            <i className="fas fa-map-marker-alt mr-1"></i>
+                                            Dirección:</p>
                                         <p className="text-base font-semibold text-gray-800 mt-0.5 truncate">
                                             {application.matrimonio.direccion}
                                         </p>
                                     </div>
                                     <div className="bg-pink-50 rounded-xl p-3">
-                                        <p className="text-lg text-pink-500 font-bold uppercase tracking-wide">Oficiante:</p>
+                                        <p className="text-lg text-pink-500 font-bold uppercase tracking-wide">
+                                            <i className="fas fa-user-tie mr-1"></i>
+                                            Oficiante:</p>
                                         <p className="text-base font-semibold text-gray-800 mt-0.5 truncate">
                                             {application.matrimonio.oficiante}
                                         </p>

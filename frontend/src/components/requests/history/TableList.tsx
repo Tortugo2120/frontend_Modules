@@ -111,7 +111,7 @@ export default function TableList({ data }: Props) {
                                         <i className="fas fa-eye text-sm"></i>
                                     </button>
                                     <button
-                                        onClick={() => console.log("Editar solicitud", item.id)}
+                                        onClick={() => navigate('/dashboard/actualizar', { state: { id: item.id } })}
                                         className="btn btn-sm btn-circle btn-ghost text-amber-600 hover:bg-amber-100"
                                         title="Editar solicitud"
                                     >
