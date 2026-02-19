@@ -130,14 +130,14 @@ export default function ConfirmationSummary({
                 <div className="mt-6 bg-linear-to-br from-blue-50 to-blue-100 rounded-xl p-6 border border-blue-200">
                     <h3 className="text-lg font-bold text-gray-900 mb-4 flex items-center gap-2">
                         <i className="fas fa-user-friends text-blue-600"></i>
-                        Novios ({contrayentes.length})
+                        Prometidos ({contrayentes.length})
                     </h3>
                     <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-2 gap-4">
                         {contrayentes.map((contrayente: Participant, index: number) => (
                             <div key={contrayente.cui} className="bg-white rounded-lg p-4 shadow-sm">
                                 <h4 className="font-semibold text-gray-800 mb-3 flex items-center gap-2">
                                     <i className="fas fa-user-circle text-blue-500"></i>
-                                    Novio {index + 1}
+                                    Prometido {index + 1}
                                 </h4>
                                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                                     <div>

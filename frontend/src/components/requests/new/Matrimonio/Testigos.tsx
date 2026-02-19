@@ -659,7 +659,7 @@ const Testigo = (props: Solicitud) => {
                     {/* Selector de Contrayente */}
                     <div className='mb-0 sm:col-span-2 lg:col-span-1'>
                         <label className="block text-sm font-medium text-gray-700 mb-2">
-                            Contrayente que Respalda <span className="text-red-500">*</span>
+                            Prometido al que Respalda <span className="text-red-500">*</span>
                         </label>
                         <select
                             value={testigoNum === 1 ? selectedContrayente1 : selectedContrayente2}
@@ -775,7 +775,7 @@ const Testigo = (props: Solicitud) => {
                                     <th className="px-4 py-2 text-left text-sm font-semibold text-gray-700">Sexo</th>
                                     <th className="px-4 py-2 text-left text-sm font-semibold text-gray-700">Estado Civil</th>
                                     <th className="px-4 py-2 text-left text-sm font-semibold text-gray-700">Email</th>
-                                    <th className="px-4 py-2 text-left text-sm font-semibold text-gray-700">Contrayente que Respalda</th>
+                                    <th className="px-4 py-2 text-left text-sm font-semibold text-gray-700">Prometido al que Respalda</th>
                                     <th className="px-4 py-2 text-left text-sm font-semibold text-gray-700">Rol</th>
                                     <th className="px-4 py-2 text-center text-sm font-semibold text-gray-700">Acciones</th>
                                 </tr>

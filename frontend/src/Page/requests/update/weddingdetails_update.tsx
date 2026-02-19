@@ -50,16 +50,11 @@ const DetallesMatrimonio_update = () => {
     setValue('hora', m.hora || '', { shouldDirty: true });
     setValue('direccion', m.direccion || '', { shouldDirty: true });
 
-    setValue('oficianteId', m.oficiante || '', { shouldDirty: true });
-
-  }, [application]);
-
-  useEffect(() => {
-    if (!application?.matrimonio || !oficiantes.length) return;
-    const raw = application.matrimonio.oficiante;
-    const match = oficiantes.find(o => o.id === raw || o.full_name === raw);
-    if (match) setValue('oficianteId', match.id, { shouldDirty: true });
-  }, [oficiantes]);
+    if (oficiantes.length > 0) {
+      const match = oficiantes.find(o => o.id === m.oficiante || o.full_name === m.oficiante);
+      setValue('oficianteId', match ? match.id : '', { shouldDirty: true });
+    }
+  }, [application, oficiantes]);
 
   const onSubmit = (data: WeddingFormData) => {
     if (!applicationId) {
@@ -85,7 +80,7 @@ const DetallesMatrimonio_update = () => {
       });
   };
 
-  /* ─── Cargando ─── */
+  /* Cargando */
   if (loadingDetail) {
     return (
       <div className="min-h-screen bg-blue-300/40 flex items-center justify-center">
@@ -143,7 +138,7 @@ const DetallesMatrimonio_update = () => {
                 </div>
             )}
       */}
-      {/* Current wedding summary */}
+      {/* Detalles */}
       {matrimonio && (
         <div className="bg-pink-50 border border-pink-200 shadow px-6 py-3 flex flex-wrap gap-6 text-lg text-pink-800">
           <span><i className="fas fa-calendar mr-1"></i><strong>Fecha actual:</strong> {matrimonio.fecha}</span>

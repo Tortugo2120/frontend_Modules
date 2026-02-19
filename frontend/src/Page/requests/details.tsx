@@ -109,12 +109,12 @@ export const Detalles = () => {
           {/* CONTRAYENTES DINÁMICOS */}
           <section className="mb-8">
             <div className="bg-info-content text-white px-4 py-2 mb-4">
-              <h2 className="text-lg font-bold">CONTRAYENTES</h2>
+              <h2 className="text-lg font-bold">PROMETIDOS</h2>
             </div>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               {contrayentes.map((c, index) => (
                 <div key={index} className="space-y-2 border-l-4 border-info-content pl-4">
-                  <h3 className="font-semibold text-gray-700 mb-3">Datos de {index === 0 ? 'la Contrayente' : 'del Contrayente'}:</h3>
+                  <h3 className="font-semibold text-gray-700 mb-3">Datos de {index === 0 ? 'la Prometida' : 'del Prometido'}:</h3>
                   <div className="flex gap-2">
                     <span className="font-semibold text-gray-700">Nombre:</span>
                     <span className="text-gray-600">{c.nombre}</span>

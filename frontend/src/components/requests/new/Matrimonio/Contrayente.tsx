@@ -683,7 +683,7 @@ const Contrayente = (props: Solicitud) => {
             <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-3 sm:gap-2 pb-3 border-b border-b-blue-300">
                 <h3 className="text-base sm:text-lg font-semibold text-gray-900 flex items-center gap-2">
                     <i className="fas fa-user text-blue-600"></i>
-                    <span>Datos de los Contrayentes</span>
+                    <span>Datos de los Prometidos</span>
                 </h3>
                 {tipoSolicitudNombre && (
                     <span className="bg-blue-100 text-blue-800 text-xs sm:text-sm font-medium px-3 sm:px-4 py-1.5 sm:py-2 rounded-lg flex flex-col items-center w-fit">
@@ -711,7 +711,7 @@ const Contrayente = (props: Solicitud) => {
             <div className="bg-blue-50 p-4 rounded-lg border border-blue-200">
                 <h4 className="text-lg font-bold text-gray-800 mb-4 flex items-center gap-2">
                     <i className="fas fa-user-circle text-blue-600"></i>
-                    Datos del Novio
+                    Datos del Prometido
                 </h4>
                 {renderContrayenteForm(
                     1,
@@ -733,7 +733,7 @@ const Contrayente = (props: Solicitud) => {
             <div className="bg-pink-50 p-4 rounded-lg border border-pink-200">
                 <h4 className="text-lg font-bold text-gray-800 mb-4 flex items-center gap-2">
                     <i className="fas fa-user-circle text-pink-600"></i>
-                    Datos de la Novia
+                    Datos de la Prometida
                 </h4>
                 {renderContrayenteForm(
                     2,
@@ -761,7 +761,7 @@ const Contrayente = (props: Solicitud) => {
                 <div className="mt-6">
                     <h4 className="text-lg font-semibold text-gray-800 mb-4 flex items-center gap-2">
                         <i className="fas fa-list text-blue-600"></i>
-                        Contrayentes Agregados
+                        Prometidos Agregados
                     </h4>
                     <div className="overflow-x-auto">
                         <table className="min-w-full bg-white border border-gray-300 rounded-lg">
