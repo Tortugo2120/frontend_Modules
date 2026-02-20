@@ -5,7 +5,7 @@ interface Props {
     application: ApplicationDetailItem;
 }
 
-// ── Quick-stat card ────────────────────────────────────────────────────────────
+//
 function StatCard({ label, children }: { label: string; children: React.ReactNode }) {
     return (
         <div className="bg-gray-50 rounded-xl p-2 sm:p-3">
@@ -55,7 +55,7 @@ function ParticipantsSection({ application }: Props) {
     );
 }
 
-// ── Wedding details section ────────────────────────────────────────────────────
+// Detalles del matrimonio 
 function WeddingSection({ application }: Props) {
     if (!application.matrimonio) return null;
 
