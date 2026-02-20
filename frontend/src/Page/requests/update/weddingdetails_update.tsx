@@ -7,6 +7,7 @@ import { z } from 'zod';
 import { useDetailsApplication } from '../../../hooks/useApplicationDetails.ts';
 import { useGetOficiantes } from '../../../hooks/useGetOficiantes.ts';
 import { useUpdateWedding } from '../../../hooks/useUpdateWedding.ts';
+import { useGetMarriageDetails } from '../../../hooks/useGetMarriageDetails.ts';
 import { useState } from 'react';
 
 const weddingSchema = z.object({
@@ -30,6 +31,11 @@ const DetallesMatrimonio_update = () => {
   const { application, loading: loadingDetail } = useDetailsApplication(id);
   const { oficiantes, loading: loadingOficiantes } = useGetOficiantes('oficiante');
   const { updateWedding, isUpdating } = useUpdateWedding();
+  const { marriageDetails, fetchMarriageDetails } = useGetMarriageDetails();
+
+  useEffect(() => {
+    if (applicationId) fetchMarriageDetails(applicationId);
+  }, [applicationId]);
 
   const [alert, setAlert] = useState<{ type: 'success' | 'error'; msg: string } | null>(null);
 
@@ -46,21 +52,16 @@ const DetallesMatrimonio_update = () => {
   useEffect(() => {
     if (!application?.matrimonio) return;
     const m = application.matrimonio;
-
-    // Formatear la fecha para el input date (YYYY-MM-DD)
-    const fechaFormateada = m.fecha ? m.fecha.split(' ')[0] : '';
-    setValue('fecha', fechaFormateada, { shouldDirty: true });
+    setValue('fecha', m.fecha || '', { shouldDirty: true });
     setValue('hora', m.hora || '', { shouldDirty: true });
     setValue('direccion', m.direccion || '', { shouldDirty: true });
+  }, [application]);
 
-    // Buscar el oficiante por nombre completo
-    if (oficiantes.length > 0 && m.oficiante) {
-      const match = oficiantes.find(o => o.full_name === m.oficiante);
-      if (match) {
-        setValue('oficianteId', match.id, { shouldDirty: true });
-      }
+  useEffect(() => {
+    if (marriageDetails?.oficianteId && oficiantes.length > 0) {
+      setValue('oficianteId', marriageDetails.oficianteId, { shouldDirty: true });
     }
-  }, [application, oficiantes, setValue]);
+  }, [marriageDetails, oficiantes]);
 
   const onSubmit = (data: WeddingFormData) => {
     if (!applicationId) {
@@ -202,7 +203,11 @@ const DetallesMatrimonio_update = () => {
                   className="w-full px-3 py-2 text-base border border-gray-300 rounded-lg bg-white outline-0 focus:ring-2 focus:ring-pink-500 disabled:bg-gray-100"
                 >
                   <option value="">
-                    {loadingOficiantes ? 'Cargando oficiantes...' : 'Seleccione un oficiante'}
+                    {loadingOficiantes
+                      ? 'Cargando...'
+                      : marriageDetails?.oficiante
+                        ? `Seleccione un oficiante:`
+                        : 'Seleccione un oficiante'}
                   </option>
                   {oficiantes.map(o => (
                     <option key={o.id} value={o.id}>{o.full_name}</option>
