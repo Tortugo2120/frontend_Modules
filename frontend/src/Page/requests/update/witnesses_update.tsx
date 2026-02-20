@@ -449,7 +449,7 @@ const Testigos_update = () => {
             {testigos.length > 0 && (
                 <div className="bg-indigo-50 border border-indigo-200 rounded-none shadow px-6 py-3 flex flex-wrap gap-3">
                     {testigos.map((t, i) => {
-                        const ctry = i === 0 ? participants?.contrayente1 : participants?.contrayente2;
+                        const ctry = i === 0 ? participants?.contrayente2 : participants?.contrayente1;
                         return (
                             <span key={i} className="inline-flex items-center gap-2 bg-white border border-indigo-200 text-indigo-700 text-xs px-3 py-1.5 rounded-full shadow-sm">
                                 <i className="fas fa-user-check"></i>
@@ -469,7 +469,7 @@ const Testigos_update = () => {
                 <div className="bg-indigo-50 border border-indigo-200 rounded-lg p-5">
                     <h4 className="text-base font-bold text-gray-800 mb-4 flex items-center gap-2">
                         <i className="fas fa-user-check text-indigo-600"></i>
-                        {participants?.contrayente1 ? `Testigo de ${fullName(participants.contrayente1)}` : 'Testigo 1'}
+                        {participants?.contrayente2 ? `Testigo de ${fullName(participants.contrayente2)}` : 'Testigo 1'}
                     </h4>
                     <WitnessFormBlock
                         registerForm={regF1} errorsForm={fErr1}
@@ -487,7 +487,7 @@ const Testigos_update = () => {
                 <div className="bg-indigo-50 border border-indigo-200 rounded-lg p-5">
                     <h4 className="text-base font-bold text-gray-800 mb-4 flex items-center gap-2">
                         <i className="fas fa-user-check text-indigo-600"></i>
-                        {participants?.contrayente2 ? `Testigo de ${fullName(participants.contrayente2)}` : 'Testigo 2'}
+                        {participants?.contrayente1 ? `Testigo de ${fullName(participants.contrayente1)}` : 'Testigo 2'}
                     </h4>
                     <WitnessFormBlock
                         registerForm={regF2} errorsForm={fErr2}

@@ -15,7 +15,7 @@ function StatCard({ label, children }: { label: string; children: React.ReactNod
     );
 }
 
-// ── Participants section ───────────────────────────────────────────────────────
+// Participantes
 function ParticipantsSection({ application }: Props) {
     const contrayentes = application.participantes.filter(p => p.rol === "CONTRAYENTE");
     const testigos     = application.participantes.filter(p => p.rol === "TESTIGO");
@@ -87,7 +87,7 @@ function WeddingSection({ application }: Props) {
     );
 }
 
-// ── Main component ─────────────────────────────────────────────────────────────
+// Main component 
 export default function ApplicationSummary({ application }: Props) {
     const reqTotal      = application.requisitos.length;
     const reqEntregados = application.requisitos.filter(r => r.estado_entrega === "Entregado").length;

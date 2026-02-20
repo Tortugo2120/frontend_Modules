@@ -6,7 +6,7 @@ export default function StepProgressBar({ currentStep }: StepProgressBarProps) {
     const steps = [
         { number: 1, label: 'Tipo ', fullLabel: 'de Solicitud', shortLabel: 'Tipo' },
         { number: 2, label: 'N° Exp', fullLabel: 'ediente', shortLabel: 'EXP' },
-        { number: 3, label: 'Contrayentes', fullLabel: '', shortLabel: 'Contrayentes' },
+        { number: 3, label: 'Prometidos', fullLabel: '', shortLabel: 'Prometidos' },
         { number: 4, label: 'Testigos', fullLabel: '', shortLabel: 'Testigos' },
         { number: 5, label: 'Detalles Matrimonio', fullLabel: '', shortLabel: 'Detalles' },
         { number: 6, label: 'Requisitos', fullLabel: '', shortLabel: 'Requisitos' },
