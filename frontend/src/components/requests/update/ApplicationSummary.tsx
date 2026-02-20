@@ -5,7 +5,7 @@ interface Props {
     application: ApplicationDetailItem;
 }
 
-// ── Quick-stat card ────────────────────────────────────────────────────────────
+//
 function StatCard({ label, children }: { label: string; children: React.ReactNode }) {
     return (
         <div className="bg-gray-50 rounded-xl p-2 sm:p-3">
@@ -15,7 +15,7 @@ function StatCard({ label, children }: { label: string; children: React.ReactNod
     );
 }
 
-// ── Participants section ───────────────────────────────────────────────────────
+// Participantes
 function ParticipantsSection({ application }: Props) {
     const contrayentes = application.participantes.filter(p => p.rol === "CONTRAYENTE");
     const testigos     = application.participantes.filter(p => p.rol === "TESTIGO");
@@ -55,7 +55,7 @@ function ParticipantsSection({ application }: Props) {
     );
 }
 
-// ── Wedding details section ────────────────────────────────────────────────────
+// Detalles del matrimonio 
 function WeddingSection({ application }: Props) {
     if (!application.matrimonio) return null;
 
@@ -87,7 +87,7 @@ function WeddingSection({ application }: Props) {
     );
 }
 
-// ── Main component ─────────────────────────────────────────────────────────────
+// Main component 
 export default function ApplicationSummary({ application }: Props) {
     const reqTotal      = application.requisitos.length;
     const reqEntregados = application.requisitos.filter(r => r.estado_entrega === "Entregado").length;
