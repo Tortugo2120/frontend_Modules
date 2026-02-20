@@ -8,8 +8,10 @@ import { searchTypeDocument } from '../../../Validations/validationSearchTypeDoc
 import { usePersonSearch } from '../../../hooks/usePersonSearch.ts';
 import { useDetailsApplication } from '../../../hooks/useApplicationDetails.ts';
 import { useUpdateWitnesses } from '../../../hooks/useUpdateWitnesses.ts';
+import { useGetParticipants } from '../../../hooks/useGetParticipants.ts';
 import type { ParticipanteDetalle } from '../../../model/detailRequestModel.ts';
 import type { WitnessUpdatePayload } from '../../../model/witnessModel.ts';
+import type { ParticipantItem } from '../../../model/participantsModel.ts';
 
 type InputSearch = z.infer<typeof searchTypeDocument>;
 
@@ -52,8 +54,7 @@ const fillFormFromParticipant = (
     setValue('address', p.direccion || '');
     setValue('email', p.correo || '');
     setValue('phone', p.telefono || '');
-    const ubigeo = p.ubigeo;
-    setValue('ubigeoId', ubigeo);
+    setValue('ubigeoId', String(p.ubigeo).padStart(6, '0'));
     setValue('maritalStatus', p.estado_civil as any || undefined);
 };
 
@@ -265,6 +266,17 @@ const Testigos_update = () => {
     const { application, loading: loadingDetail } = useDetailsApplication(id);
     const { fetchPersonSearch, loading: loadingSearch } = usePersonSearch();
     const { updateWitnesses, isUpdating } = useUpdateWitnesses();
+    const { participants, loading: loadingParticipants } = useGetParticipants(applicationId);
+
+    /* Helper: nombre completo de un participante */
+    const fullName = (p: ParticipantItem) =>
+        `${p.nombres} ${p.apellidoPaterno} ${p.apellidoMaterno}`.trim();
+
+    /* DNIs de los contrayentes, disponibles para handleSave */
+    const contrayenteDnis = [
+        participants?.contrayente1?.numeroDocumento ?? '',
+        participants?.contrayente2?.numeroDocumento ?? '',
+    ];
 
     /* ── Search forms ── */
     const { register: reg1, watch: watch1, formState: { errors: errs1 }, reset: resetSearch1 } =
@@ -285,7 +297,7 @@ const Testigos_update = () => {
     const [searchOk2, setSearchOk2] = useState(false);
     const [alert, setAlert] = useState<{ type: 'success' | 'error'; msg: string } | null>(null);
 
-    /* ── Carga de datos de testigos ── */
+    /* Carga de datos de testigos */
     useEffect(() => {
         if (!application) return;
         const testigos = application.participantes.filter(p => p.rol === 'TESTIGO');
@@ -294,7 +306,7 @@ const Testigos_update = () => {
 
     }, [application]);
 
-    /* ── Search handler ── */
+    /* Search handler */
     const handleSearch = useCallback(async (num: 1 | 2) => {
         const tipoDoc = num === 1 ? watch1('documentType') : watch2('documentType');
         const numDoc = num === 1 ? watch1('documentNumber') : watch2('documentNumber');
@@ -350,7 +362,7 @@ const Testigos_update = () => {
                 setAlert({ type: 'error', msg: 'No se encontró el ID de la solicitud' }); return;
             }
 
-            const witnesses: WitnessUpdatePayload[] = [formOneData, formTwoData].map(d => ({
+            const witnesses: WitnessUpdatePayload[] = [formOneData, formTwoData].map((d, i) => ({
                 documentTypeId: d.documentTypeId,
                 cui: d.cui,
                 names: d.names,
@@ -361,8 +373,10 @@ const Testigos_update = () => {
                 address: d.address,
                 email: d.email,
                 phone: d.phone,
-                ubigeoId: d.ubigeoId,
+                ubigeoId: parseInt(d.ubigeoId, 10),  // convertir a integer para el backend
                 maritalStatus: d.maritalStatus,
+                rol: 'testigo',
+                ctry: contrayenteDnis[i],
             }));
 
             updateWitnesses(applicationId, witnesses)
@@ -375,7 +389,8 @@ const Testigos_update = () => {
                     }
                 })
                 .catch((e: any) => {
-                    setAlert({ type: 'error', msg: e.message || 'Error al actualizar testigos' });
+                    const detail = e?.response?.data?.message || e?.response?.data?.error || e?.message || 'Error al actualizar testigos';
+                    setAlert({ type: 'error', msg: detail });
                 });
         };
 
@@ -384,7 +399,7 @@ const Testigos_update = () => {
     };
 
 
-    if (loadingDetail) {
+    if (loadingDetail || loadingParticipants) {
         return (
             <div className="min-h-screen bg-blue-300/40 flex items-center justify-center">
                 <div className="text-center">
@@ -433,12 +448,17 @@ const Testigos_update = () => {
             {/* Info chips */}
             {testigos.length > 0 && (
                 <div className="bg-indigo-50 border border-indigo-200 rounded-none shadow px-6 py-3 flex flex-wrap gap-3">
-                    {testigos.map((t, i) => (
-                        <span key={i} className="inline-flex items-center gap-2 bg-white border border-indigo-200 text-indigo-700 text-xs px-3 py-1.5 rounded-full shadow-sm">
-                            <i className="fas fa-user-check"></i>
-                            <span className="font-semibold">Testigo {i + 1}:</span> {t.nombre} · {t.numero_identificacion}
-                        </span>
-                    ))}
+                    {testigos.map((t, i) => {
+                        const ctry = i === 0 ? participants?.contrayente1 : participants?.contrayente2;
+                        return (
+                            <span key={i} className="inline-flex items-center gap-2 bg-white border border-indigo-200 text-indigo-700 text-xs px-3 py-1.5 rounded-full shadow-sm">
+                                <i className="fas fa-user-check"></i>
+                                <span className="font-semibold">
+                                    {ctry ? `Testigo de ${fullName(ctry)}` : `Testigo ${i + 1}`}:
+                                </span>{t.nombre} · {t.numero_identificacion}
+                            </span>
+                        );
+                    })}
                 </div>
             )}
 
@@ -448,7 +468,8 @@ const Testigos_update = () => {
                 {/* Testigo 1 */}
                 <div className="bg-indigo-50 border border-indigo-200 rounded-lg p-5">
                     <h4 className="text-base font-bold text-gray-800 mb-4 flex items-center gap-2">
-                        <i className="fas fa-user-check text-indigo-600"></i> Testigo 1
+                        <i className="fas fa-user-check text-indigo-600"></i>
+                        {participants?.contrayente1 ? `Testigo de ${fullName(participants.contrayente1)}` : 'Testigo 1'}
                     </h4>
                     <WitnessFormBlock
                         registerForm={regF1} errorsForm={fErr1}
@@ -465,7 +486,8 @@ const Testigos_update = () => {
                 {/* Testigo 2 */}
                 <div className="bg-indigo-50 border border-indigo-200 rounded-lg p-5">
                     <h4 className="text-base font-bold text-gray-800 mb-4 flex items-center gap-2">
-                        <i className="fas fa-user-check text-indigo-600"></i> Testigo 2
+                        <i className="fas fa-user-check text-indigo-600"></i>
+                        {participants?.contrayente2 ? `Testigo de ${fullName(participants.contrayente2)}` : 'Testigo 2'}
                     </h4>
                     <WitnessFormBlock
                         registerForm={regF2} errorsForm={fErr2}

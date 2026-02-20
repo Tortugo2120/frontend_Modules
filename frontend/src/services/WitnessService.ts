@@ -6,13 +6,14 @@ export const updateWitnessesByApplicationId = async (
     witnesses: WitnessUpdatePayload[]
 ): Promise<UpdateWitnessesResponse> => {
     try {
+        console.log('[WitnessService] PUT payload:', JSON.stringify({ witnesses }, null, 2));
         const response = await apiAxios.put<UpdateWitnessesResponse>(
-            `/api/v1/application/${applicationId}/witness`,
+            `/api/v1/application/${applicationId}/witnesses`,
             { witnesses }
         );
         return response.data;
-    } catch (error) {
-        console.error('Error al actualizar testigos.', error);
+    } catch (error: any) {
+        console.error('[WitnessService] Error al actualizar testigos:', error?.response?.data ?? error);
         throw error;
     }
 };

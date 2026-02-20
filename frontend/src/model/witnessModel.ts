@@ -10,8 +10,10 @@ export interface WitnessUpdatePayload {
     address: string;
     email: string;
     phone: string;
-    ubigeoId: string;
+    ubigeoId: number;  // el backend valida como integer
     maritalStatus: string;
+    rol: 'testigo';
+    ctry: string;      // DNI del contrayente al que representa
 }
 
 // Respuesta del backend al actualizar testigos
