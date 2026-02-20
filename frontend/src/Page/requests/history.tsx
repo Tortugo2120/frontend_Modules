@@ -97,21 +97,10 @@ export default function History() {
             return;
         }
         applyFilters();
-
-        // Resetear los inputs del formulario
-        setAdvancedForm({
-            beginDate: "",
-            endDate: "",
-            applicationType: ""
-        });
-        setFiltersAvanzados(new Map());
     }
 
     const volverAHistorial = () => {
-        // Resetear filtros del hook
         resetFilters();
-
-        // Limpiar formulario visual
         setAdvancedForm({
             beginDate: "",
             endDate: "",
@@ -130,6 +119,11 @@ export default function History() {
                 beginDate: filtersAvanzados.get('beginDate') || undefined,
                 endDate: filtersAvanzados.get('endDate') || undefined,
                 ApplicationType: applicationType ? parseInt(applicationType) : undefined,
+            });
+            setAdvancedForm({
+                beginDate: "",
+                endDate: "",
+                applicationType: ""
             });
         } catch (err) {
             console.error(err);
@@ -313,7 +307,7 @@ export default function History() {
                         <button
                             type={"button"}
                             disabled={isExportingExcel}
-                            className={"btn bg-green-600 flex-1 text-white font-medium hover:bg-green-700 disabled:bg-gray-400"}
+                            className={"btn bg-green-600 flex-1 text-white font-lg hover:bg-green-700 disabled:bg-gray-400"}
                             onClick={handleExportExcel}
                         >
                             {isExportingExcel ? (
