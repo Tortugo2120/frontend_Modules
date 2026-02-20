@@ -175,3 +175,10 @@ export const CancelApplication = async (id: string): Promise<CancelApplicationRe
     const response = await apiAxios.delete(`/api/v1/application/${id}`);
     return response.data;
 };
+
+export const SearchApplication = async (dni:string|null,applicationNumber:string|null):Promise<ApiResponse>=>{
+    const response = await apiAxios.get('/api/v1/application/search', {
+        params: { cui:dni, expedientNumber:applicationNumber }
+    });
+    return response.data;
+}

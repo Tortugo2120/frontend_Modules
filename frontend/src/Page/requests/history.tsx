@@ -1,6 +1,7 @@
 import { useApplicationHistory } from "../../hooks/useApplicationHistory";
 import { useMemo, useState } from "react";
 import useFilterApplications from "../../hooks/useFilterApplications.ts";
+import { useSearchByApplication } from "../../hooks/useSearchByApplication.ts";
 import Alert from "../../components/Alert.tsx";
 import TableList from "../../components/requests/history/TableList.tsx";
 type AdvancedFiltersForm = {
@@ -17,8 +18,6 @@ export default function History() {
         solicitudes,
         loading,
         error,
-        filtros,
-        setFiltros,
         paginaActual,
         totalPaginas,
         totalRegistros,
@@ -38,6 +37,16 @@ export default function History() {
     });
 
     const { enabled, updateFilter, data, applyFilters, applyQuickState, resetFilters } = useFilterApplications();
+
+    const {
+        query: searchQuery,
+        setQuery: setSearchQuery,
+        results: searchResults,
+        loading: searchLoading,
+        error: searchError,
+        isActive: searchIsActive,
+        clearSearch,
+    } = useSearchByApplication();
 
     const getQuickStateBtnVariant = (stateLabel: string): string => {
         const normalized = stateLabel.trim().toLowerCase();
@@ -81,13 +90,20 @@ export default function History() {
     }
 
     const tableData = useMemo(() => {
+        // Prioridad: búsqueda por texto > filtros avanzados > historial normal
+        if (searchIsActive) {
+            return searchResults.filter((item, index, self) =>
+                index === self.findIndex((t) => t.id === item.id)
+            );
+        }
+
         const sourceData = enabled ? data : solicitudes;
 
         // Eliminar duplicados basados en el ID
         return sourceData.filter((item, index, self) =>
             index === self.findIndex((t) => t.id === item.id)
         );
-    }, [enabled, data, solicitudes]);
+    }, [searchIsActive, searchResults, enabled, data, solicitudes]);
 
     const aplicarFiltros = () => {
         console.log(filtersAvanzados.size);
@@ -108,6 +124,7 @@ export default function History() {
         });
         setFiltersAvanzados(new Map());
         setShowAlert(false);
+        clearSearch();
     }
 
     const handleExportExcel = async () => {
@@ -178,7 +195,10 @@ export default function History() {
                         <div>
                             <h1 className="text-xl sm:text-2xl lg:text-3xl font-bold text-gray-900">Historial de Solicitudes</h1>
                             <p className="text-gray-600 text-xs sm:text-sm mt-1">
-                                {totalRegistros} solicitud{totalRegistros !== 1 ? 'es' : ''} encontrada{totalRegistros !== 1 ? 's' : ''}
+                                {searchIsActive
+                                    ? `${searchResults.length} resultado${searchResults.length !== 1 ? 's' : ''} de búsqueda`
+                                    : `${totalRegistros} solicitud${totalRegistros !== 1 ? 'es' : ''} encontrada${totalRegistros !== 1 ? 's' : ''}`
+                                }
                             </p>
                         </div>
                     </div>
@@ -199,15 +219,19 @@ export default function History() {
                             <div className="relative">
                                 <input
                                     type="text"
-                                    value={filtros.busqueda}
-                                    onChange={(e) => setFiltros({ busqueda: e.target.value })}
+                                    value={searchQuery}
+                                    onChange={(e) => setSearchQuery(e.target.value)}
                                     className="w-full pl-10 pr-10 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 outline-none transition-all"
                                     placeholder="Buscar por número de expediente o DNI..."
                                 />
-                                <i className="fas fa-search absolute left-3 top-1/2 -translate-y-1/2 text-gray-400"></i>
-                                {filtros.busqueda && (
+                                {searchLoading ? (
+                                    <span className="loading loading-spinner loading-xs absolute left-3 top-1/2 -translate-y-1/2 text-indigo-500"></span>
+                                ) : (
+                                    <i className="fas fa-search absolute left-3 top-1/2 -translate-y-1/2 text-gray-400"></i>
+                                )}
+                                {searchQuery && (
                                     <button
-                                        onClick={() => setFiltros({ busqueda: "" })}
+                                        onClick={clearSearch}
                                         className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600 transition-colors"
                                         title="Limpiar búsqueda"
                                     >
@@ -215,6 +239,17 @@ export default function History() {
                                     </button>
                                 )}
                             </div>
+                            {searchError && (
+                                <p className="text-red-500 text-xs mt-1">
+                                    <i className="fas fa-exclamation-circle mr-1"></i>{searchError}
+                                </p>
+                            )}
+                            {searchIsActive && !searchLoading && (
+                                <p className="text-indigo-600 text-xs mt-1">
+                                    <i className="fas fa-info-circle mr-1"></i>
+                                    {searchResults.length} resultado{searchResults.length !== 1 ? 's' : ''} encontrado{searchResults.length !== 1 ? 's' : ''}
+                                </p>
+                            )}
                         </div>
                         <div className={"lg:col-span-2"}>
                             <form className={"flex flex-col md:flex-row gap-2"}>
