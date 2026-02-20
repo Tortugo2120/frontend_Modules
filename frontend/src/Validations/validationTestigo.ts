@@ -60,7 +60,7 @@ export const testigoSchema = z.object({
         .regex(/^\d{6}$/, 'El ubigeo debe contener solo números'),
 
     maritalStatus: z
-        .enum(['Single', 'CASADO', 'Divorced', 'Widowed'], {
+        .enum(['Soltero', 'Casado', 'Divorciado', 'Viudo'], {
             message: 'Debe seleccionar un estado civil válido'
         }),
 }).superRefine((values, ctx) => {

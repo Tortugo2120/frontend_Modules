@@ -243,10 +243,10 @@ const WitnessFormBlock = ({
                     <select {...registerForm('maritalStatus')}
                         className="w-full px-3 py-2 text-sm border border-gray-300 rounded-lg bg-white outline-0 focus:ring-2 focus:ring-indigo-500">
                         <option value="">Seleccione</option>
-                        <option value="Single">Soltero(a)</option>
-                        <option value="CASADO">Casado(a)</option>
-                        <option value="Divorced">Divorciado(a)</option>
-                        <option value="Widowed">Viudo(a)</option>
+                        <option value="Soltero">Soltero(a)</option>
+                        <option value="Casado">Casado(a)</option>
+                        <option value="Divorciado">Divorciado(a)</option>
+                        <option value="Viudo">Viudo(a)</option>
                     </select>
                     {errorsForm.maritalStatus && <p className="text-red-500 text-xs mt-1">{errorsForm.maritalStatus.message}</p>}
                 </div>
@@ -373,7 +373,7 @@ const Testigos_update = () => {
                 address: d.address,
                 email: d.email,
                 phone: d.phone,
-                ubigeoId: parseInt(d.ubigeoId, 10),  // convertir a integer para el backend
+                ubigeoId: d.ubigeoId,
                 maritalStatus: d.maritalStatus,
                 rol: 'testigo',
                 ctry: contrayenteDnis[i],

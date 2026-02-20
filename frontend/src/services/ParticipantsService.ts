@@ -1,5 +1,5 @@
 import apiAxios from '../api/Axios.tsx';
-import type { ParticipantsResponse } from '../model/participantsModel.ts';
+import type {ParticipantsResponse} from '../model/participantsModel.ts';
 
 export const getParticipantsByApplicationId = async (
     applicationId: number

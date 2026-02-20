@@ -62,7 +62,7 @@ export default function NewRequest() {
             const documents = await db.obtenerDocuments();
             //console.log(`Documentos recuperados de IndexedDB: ${documents.length}`);
             //console.log('Preparando para enviar solicitud a la API:', formDataAplication);
-            console.log(JSON.stringify(formDataAplication, null, 2));
+            //console.log(JSON.stringify(formDataAplication, null, 2));
             const response = await createSolicitud(formDataAplication);
 
             if (response?.status) {
@@ -97,14 +97,14 @@ export default function NewRequest() {
                         setTimeout(() => {
                             setShowAlert(false);
                             navigate('/dashboard/solicitud/history');
-                        }, 2000);
+                        }, 1000);
                     } else {
                         console.warn('Algunos documentos fallaron:', uploadResult.message);
                         mostrarAlert(`Solicitud creada pero algunos documentos fallaron no se pudieron subir`, 'warning');
                         setTimeout(() => {
                             setShowAlert(false);
                             navigate('/dashboard/solicitud/history');
-                        }, 2000);
+                        }, 1000);
                         return;
                     }
                 } else {
@@ -113,14 +113,14 @@ export default function NewRequest() {
                     setTimeout(() => {
                         setShowAlert(false);
                         navigate('/dashboard/solicitud/history');
-                    }, 3000);
+                    }, 1000);
                 }
             } else if (error) {
                 console.error('Error al crear solicitud:', error);
                 setShowAlert(true);
                 setTypeAlert('error');
                 setMessAlert(`Error al crear la solicitud: ${error}`);
-                setTimeout(() => setShowAlert(false), 3000);
+                setTimeout(() => setShowAlert(false), 1000);
             }
         } catch (error) {
             console.error('Error en el proceso:', error);

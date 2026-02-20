@@ -131,7 +131,7 @@ const RequisitosMatrimonio = ({
             const conds = new Set<string>(["GENERAL"]);
 
             formDataAplication.participants.forEach((p) => {
-                if (p.maritalStatus && p.maritalStatus !== "Single" && p.rol !== "testigo") {
+                if (p.maritalStatus && p.maritalStatus !== "Soltero" && p.rol !== "testigo") {
                     conds.add(p.maritalStatus.toUpperCase());
                 }
             });
