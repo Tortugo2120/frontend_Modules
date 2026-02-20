@@ -6,7 +6,8 @@ import type {
     ListApplicationsResponse,
     ApplicationItem,
     ApplicationBackendItem,
-    Pager
+    Pager,
+    CancelApplicationResponse
 } from "../model/aplicationModel.ts";
 import type { ApiResponse } from "../model/aplicationFilterModel.ts";
 
@@ -107,7 +108,6 @@ export const ExportApplicationById = async (id: number): Promise<void> => {
 
     } catch (error) {
         console.error("Error al exportar la solicitud:", error);
-        // Aquí podrías manejar el error, por ejemplo, mostrando una notificación al usuario
         throw new Error("No se pudo exportar la solicitud.");
     }
 };
@@ -168,4 +168,10 @@ export const ExportApplicationsExcel = async (filters?: ExportExcelFilters): Pro
         console.error('Error al exportar reporte Excel:', error);
         throw new Error('No se pudo exportar el reporte en Excel.');
     }
+};
+
+//Anular solicitud
+export const CancelApplication = async (id: string): Promise<CancelApplicationResponse> => {
+    const response = await apiAxios.delete(`/api/v1/application/${id}`);
+    return response.data;
 };

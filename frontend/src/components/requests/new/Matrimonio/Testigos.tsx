@@ -6,7 +6,7 @@ import { searchTypeDocument } from "../../../../Validations/validationSearchType
 import { testigoSchema, type TestigoFormData } from '../../../../Validations/validationTestigo.ts';
 import { useApplicationContext } from '../../../../context/ApplicationContext.tsx';
 import { z } from "zod";
-import type { Participant } from "../../../../model/aplicationModel.ts";
+import type { Participant, MaritalStatus } from "../../../../model/aplicationModel.ts";
 import Alert from "../../../Alert.tsx";
 
 interface Solicitud {
@@ -140,7 +140,7 @@ const Testigo = (props: Solicitud) => {
             setValueForm1('email', testigo1.email || '');
             setValueForm1('phone', testigo1.phone || '');
             setValueForm1('ubigeoId', testigo1.ubigeoId);
-            setValueForm1('maritalStatus', testigo1.maritalStatus);
+            setValueForm1('maritalStatus', testigo1.maritalStatus as MaritalStatus);
             setTestigo1Added(true);
             if (testigo1.ctry) {
                 setSelectedContrayente1(testigo1.ctry);
@@ -161,14 +161,13 @@ const Testigo = (props: Solicitud) => {
             setValueForm2('email', testigo2.email || '');
             setValueForm2('phone', testigo2.phone || '');
             setValueForm2('ubigeoId', testigo2.ubigeoId);
-            setValueForm2('maritalStatus', testigo2.maritalStatus);
+            setValueForm2('maritalStatus', testigo2.maritalStatus as MaritalStatus);
             setTestigo2Added(true);
             if (testigo2.ctry) {
                 setSelectedContrayente2(testigo2.ctry);
             }
         }
         // Solo ejecutar al montar el componente
-        // eslint-disable-next-line react-hooks/exhaustive-deps
     }, []);
 
     // Sincronizar con el estado global del contexto
@@ -182,7 +181,6 @@ const Testigo = (props: Solicitud) => {
         if (onTestigosChange) {
             onTestigosChange(testigos);
         }
-        // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [formDataAplication.participants]);
 
     // Validar como mínimo 2 testigos
@@ -192,7 +190,6 @@ const Testigo = (props: Solicitud) => {
         if (onValidationChange) {
             onValidationChange(isStepValid);
         }
-        // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [testigo1Added, testigo2Added]);
 
 

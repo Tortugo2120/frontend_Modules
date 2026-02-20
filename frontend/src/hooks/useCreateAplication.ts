@@ -21,7 +21,6 @@ export default function useCreateAplication() {
               ? error.message
               : 'Error al crear la solicitud';
           setError(errorMessage);
-          console.error(error.response);
           return null;
       }finally {
           setLoading(false);

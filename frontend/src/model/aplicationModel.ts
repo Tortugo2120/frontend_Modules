@@ -71,6 +71,8 @@ export type ParticipantRol = 'solicitante' | 'contrayente' | 'testigo';
 
 export type Gender = 'M' | 'F';
 
+export type MaritalStatus = 'Soltero' | 'Casado' | 'Divorciado' | 'Viudo';
+
 export interface Participant {
     cui: string;
     documentTypeId: number;
@@ -83,9 +85,9 @@ export interface Participant {
     email: string;
     phone: string;
     ubigeoId: string;
-    maritalStatus: string;
+    maritalStatus: MaritalStatus;
     rol: ParticipantRol;
-    ctry?: string | null; // null para contrayente, dni del contrayente para testigo
+    ctry?: string | null; 
 }
 
 export interface ApplicationData {
@@ -126,4 +128,10 @@ export interface AplicationResponse {
         estado: string;
         fecha_actualizacion: string;
     }
+}
+
+// Interfaz para la respuesta de cancelación
+export interface CancelApplicationResponse {
+    success: boolean;
+    message: string;
 }
