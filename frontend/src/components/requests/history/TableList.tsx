@@ -110,13 +110,15 @@ export default function TableList({ data }: Props) {
                                     >
                                         <i className="fas fa-eye text-sm"></i>
                                     </button>
-                                    <button
-                                        onClick={() => navigate('/dashboard/actualizar', { state: { id: item.id } })}
-                                        className="btn btn-sm btn-circle btn-ghost text-amber-600 hover:bg-amber-100"
-                                        title="Editar solicitud"
-                                    >
-                                        <i className="fas fa-pen-to-square text-sm"></i>
-                                    </button>
+                                    {!['cancelado', 'anulada'].includes(item.estado.toLowerCase()) && (
+                                        <button
+                                            onClick={() => navigate('/dashboard/actualizar', { state: { id: item.id } })}
+                                            className="btn btn-sm btn-circle btn-ghost text-amber-600 hover:bg-amber-100"
+                                            title="Editar solicitud"
+                                        >
+                                            <i className="fas fa-pen-to-square text-sm"></i>
+                                        </button>
+                                    )}
                                 </div>
                             </div>
                         </div>
@@ -201,13 +203,15 @@ export default function TableList({ data }: Props) {
                                     </td>
                                     <td className="pr-4">
                                         <div className="flex items-center justify-center gap-2">
-                                            <button
-                                                onClick={() => navigate('/dashboard/actualizar', { state: { id: item.id } })}
-                                                className="btn btn-sm btn-circle btn-ghost text-amber-600 hover:bg-amber-100 transition-colors"
-                                                title="Editar solicitud"
-                                            >
-                                                <i className="fas fa-pen-to-square"></i>
-                                            </button>
+                                            {!['cancelado', 'anulada'].includes(item.estado.toLowerCase()) && (
+                                                <button
+                                                    onClick={() => navigate('/dashboard/actualizar', { state: { id: item.id } })}
+                                                    className="btn btn-sm btn-circle btn-ghost text-amber-600 hover:bg-amber-100 transition-colors"
+                                                    title="Editar solicitud"
+                                                >
+                                                    <i className="fas fa-pen-to-square"></i>
+                                                </button>
+                                            )}
                                             <button
                                                 onClick={() => navigate('/dashboard/solicitud/detalles', { state: { id: item.id } })}
                                                 className="btn btn-sm btn-circle btn-ghost text-indigo-600 hover:bg-indigo-100 transition-colors"

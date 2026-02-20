@@ -85,7 +85,7 @@ export interface Participant {
     ubigeoId: string;
     maritalStatus: string;
     rol: ParticipantRol;
-    ctry?: string | null; // null para contrayente, dni del contrayente para testigo
+    ctry?: string | null; 
 }
 
 export interface ApplicationData {
@@ -126,4 +126,10 @@ export interface AplicationResponse {
         estado: string;
         fecha_actualizacion: string;
     }
+}
+
+// Interfaz para la respuesta de cancelación
+export interface CancelApplicationResponse {
+    success: boolean;
+    message: string;
 }
