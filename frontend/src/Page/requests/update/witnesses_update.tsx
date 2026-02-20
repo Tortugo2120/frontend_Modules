@@ -373,7 +373,7 @@ const Testigos_update = () => {
                 address: d.address,
                 email: d.email,
                 phone: d.phone,
-                ubigeoId: parseInt(d.ubigeoId, 10),  // convertir a integer para el backend
+                ubigeoId: parseInt(d.ubigeoId, 10),
                 maritalStatus: d.maritalStatus,
                 rol: 'testigo',
                 ctry: contrayenteDnis[i],
