@@ -1,5 +1,5 @@
 import { useNavigate } from "react-router-dom";
-import { ACTION_CARDS, COLOR_MAP } from "./constants.ts";
+import { ACTION_CARDS, COLOR_MAP } from "../../../Types/requests/update/constants.ts";
 import type { ApplicationDetailItem } from "../../../model/detailRequestModel.ts";
 
 interface Props {

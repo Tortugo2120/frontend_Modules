@@ -1,5 +1,5 @@
 import type { ApplicationDetailItem } from "../../../model/detailRequestModel.ts";
-import { ESTADO_CLASSES, formatFecha } from "./constants.ts";
+import { ESTADO_CLASSES, formatFecha } from "../../../Types/requests/update/constants.ts";
 
 interface Props {
     application: ApplicationDetailItem;

@@ -71,6 +71,8 @@ export type ParticipantRol = 'solicitante' | 'contrayente' | 'testigo';
 
 export type Gender = 'M' | 'F';
 
+export type MaritalStatus = 'Soltero' | 'Casado' | 'Divorciado' | 'Viudo';
+
 export interface Participant {
     cui: string;
     documentTypeId: number;
@@ -83,7 +85,7 @@ export interface Participant {
     email: string;
     phone: string;
     ubigeoId: string;
-    maritalStatus: string;
+    maritalStatus: MaritalStatus;
     rol: ParticipantRol;
     ctry?: string | null; 
 }

@@ -110,7 +110,7 @@ export default function TableList({ data }: Props) {
                                     >
                                         <i className="fas fa-eye text-sm"></i>
                                     </button>
-                                    {!['cancelado', 'anulada'].includes(item.estado.toLowerCase()) && (
+                                    {!['cancelado', 'anulada', 'completada'].includes(item.estado.toLowerCase()) && (
                                         <button
                                             onClick={() => navigate('/dashboard/actualizar', { state: { id: item.id } })}
                                             className="btn btn-sm btn-circle btn-ghost text-amber-600 hover:bg-amber-100"
@@ -203,7 +203,7 @@ export default function TableList({ data }: Props) {
                                     </td>
                                     <td className="pr-4">
                                         <div className="flex items-center justify-center gap-2">
-                                            {!['cancelado', 'anulada'].includes(item.estado.toLowerCase()) && (
+                                            {!['cancelado', 'anulada', 'completada'].includes(item.estado.toLowerCase()) && (
                                                 <button
                                                     onClick={() => navigate('/dashboard/actualizar', { state: { id: item.id } })}
                                                     className="btn btn-sm btn-circle btn-ghost text-amber-600 hover:bg-amber-100 transition-colors"
