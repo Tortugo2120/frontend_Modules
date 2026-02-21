@@ -120,6 +120,10 @@ const Testigo = (props: Solicitud) => {
     const [selectedContrayente1, setSelectedContrayente1] = useState('');
     const [selectedContrayente2, setSelectedContrayente2] = useState('');
 
+    // Estados para controlar apertura del panel de formulario
+    const [open1, setOpen1] = useState(false);
+    const [open2, setOpen2] = useState(false);
+
     // Cargar datos desde localStorage al montar el componente
     useEffect(() => {
         const testigos = formDataAplication.participants.filter((p: Participant) =>
@@ -142,6 +146,7 @@ const Testigo = (props: Solicitud) => {
             setValueForm1('ubigeoId', testigo1.ubigeoId);
             setValueForm1('maritalStatus', testigo1.maritalStatus as MaritalStatus);
             setTestigo1Added(true);
+            setOpen1(true);
             if (testigo1.ctry) {
                 setSelectedContrayente1(testigo1.ctry);
             }
@@ -163,6 +168,7 @@ const Testigo = (props: Solicitud) => {
             setValueForm2('ubigeoId', testigo2.ubigeoId);
             setValueForm2('maritalStatus', testigo2.maritalStatus as MaritalStatus);
             setTestigo2Added(true);
+            setOpen2(true);
             if (testigo2.ctry) {
                 setSelectedContrayente2(testigo2.ctry);
             }
@@ -241,6 +247,8 @@ const Testigo = (props: Solicitud) => {
             if (personData.maritalStatus) setValueForm('maritalStatus', personData.maritalStatus as any);
 
             setSuccess(true);
+            // Auto-abrir el formulario al encontrar persona
+            if (isTestigo1) setOpen1(true); else setOpen2(true);
             setTimeout(() => setSuccess(false), 2000);
         } catch (error: any) {
             console.error('Error al buscar persona:', error);
@@ -315,7 +323,7 @@ const Testigo = (props: Solicitud) => {
                 );
 
                 setShowAlert(true);
-                setAlertMessage( `El contrayente ${contrayente?.names} ${contrayente?.paternalSurname} ya tiene un testigo asignado. ` +
+                setAlertMessage(`El contrayente ${contrayente?.names} ${contrayente?.paternalSurname} ya tiene un testigo asignado. ` +
                     `Cada contrayente solo puede tener un testigo.`);
                 return;
             }
@@ -383,299 +391,323 @@ const Testigo = (props: Solicitud) => {
     ) => {
         const tipoDoc = watchSearch('documentType');
         const numDoc = watchSearch('documentNumber');
+        const isOpen = testigoNum === 1 ? open1 : open2;
+        const setIsOpen = testigoNum === 1 ? setOpen1 : setOpen2;
 
         return (
-            <div className="space-y-4">
+            <div className="">
                 {/* Búsqueda */}
-                <div className='mb-2 flex flex-col md:flex-row items-start gap-4'>
-                    <div className={"flex-1 w-full"}>
-                        <label className="block text-sm font-medium text-gray-700 mb-2">
-                            Tipo de documento
-                        </label>
-                        <p className="mt-2 text-xs text-gray-500 mb-3 min-h-8">
-                            <i className="fas fa-info-circle mr-1"></i>
-                            <span>Seleccione el tipo de documento</span>
-                        </p>
-                        <select
-                            defaultValue={"dni"}
-                            className={"select outline-0 w-full py-2 sm:py-2.5 text-sm sm:text-base focus:ring-2 focus:ring-blue-500 transition-all bg-white px-3 border border-gray-300 rounded-lg"}
-                            {...registerSearch('documentType')}
-                        >
-                            <option value="dni">DNI</option>
-                            <option value="pas">PASAPORTE</option>
-                            <option value="ced">CEDULA</option>
-                        </select>
-                    </div>
-                    <div className={"flex-1 w-full"}>
-                        <label className="block text-sm font-medium text-gray-700 mb-2">
-                            Buscar por Documento
-                        </label>
-                        <p className="mt-2 text-xs text-gray-500 mb-3 min-h-8">
-                            <i className="fas fa-info-circle mr-1"></i>
-                            <span>Ingrese el documento para buscar la información</span>
-                        </p>
-                        <div className="relative">
-                            <div className="absolute inset-y-0 left-0 pl-3 sm:pl-4 flex items-center pointer-events-none">
-                                <i className="fas fa-search text-gray-400 text-sm"></i>
-                            </div>
-                            <input
-                                type="text"
-                                onKeyDown={(e) => handleKeyDown(e, testigoNum)}
-                                onInput={(e) => handleDocumentInput(e, tipoDoc)}
-                                className={`w-full pl-9 sm:pl-11 pr-20 sm:pr-24 py-2 sm:py-2.5 text-sm sm:text-base border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-0 transition-all ${searchSuccess
-                                    ? 'border-green-500 bg-green-50'
-                                    : searchError
-                                        ? 'border-red-300 bg-red-50'
-                                        : 'border-gray-300'
-                                    }`}
-                                {...registerSearch('documentNumber')}
-                                placeholder={tipoDoc === 'dni' ? "8 dígitos" : tipoDoc === 'pas' ? "Pasaporte" : "Cédula"}
-                                maxLength={tipoDoc === 'dni' ? 8 : tipoDoc === 'ced' ? 10 : 20}
-                            />
-                            {numDoc && numDoc.length > 0 && (
-                                <button
-                                    type="button"
-                                    onClick={() => handleClearSearch(testigoNum)}
-                                    className="absolute inset-y-0 right-12 sm:right-16 pr-2 flex items-center text-gray-400 hover:text-gray-600 transition-colors"
-                                    title="Limpiar"
-                                >
-                                    <i className="fas fa-times text-sm"></i>
-                                </button>
-                            )}
+                <div className="bg-base-100 border border-indigo-200 rounded-lg overflow-hidden">
+                    <div
+                        className="font-semibold bg-indigo-50 p-4 cursor-pointer"
+                        onClick={() => setIsOpen(!isOpen)}
+                    >
+                        <div className='w-full flex flex-row-reverse items-end'>
                             <button
                                 type="button"
-                                onClick={() => handleSearchTestigo(testigoNum)}
-                                disabled={!!errorsSearch.documentNumber || !numDoc || numDoc.length === 0}
-                                className="cursor-pointer absolute inset-y-0 right-0 pr-3 sm:pr-4 flex items-center text-blue-600 hover:text-blue-700 disabled:text-gray-400 disabled:cursor-not-allowed transition-colors"
-                                title="Buscar"
+                                onClick={(e) => { e.stopPropagation(); setIsOpen(!isOpen); }}
+                                className="relative h-full px-3 flex items-center text-indigo-500 hover:text-indigo-700 transition-colors cursor-pointer"
+                                title={isOpen ? 'Cerrar formulario' : 'Abrir formulario'}
                             >
-                                {loading ? (
-                                    <i className="fas fa-spinner fa-spin text-sm"></i>
-                                ) : (
-                                    <i className="fas fa-arrow-right text-sm"></i>
-                                )}
+                                <i className={`fas fa-chevron-${isOpen ? 'up' : 'down'} text-2xl`}></i>
                             </button>
                         </div>
-                        <div className='h-4 sm:h-5 p-1'>
-                            {errorsSearch.documentNumber && (
-                                <p className="text-red-500 text-xs mt-1">{errorsSearch.documentNumber.message}</p>
-                            )}
-                            {searchError && (
-                                <p className="text-red-500 text-xs mt-1">{searchError}</p>
-                            )}
+                        <div className='flex flex-col md:flex-row items-start gap-4 relative pr-10'>
+                            <div className={"flex-1 w-full"}>
+                                <label className="block text-sm font-medium text-gray-700 mb-2">
+                                    Tipo de documento
+                                </label>
+                                <p className="mt-2 text-xs text-gray-500 mb-3 min-h-8">
+                                    <i className="fas fa-info-circle mr-1"></i>
+                                    <span>Seleccione el tipo de documento</span>
+                                </p>
+                                <select
+                                    defaultValue={"dni"}
+                                    className={"select outline-0 w-full py-2 sm:py-2.5 text-sm sm:text-base focus:ring-2 focus:ring-blue-500 transition-all bg-white px-3 border border-gray-300 rounded-lg"}
+                                    onClick={(e) => e.stopPropagation()}
+                                    {...registerSearch('documentType')}
+                                >
+                                    <option value="dni">DNI</option>
+                                    <option value="pas">PASAPORTE</option>
+                                    <option value="ced">CEDULA</option>
+                                </select>
+                            </div>
+                            <div className={"flex-1 w-full"}>
+                                <label className="block text-sm font-medium text-gray-700 mb-2">
+                                    Buscar por Documento
+                                </label>
+                                <p className="mt-2 text-xs text-gray-500 mb-3 min-h-8">
+                                    <i className="fas fa-info-circle mr-1"></i>
+                                    <span>Ingrese el documento para buscar la información</span>
+                                </p>
+                                <div className="relative">
+                                    <div className="absolute inset-y-0 left-0 pl-3 sm:pl-4 flex items-center pointer-events-none">
+                                        <i className="fas fa-search text-gray-400 text-sm"></i>
+                                    </div>
+                                    <input
+                                        type="text"
+                                        onKeyDown={(e) => handleKeyDown(e, testigoNum)}
+                                        onInput={(e) => handleDocumentInput(e, tipoDoc)}
+                                        onClick={(e) => e.stopPropagation()}
+                                        className={`w-full pl-9 sm:pl-11 pr-20 sm:pr-24 py-2 sm:py-2.5 text-sm sm:text-base border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-0 transition-all ${searchSuccess
+                                            ? 'border-green-500 bg-green-50'
+                                            : searchError
+                                                ? 'border-red-300 bg-red-50'
+                                                : 'border-gray-300'
+                                            }`}
+                                        {...registerSearch('documentNumber')}
+                                        placeholder={tipoDoc === 'dni' ? "8 dígitos" : tipoDoc === 'pas' ? "Pasaporte" : "Cédula"}
+                                        maxLength={tipoDoc === 'dni' ? 8 : tipoDoc === 'ced' ? 10 : 20}
+                                    />
+                                    {numDoc && numDoc.length > 0 && (
+                                        <button
+                                            type="button"
+                                            onClick={(e) => { e.stopPropagation(); handleClearSearch(testigoNum); }}
+                                            className="absolute inset-y-0 right-12 sm:right-16 pr-2 flex items-center text-gray-400 hover:text-gray-600 transition-colors"
+                                            title="Limpiar"
+                                        >
+                                            <i className="fas fa-times text-sm"></i>
+                                        </button>
+                                    )}
+                                    <button
+                                        type="button"
+                                        onClick={(e) => { e.stopPropagation(); handleSearchTestigo(testigoNum); }}
+                                        disabled={!!errorsSearch.documentNumber || !numDoc || numDoc.length === 0}
+                                        className="cursor-pointer absolute inset-y-0 right-0 pr-3 sm:pr-4 flex items-center text-blue-600 hover:text-blue-700 disabled:text-gray-400 disabled:cursor-not-allowed transition-colors"
+                                        title="Buscar"
+                                    >
+                                        {loading ? (
+                                            <i className="fas fa-spinner fa-spin text-sm"></i>
+                                        ) : (
+                                            <i className="fas fa-arrow-right text-sm"></i>
+                                        )}
+                                    </button>
+                                </div>
+                                <div className='h-4 sm:h-5 p-1'>
+                                    {errorsSearch.documentNumber && (
+                                        <p className="text-red-500 text-xs mt-1">{errorsSearch.documentNumber.message}</p>
+                                    )}
+                                    {searchError && (
+                                        <p className="text-red-500 text-xs mt-1">{searchError}</p>
+                                    )}
+                                </div>
+
+                            </div>
                         </div>
+                        {/* Flecha de expandir - derecha */}
                     </div>
-                </div>
+                    {isOpen && <div className="p-4 text-sm">
+                        {/* Formulario de datos */}
+                        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
+                            {/* DNI */}
+                            <div className='mb-0'>
+                                <label className="block text-sm font-medium text-gray-700 mb-2">
+                                    CUI <span className="text-red-500">*</span>
+                                </label>
+                                <input
+                                    type="text"
+                                    className='w-full px-3 sm:px-4 py-2 text-sm sm:text-base border border-gray-300 rounded-lg bg-white outline-0 transition-all focus:ring-2 focus:ring-blue-500 focus:border-transparent'
+                                    {...registerForm('cui')}
+                                    placeholder="CUI"
+                                    maxLength={8}
+                                />
+                                {errorsForm.cui && (
+                                    <p className="text-red-500 text-xs mt-1">{errorsForm.cui.message}</p>
+                                )}
+                            </div>
 
-                {/* Formulario de datos */}
-                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
-                    {/* DNI */}
-                    <div className='mb-0'>
-                        <label className="block text-sm font-medium text-gray-700 mb-2">
-                            CUI <span className="text-red-500">*</span>
-                        </label>
-                        <input
-                            type="text"
-                            className='w-full px-3 sm:px-4 py-2 text-sm sm:text-base border border-gray-300 rounded-lg bg-white outline-0 transition-all focus:ring-2 focus:ring-blue-500 focus:border-transparent'
-                            {...registerForm('cui')}
-                            placeholder="CUI"
-                            maxLength={8}
-                        />
-                        {errorsForm.cui && (
-                            <p className="text-red-500 text-xs mt-1">{errorsForm.cui.message}</p>
-                        )}
-                    </div>
+                            {/* Nombres */}
+                            <div className='mb-0 sm:col-span-2 lg:col-span-1'>
+                                <label className="block text-sm font-medium text-gray-700 mb-2">
+                                    Nombres <span className="text-red-500">*</span>
+                                </label>
+                                <input
+                                    type="text"
+                                    {...registerForm('names')}
+                                    className="w-full px-3 sm:px-4 py-2 text-sm sm:text-base border border-gray-300 rounded-lg bg-white outline-0 transition-all focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                                    placeholder="Nombres"
+                                />
+                                {errorsForm.names && (
+                                    <p className="text-red-500 text-xs mt-1">{errorsForm.names.message}</p>
+                                )}
+                            </div>
 
-                    {/* Nombres */}
-                    <div className='mb-0 sm:col-span-2 lg:col-span-1'>
-                        <label className="block text-sm font-medium text-gray-700 mb-2">
-                            Nombres <span className="text-red-500">*</span>
-                        </label>
-                        <input
-                            type="text"
-                            {...registerForm('names')}
-                            className="w-full px-3 sm:px-4 py-2 text-sm sm:text-base border border-gray-300 rounded-lg bg-white outline-0 transition-all focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                            placeholder="Nombres"
-                        />
-                        {errorsForm.names && (
-                            <p className="text-red-500 text-xs mt-1">{errorsForm.names.message}</p>
-                        )}
-                    </div>
+                            {/* Apellido Paterno */}
+                            <div className='mb-0 sm:col-span-2 lg:col-span-1'>
+                                <label className="block text-sm font-medium text-gray-700 mb-2">
+                                    Apellido Paterno <span className="text-red-500">*</span>
+                                </label>
+                                <input
+                                    type="text"
+                                    {...registerForm('paternalSurname')}
+                                    className="w-full px-3 sm:px-4 py-2 text-sm sm:text-base border border-gray-300 rounded-lg bg-white outline-0 transition-all focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                                    placeholder="Apellido paterno"
+                                />
+                                {errorsForm.paternalSurname && (
+                                    <p className="text-red-500 text-xs mt-1">{errorsForm.paternalSurname.message}</p>
+                                )}
+                            </div>
 
-                    {/* Apellido Paterno */}
-                    <div className='mb-0 sm:col-span-2 lg:col-span-1'>
-                        <label className="block text-sm font-medium text-gray-700 mb-2">
-                            Apellido Paterno <span className="text-red-500">*</span>
-                        </label>
-                        <input
-                            type="text"
-                            {...registerForm('paternalSurname')}
-                            className="w-full px-3 sm:px-4 py-2 text-sm sm:text-base border border-gray-300 rounded-lg bg-white outline-0 transition-all focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                            placeholder="Apellido paterno"
-                        />
-                        {errorsForm.paternalSurname && (
-                            <p className="text-red-500 text-xs mt-1">{errorsForm.paternalSurname.message}</p>
-                        )}
-                    </div>
+                            {/* Apellido Materno */}
+                            <div className='mb-0 sm:col-span-2 lg:col-span-1'>
+                                <label className="block text-sm font-medium text-gray-700 mb-2">
+                                    Apellido Materno <span className="text-red-500">*</span>
+                                </label>
+                                <input
+                                    type="text"
+                                    {...registerForm('maternalSurname')}
+                                    className="w-full px-3 sm:px-4 py-2 text-sm sm:text-base border border-gray-300 rounded-lg bg-white outline-0 transition-all focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                                    placeholder="Apellido materno"
+                                />
+                                {errorsForm.maternalSurname && (
+                                    <p className="text-red-500 text-xs mt-1">{errorsForm.maternalSurname.message}</p>
+                                )}
+                            </div>
 
-                    {/* Apellido Materno */}
-                    <div className='mb-0 sm:col-span-2 lg:col-span-1'>
-                        <label className="block text-sm font-medium text-gray-700 mb-2">
-                            Apellido Materno <span className="text-red-500">*</span>
-                        </label>
-                        <input
-                            type="text"
-                            {...registerForm('maternalSurname')}
-                            className="w-full px-3 sm:px-4 py-2 text-sm sm:text-base border border-gray-300 rounded-lg bg-white outline-0 transition-all focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                            placeholder="Apellido materno"
-                        />
-                        {errorsForm.maternalSurname && (
-                            <p className="text-red-500 text-xs mt-1">{errorsForm.maternalSurname.message}</p>
-                        )}
-                    </div>
+                            {/* Fecha de Nacimiento */}
+                            <div className='mb-0'>
+                                <label className="block text-sm font-medium text-gray-700 mb-2">
+                                    Fecha Nacimiento <span className="text-red-500">*</span>
+                                </label>
+                                <input
+                                    type="date"
+                                    {...registerForm('birthdate')}
+                                    className="w-full px-3 sm:px-4 py-2 text-sm sm:text-base border border-gray-300 rounded-lg bg-white outline-0 transition-all focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                                />
+                                {errorsForm.birthdate && (
+                                    <p className="text-red-500 text-xs mt-1">{errorsForm.birthdate.message}</p>
+                                )}
+                            </div>
 
-                    {/* Fecha de Nacimiento */}
-                    <div className='mb-0'>
-                        <label className="block text-sm font-medium text-gray-700 mb-2">
-                            Fecha Nacimiento <span className="text-red-500">*</span>
-                        </label>
-                        <input
-                            type="date"
-                            {...registerForm('birthdate')}
-                            className="w-full px-3 sm:px-4 py-2 text-sm sm:text-base border border-gray-300 rounded-lg bg-white outline-0 transition-all focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                        />
-                        {errorsForm.birthdate && (
-                            <p className="text-red-500 text-xs mt-1">{errorsForm.birthdate.message}</p>
-                        )}
-                    </div>
+                            {/* Sexo */}
+                            <div className='mb-0'>
+                                <label className="block text-sm font-medium text-gray-700 mb-2">
+                                    Sexo <span className="text-red-500">*</span>
+                                </label>
+                                <select
+                                    {...registerForm('gender')}
+                                    className="w-full px-3 sm:px-4 py-2 text-sm sm:text-base border border-gray-300 rounded-lg bg-white outline-0 transition-all focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                                >
+                                    <option value="">Seleccione</option>
+                                    <option value="M">Masculino</option>
+                                    <option value="F">Femenino</option>
+                                </select>
+                                {errorsForm.gender && (
+                                    <p className="text-red-500 text-xs mt-1">{errorsForm.gender.message}</p>
+                                )}
+                            </div>
 
-                    {/* Sexo */}
-                    <div className='mb-0'>
-                        <label className="block text-sm font-medium text-gray-700 mb-2">
-                            Sexo <span className="text-red-500">*</span>
-                        </label>
-                        <select
-                            {...registerForm('gender')}
-                            className="w-full px-3 sm:px-4 py-2 text-sm sm:text-base border border-gray-300 rounded-lg bg-white outline-0 transition-all focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                        >
-                            <option value="">Seleccione</option>
-                            <option value="M">Masculino</option>
-                            <option value="F">Femenino</option>
-                        </select>
-                        {errorsForm.gender && (
-                            <p className="text-red-500 text-xs mt-1">{errorsForm.gender.message}</p>
-                        )}
-                    </div>
+                            {/* Dirección */}
+                            <div className='mb-0 sm:col-span-2 lg:col-span-2'>
+                                <label className="block text-sm font-medium text-gray-700 mb-2">
+                                    Dirección <span className="text-red-500">*</span>
+                                </label>
+                                <input
+                                    type="text"
+                                    {...registerForm('address')}
+                                    className="w-full px-3 sm:px-4 py-2 text-sm sm:text-base border border-gray-300 rounded-lg bg-white outline-0 transition-all focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                                    placeholder="Dirección"
+                                />
+                                {errorsForm.address && (
+                                    <p className="text-red-500 text-xs mt-1">{errorsForm.address.message}</p>
+                                )}
+                            </div>
 
-                    {/* Dirección */}
-                    <div className='mb-0 sm:col-span-2 lg:col-span-2'>
-                        <label className="block text-sm font-medium text-gray-700 mb-2">
-                            Dirección <span className="text-red-500">*</span>
-                        </label>
-                        <input
-                            type="text"
-                            {...registerForm('address')}
-                            className="w-full px-3 sm:px-4 py-2 text-sm sm:text-base border border-gray-300 rounded-lg bg-white outline-0 transition-all focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                            placeholder="Dirección"
-                        />
-                        {errorsForm.address && (
-                            <p className="text-red-500 text-xs mt-1">{errorsForm.address.message}</p>
-                        )}
-                    </div>
+                            {/* Correo */}
+                            <div className='mb-0 sm:col-span-2 lg:col-span-1'>
+                                <label className="block text-sm font-medium text-gray-700 mb-2">
+                                    Correo Electrónico <span className="text-red-500">*</span>
+                                </label>
+                                <input
+                                    type="email"
+                                    {...registerForm('email')}
+                                    className="w-full px-3 sm:px-4 py-2 text-sm sm:text-base border border-gray-300 rounded-lg bg-white outline-0 transition-all focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                                    placeholder="correo@ejemplo.com"
+                                />
+                                {errorsForm.email && (
+                                    <p className="text-red-500 text-xs mt-1">{errorsForm.email.message}</p>
+                                )}
+                            </div>
 
-                    {/* Correo */}
-                    <div className='mb-0 sm:col-span-2 lg:col-span-1'>
-                        <label className="block text-sm font-medium text-gray-700 mb-2">
-                            Correo Electrónico <span className="text-red-500">*</span>
-                        </label>
-                        <input
-                            type="email"
-                            {...registerForm('email')}
-                            className="w-full px-3 sm:px-4 py-2 text-sm sm:text-base border border-gray-300 rounded-lg bg-white outline-0 transition-all focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                            placeholder="correo@ejemplo.com"
-                        />
-                        {errorsForm.email && (
-                            <p className="text-red-500 text-xs mt-1">{errorsForm.email.message}</p>
-                        )}
-                    </div>
+                            {/* Teléfono */}
+                            <div className='mb-0 sm:col-span-2 lg:col-span-1'>
+                                <label className="block text-sm font-medium text-gray-700 mb-2">
+                                    Teléfono <span className="text-red-500">*</span>
+                                </label>
+                                <input
+                                    type="text"
+                                    {...registerForm('phone')}
+                                    className="w-full px-3 sm:px-4 py-2 text-sm sm:text-base border border-gray-300 rounded-lg bg-white outline-0 transition-all focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                                    placeholder="987654321"
+                                    maxLength={9}
+                                />
+                                {errorsForm.phone && (
+                                    <p className="text-red-500 text-xs mt-1">{errorsForm.phone.message}</p>
+                                )}
+                            </div>
 
-                    {/* Teléfono */}
-                    <div className='mb-0 sm:col-span-2 lg:col-span-1'>
-                        <label className="block text-sm font-medium text-gray-700 mb-2">
-                            Teléfono <span className="text-red-500">*</span>
-                        </label>
-                        <input
-                            type="text"
-                            {...registerForm('phone')}
-                            className="w-full px-3 sm:px-4 py-2 text-sm sm:text-base border border-gray-300 rounded-lg bg-white outline-0 transition-all focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                            placeholder="987654321"
-                            maxLength={9}
-                        />
-                        {errorsForm.phone && (
-                            <p className="text-red-500 text-xs mt-1">{errorsForm.phone.message}</p>
-                        )}
-                    </div>
+                            {/* Ubigeo */}
+                            <div className='mb-0 sm:col-span-2 lg:col-span-1'>
+                                <label className="block text-sm font-medium text-gray-700 mb-2">
+                                    Ubigeo <span className="text-red-500">*</span>
+                                </label>
+                                <input
+                                    type="text"
+                                    {...registerForm('ubigeoId')}
+                                    className="w-full px-3 sm:px-4 py-2 text-sm sm:text-base border border-gray-300 rounded-lg bg-white outline-0 transition-all focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                                    placeholder="150101"
+                                    maxLength={6}
+                                />
+                                {errorsForm.ubigeoId && (
+                                    <p className="text-red-500 text-xs mt-1">{errorsForm.ubigeoId.message}</p>
+                                )}
+                            </div>
 
-                    {/* Ubigeo */}
-                    <div className='mb-0 sm:col-span-2 lg:col-span-1'>
-                        <label className="block text-sm font-medium text-gray-700 mb-2">
-                            Ubigeo <span className="text-red-500">*</span>
-                        </label>
-                        <input
-                            type="text"
-                            {...registerForm('ubigeoId')}
-                            className="w-full px-3 sm:px-4 py-2 text-sm sm:text-base border border-gray-300 rounded-lg bg-white outline-0 transition-all focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                            placeholder="150101"
-                            maxLength={6}
-                        />
-                        {errorsForm.ubigeoId && (
-                            <p className="text-red-500 text-xs mt-1">{errorsForm.ubigeoId.message}</p>
-                        )}
-                    </div>
+                            {/* Estado Civil */}
+                            <div className='mb-0 sm:col-span-2 lg:col-span-1'>
+                                <label className="block text-sm font-medium text-gray-700 mb-2">
+                                    Estado Civil <span className="text-red-500">*</span>
+                                </label>
+                                <select
+                                    {...registerForm('maritalStatus')}
+                                    className="w-full px-3 sm:px-4 py-2 text-sm sm:text-base border border-gray-300 rounded-lg bg-white outline-0 transition-all focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                                >
+                                    <option value="">Seleccione</option>
+                                    <option value="Soltero">Soltero(a)</option>
+                                    <option value="Casado">Casado(a)</option>
+                                    <option value="Divorciado">Divorciado(a)</option>
+                                    <option value="Viudo">Viudo(a)</option>
+                                </select>
+                                {errorsForm.maritalStatus && (
+                                    <p className="text-red-500 text-xs mt-1">{errorsForm.maritalStatus.message}</p>
+                                )}
+                            </div>
 
-                    {/* Estado Civil */}
-                    <div className='mb-0 sm:col-span-2 lg:col-span-1'>
-                        <label className="block text-sm font-medium text-gray-700 mb-2">
-                            Estado Civil <span className="text-red-500">*</span>
-                        </label>
-                        <select
-                            {...registerForm('maritalStatus')}
-                            className="w-full px-3 sm:px-4 py-2 text-sm sm:text-base border border-gray-300 rounded-lg bg-white outline-0 transition-all focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                        >
-                            <option value="">Seleccione</option>
-                            <option value="Soltero">Soltero(a)</option>
-                            <option value="Casado">Casado(a)</option>
-                            <option value="Divorciado">Divorciado(a)</option>
-                            <option value="Viudo">Viudo(a)</option>
-                        </select>
-                        {errorsForm.maritalStatus && (
-                            <p className="text-red-500 text-xs mt-1">{errorsForm.maritalStatus.message}</p>
-                        )}
-                    </div>
-
-                    {/* Selector de Contrayente */}
-                    <div className='mb-0 sm:col-span-2 lg:col-span-1'>
-                        <label className="block text-sm font-medium text-gray-700 mb-2">
-                            Prometido al que Respalda <span className="text-red-500">*</span>
-                        </label>
-                        <select
-                            value={testigoNum === 1 ? selectedContrayente1 : selectedContrayente2}
-                            onChange={(e) => testigoNum === 1 ? setSelectedContrayente1(e.target.value) : setSelectedContrayente2(e.target.value)}
-                            className="w-full px-3 sm:px-4 py-2 text-sm sm:text-base border border-gray-300 rounded-lg bg-white outline-0 transition-all focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                        >
-                            <option value="">Seleccione un contrayente</option>
-                            {formDataAplication.participants
-                                .filter((p: Participant) => p.rol === 'contrayente')
-                                .map((contrayente: Participant, index: number) => (
-                                    <option key={contrayente.cui} value={contrayente.cui}>
-                                        {contrayente.names} {contrayente.paternalSurname} - DNI: {contrayente.cui} - Contrayente {index + 1}
-                                    </option>
-                                ))}
-                        </select>
-                        {searchError && !(testigoNum === 1 ? selectedContrayente1 : selectedContrayente2) && (
-                            <p className="text-red-500 text-xs mt-1">Debe seleccionar un contrayente</p>
-                        )}
-                    </div>
+                            {/* Selector de Contrayente */}
+                            <div className='mb-0 sm:col-span-2 lg:col-span-2'>
+                                <label className="block text-sm font-medium text-gray-700 mb-2">
+                                    Prometido al que Respalda <span className="text-red-500">*</span>
+                                </label>
+                                <select
+                                    value={testigoNum === 1 ? selectedContrayente1 : selectedContrayente2}
+                                    onChange={(e) => testigoNum === 1 ? setSelectedContrayente1(e.target.value) : setSelectedContrayente2(e.target.value)}
+                                    className="w-full px-3 sm:px-4 py-2 text-sm sm:text-base border border-gray-300 rounded-lg bg-white outline-0 transition-all focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                                >
+                                    <option value="">Seleccione un contrayente</option>
+                                    {formDataAplication.participants
+                                        .filter((p: Participant) => p.rol === 'contrayente')
+                                        .map((contrayente: Participant, index: number) => (
+                                            <option key={contrayente.cui} value={contrayente.cui}>
+                                                {contrayente.names} {contrayente.paternalSurname} - DNI: {contrayente.cui} - Contrayente {index + 1}
+                                            </option>
+                                        ))}
+                                </select>
+                                {searchError && !(testigoNum === 1 ? selectedContrayente1 : selectedContrayente2) && (
+                                    <p className="text-red-500 text-xs mt-1">Debe seleccionar un contrayente</p>
+                                )}
+                            </div>
+                        </div>
+                    </div>}
                 </div>
 
                 {/* Botón para agregar testigo */}
@@ -734,8 +766,6 @@ const Testigo = (props: Solicitud) => {
                 )}
             </div>
 
-            <div className="border-solid border-b border-b-blue-300"></div>
-
             {/* Testigo 2 */}
             <div className="bg-green-50 p-4 rounded-lg border border-green-200">
                 <h4 className="text-lg font-bold text-gray-800 mb-4 flex items-center gap-2">
@@ -756,7 +786,7 @@ const Testigo = (props: Solicitud) => {
             </div>
 
             {/* Tabla de testigos agregados */}
-            {showAlert && (<Alert message={alertMessage} type={"warning"} onClose={()=>setShowAlert(false)}/>)}
+            {showAlert && (<Alert message={alertMessage} type={"warning"} onClose={() => setShowAlert(false)} />)}
             {formDataAplication.participants.filter((p: Participant) => p.rol === 'testigo').length > 0 && (
                 <div className="mt-6">
                     <h4 className="text-lg font-semibold text-gray-800 mb-4 flex items-center gap-2">
@@ -784,41 +814,41 @@ const Testigo = (props: Solicitud) => {
                                     );
 
                                     return (
-                                    <tr key={testigo.cui} className="border-t border-gray-200">
-                                        <td className="px-4 py-2 text-sm text-gray-700">{testigo.cui}</td>
-                                        <td className="px-4 py-2 text-sm text-gray-700">
-                                            {testigo.names} {testigo.paternalSurname} {testigo.maternalSurname}
-                                        </td>
-                                        <td className="px-4 py-2 text-sm text-gray-700">
-                                            {testigo.gender === 'M' ? 'Masculino' : 'Femenino'}
-                                        </td>
-                                        <td className="px-4 py-2 text-sm text-gray-700">{testigo.maritalStatus}</td>
-                                        <td className="px-4 py-2 text-sm text-gray-700">{testigo.email}</td>
-                                        <td className="px-4 py-2 text-sm text-gray-700">
-                                            {contrayente ? (
-                                                <span className="text-blue-600 font-medium">
-                                                    {contrayente.names} {contrayente.paternalSurname}
+                                        <tr key={testigo.cui} className="border-t border-gray-200">
+                                            <td className="px-4 py-2 text-sm text-gray-700">{testigo.cui}</td>
+                                            <td className="px-4 py-2 text-sm text-gray-700">
+                                                {testigo.names} {testigo.paternalSurname} {testigo.maternalSurname}
+                                            </td>
+                                            <td className="px-4 py-2 text-sm text-gray-700">
+                                                {testigo.gender === 'M' ? 'Masculino' : 'Femenino'}
+                                            </td>
+                                            <td className="px-4 py-2 text-sm text-gray-700">{testigo.maritalStatus}</td>
+                                            <td className="px-4 py-2 text-sm text-gray-700">{testigo.email}</td>
+                                            <td className="px-4 py-2 text-sm text-gray-700">
+                                                {contrayente ? (
+                                                    <span className="text-blue-600 font-medium">
+                                                        {contrayente.names} {contrayente.paternalSurname}
+                                                    </span>
+                                                ) : (
+                                                    <span className="text-gray-400 italic">No asignado</span>
+                                                )}
+                                            </td>
+                                            <td className="px-4 py-2 text-sm text-gray-700">
+                                                <span className="px-2 py-1 bg-green-100 text-green-800 text-xs rounded-full">
+                                                    {testigo.rol}
                                                 </span>
-                                            ) : (
-                                                <span className="text-gray-400 italic">No asignado</span>
-                                            )}
-                                        </td>
-                                        <td className="px-4 py-2 text-sm text-gray-700">
-                                            <span className="px-2 py-1 bg-green-100 text-green-800 text-xs rounded-full">
-                                                {testigo.rol}
-                                            </span>
-                                        </td>
-                                        <td className="px-4 py-2 text-center">
-                                            <button
-                                                type="button"
-                                                onClick={() => handleDeleteTestigo(testigo.cui, (index + 1) as 1 | 2)}
-                                                className="text-red-600 hover:text-red-800 transition-colors"
-                                                title="Eliminar testigo"
-                                            >
-                                                <i className="fas fa-trash"></i>
-                                            </button>
-                                        </td>
-                                    </tr>
+                                            </td>
+                                            <td className="px-4 py-2 text-center">
+                                                <button
+                                                    type="button"
+                                                    onClick={() => handleDeleteTestigo(testigo.cui, (index + 1) as 1 | 2)}
+                                                    className="text-red-600 hover:text-red-800 transition-colors"
+                                                    title="Eliminar testigo"
+                                                >
+                                                    <i className="fas fa-trash"></i>
+                                                </button>
+                                            </td>
+                                        </tr>
                                     );
                                 })}
                             </tbody>

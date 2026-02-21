@@ -345,7 +345,7 @@ export const RequirementsDisplay = ({ requirements, onRequirementsChange }: Requ
                                                     value={observaciones.get(requisito.id) || ''}
                                                     onChange={(e) => handleObservacionChange(requisito.id, e.target.value)}
                                                     placeholder="Agregar una observación sobre este requerimiento..."
-                                                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm resize-none"
+                                                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm outline-none resize-none"
                                                     rows={2}
                                                 />
                                             </div>

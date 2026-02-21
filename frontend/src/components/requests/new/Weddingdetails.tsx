@@ -163,10 +163,10 @@ const Weddingdetails = (props: Solicitud) => {
                             </div>
                         </div>
                     </div>
-                    {/* Selector de Oficial o Sacerdote */}
+                    {/* Selector de Oficial */}
                     <div className='border-t border-gray-200 pt-4'>
                         <label className="block text-sm font-medium text-gray-700 mb-2">
-                            Oficial o Sacerdote <span className="text-red-500">*</span>
+                            Oficial <span className="text-red-500">*</span>
                         </label>
                         <p className="text-xs text-gray-500 mb-3 min-h-8">
                             <i className="fas fa-info-circle mr-1"></i>

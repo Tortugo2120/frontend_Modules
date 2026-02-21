@@ -38,6 +38,7 @@ const DetallesMatrimonio_update = () => {
   }, [applicationId]);
 
   const [alert, setAlert] = useState<{ type: 'success' | 'error'; msg: string } | null>(null);
+  const [saved, setSaved] = useState(false);
 
   const {
     register,
@@ -77,7 +78,7 @@ const DetallesMatrimonio_update = () => {
       .then(res => {
         if (res.status) {
           setAlert({ type: 'success', msg: 'Detalles del matrimonio actualizados correctamente' });
-          setTimeout(() => { setAlert(null); navigate(-1); }, 2500);
+          setSaved(true);
         } else {
           setAlert({ type: 'error', msg: res.message || 'Error al actualizar' });
         }
@@ -241,16 +242,18 @@ const DetallesMatrimonio_update = () => {
               disabled={isUpdating}
               className="btn btn-soft btn-secondary border-secondary gap-2"
             >
-              <i className="fas fa-times mr-1"></i> Cancelar
+              <i className="fa fa-angle-left mr-1"></i> Volver
             </button>
             <button
               type="submit"
-              disabled={isUpdating}
+              disabled={isUpdating || saved}
               className="btn btn-primary gap-2"
             >
               {isUpdating
                 ? <><span className="loading loading-spinner loading-sm"></span> Guardando...</>
-                : <><i className="fas fa-save mr-1"></i> Guardar Cambios</>}
+                : saved
+                  ? <><i className="fas fa-check-circle mr-1"></i> Cambios Guardados</>
+                  : <><i className="fas fa-save mr-1"></i> Guardar Cambios</>}
             </button>
           </div>
         </div>

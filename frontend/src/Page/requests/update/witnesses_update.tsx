@@ -9,7 +9,6 @@ import { usePersonSearch } from '../../../hooks/usePersonSearch.ts';
 import { useDetailsApplication } from '../../../hooks/useApplicationDetails.ts';
 import { useUpdateWitnesses } from '../../../hooks/useUpdateWitnesses.ts';
 import { useGetParticipants } from '../../../hooks/useGetParticipants.ts';
-import type { ParticipanteDetalle } from '../../../model/detailRequestModel.ts';
 import type { WitnessUpdatePayload } from '../../../model/witnessModel.ts';
 import type { ParticipantItem } from '../../../model/participantsModel.ts';
 
@@ -32,30 +31,23 @@ const buildDefaultTestigo = (): TestigoFormData => ({
     maritalStatus: undefined as any,
 });
 
-const fillFormFromParticipant = (
-    p: ParticipanteDetalle,
+const fillFormFromParticipantItem = (
+    p: ParticipantItem,
     setValue: (field: keyof TestigoFormData, value: any) => void
 ) => {
-    const parts = p.nombre.trim().split(' ');
-
-    const paternalSurname = parts[0] || '';
-    const maternalSurname = parts.length >= 2 ? parts[1] : '';
-    const names = parts.length >= 3 ? parts.slice(2).join(' ') : '';
-
-    const docTypeMap: Record<string, number> = { DNI: 1, PASAPORTE: 2, CEDULA: 3 };
-    setValue('documentTypeId', docTypeMap[p.tipo_identificacion?.toUpperCase()] ?? 1);
-    setValue('cui', p.numero_identificacion || '');
-    setValue('names', names);
-    setValue('paternalSurname', paternalSurname);
-    setValue('maternalSurname', maternalSurname);
-    setValue('birthdate', p.fecha_nacimiento || '');
+    setValue('documentTypeId', p.tipoDocumentoId ?? 1);
+    setValue('cui', p.numeroDocumento || '');
+    setValue('names', p.nombres || '');
+    setValue('paternalSurname', p.apellidoPaterno || '');
+    setValue('maternalSurname', p.apellidoMaterno || '');
+    setValue('birthdate', p.fechaNacimiento || '');
     const g = p.sexo === 'M' || p.sexo === 'F' ? p.sexo : undefined;
     if (g) setValue('gender', g);
     setValue('address', p.direccion || '');
     setValue('email', p.correo || '');
     setValue('phone', p.telefono || '');
-    setValue('ubigeoId', String(p.ubigeo).padStart(6, '0'));
-    setValue('maritalStatus', p.estado_civil as any || undefined);
+    setValue('ubigeoId', p.ubigeo ? String(p.ubigeo.id).padStart(6, '0') : '');
+    setValue('maritalStatus', p.estadoCivil as any || undefined);
 };
 
 interface WitnessFormBlockProps {
@@ -69,6 +61,11 @@ interface WitnessFormBlockProps {
     watchSearch: (name: string) => any;
     onSearch: () => void;
     onClear: () => void;
+    isOpen: boolean;
+    setIsOpen: (v: boolean) => void;
+    onSave: () => void;
+    savedIndividual: boolean;
+    isUpdating: boolean;
 }
 
 const WitnessFormBlock = ({
@@ -82,6 +79,11 @@ const WitnessFormBlock = ({
     watchSearch,
     onSearch,
     onClear,
+    isOpen,
+    setIsOpen,
+    onSave,
+    savedIndividual,
+    isUpdating,
 }: WitnessFormBlockProps) => {
     const tipoDoc = watchSearch('documentType');
     const numDoc = watchSearch('documentNumber');
@@ -98,159 +100,216 @@ const WitnessFormBlock = ({
     };
 
     return (
-        <div className="space-y-4">
-            {/* Search bar */}
-            <div className="flex flex-col md:flex-row items-start gap-4 mb-2">
-                <div className="flex-1 w-full">
-                    <label className="block text-sm font-medium text-gray-700 mb-1">Tipo de documento</label>
-                    <select
-                        defaultValue="dni"
-                        className="select outline-0 w-full py-2 text-sm border border-gray-300 rounded-lg bg-white px-3 focus:ring-2 focus:ring-indigo-500"
-                        {...registerSearch('documentType')}
+        <div className="bg-base-100 border border-indigo-200 rounded-lg overflow-hidden">
+            {/* Accordion header */}
+            <div
+                className="font-semibold bg-indigo-50 p-4 cursor-pointer"
+                onClick={() => setIsOpen(!isOpen)}
+            >
+                {/* Chevron */}
+                <div className='w-full flex flex-row-reverse items-end'>
+                    <button
+                        type="button"
+                        onClick={(e) => { e.stopPropagation(); setIsOpen(!isOpen); }}
+                        className="relative h-full px-3 flex items-center text-indigo-500 hover:text-indigo-700 transition-colors cursor-pointer"
+                        title={isOpen ? 'Cerrar formulario' : 'Abrir formulario'}
                     >
-                        <option value="dni">DNI</option>
-                        <option value="pas">PASAPORTE</option>
-                        <option value="ced">CÉDULA</option>
-                    </select>
+                        <i className={`fas fa-chevron-${isOpen ? 'up' : 'down'} text-2xl`}></i>
+                    </button>
                 </div>
-                <div className="flex-1 w-full">
-                    <label className="block text-sm font-medium text-gray-700 mb-1">Buscar por Documento</label>
-                    <div className="relative">
-                        <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                            <i className="fas fa-search text-gray-400 text-sm"></i>
-                        </div>
-                        <input
-                            type="text"
-                            onKeyDown={handleKeyDown}
-                            onInput={handleDocInput}
-                            placeholder={tipoDoc === 'dni' ? '8 dígitos' : tipoDoc === 'pas' ? 'Pasaporte' : 'Cédula'}
-                            maxLength={tipoDoc === 'dni' ? 8 : tipoDoc === 'ced' ? 10 : 20}
-                            className={`w-full pl-9 pr-20 py-2 text-sm border rounded-lg outline-0 focus:ring-2 focus:ring-indigo-500 transition-all ${searchSuccess ? 'border-green-500 bg-green-50' : searchError ? 'border-red-300 bg-red-50' : 'border-gray-300'}`}
-                            {...registerSearch('documentNumber')}
-                        />
-                        {numDoc && numDoc.length > 0 && (
-                            <button type="button" onClick={onClear}
-                                className="absolute inset-y-0 right-12 pr-2 flex items-center text-gray-400 hover:text-gray-600"
-                                title="Limpiar">
-                                <i className="fas fa-times text-sm"></i>
+                <div className="flex flex-col md:flex-row items-start gap-4 relative pr-10">
+                    {/* Tipo de documento */}
+                    <div className="flex-1 w-full">
+                        <label className="block text-sm font-medium text-gray-700 mb-1">Tipo de documento</label>
+                        <p className="mt-1 text-xs text-gray-500 mb-2 min-h-4">
+                            <i className="fas fa-info-circle mr-1"></i>Seleccione el tipo de documento
+                        </p>
+                        <select
+                            defaultValue="dni"
+                            className="select outline-0 w-full py-2 text-sm border border-gray-300 rounded-lg bg-white px-3 focus:ring-2 focus:ring-indigo-500"
+                            onClick={(e) => e.stopPropagation()}
+                            {...registerSearch('documentType')}
+                        >
+                            <option value="dni">DNI</option>
+                            <option value="pas">PASAPORTE</option>
+                            <option value="ced">CÉDULA</option>
+                        </select>
+                    </div>
+                    {/* Número de documento */}
+                    <div className="flex-1 w-full">
+                        <label className="block text-sm font-medium text-gray-700 mb-1">Buscar por Documento</label>
+                        <p className="mt-1 text-xs text-gray-500 mb-2 min-h-4">
+                            <i className="fas fa-info-circle mr-1"></i>Ingrese el documento para buscar
+                        </p>
+                        <div className="relative">
+                            <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                                <i className="fas fa-search text-gray-400 text-sm"></i>
+                            </div>
+                            <input
+                                type="text"
+                                onKeyDown={handleKeyDown}
+                                onInput={handleDocInput}
+                                onClick={(e) => e.stopPropagation()}
+                                placeholder={tipoDoc === 'dni' ? '8 dígitos' : tipoDoc === 'pas' ? 'Pasaporte' : 'Cédula'}
+                                maxLength={tipoDoc === 'dni' ? 8 : tipoDoc === 'ced' ? 10 : 20}
+                                className={`w-full pl-9 pr-20 py-2 text-sm border rounded-lg outline-0 focus:ring-2 focus:ring-indigo-500 transition-all ${searchSuccess ? 'border-green-500 bg-green-50' : searchError ? 'border-red-300 bg-red-50' : 'border-gray-300'}`}
+                                {...registerSearch('documentNumber')}
+                            />
+                            {numDoc && numDoc.length > 0 && (
+                                <button type="button"
+                                    onClick={(e) => { e.stopPropagation(); onClear(); }}
+                                    className="absolute inset-y-0 right-12 pr-2 flex items-center text-gray-400 hover:text-gray-600"
+                                    title="Limpiar">
+                                    <i className="fas fa-times text-sm"></i>
+                                </button>
+                            )}
+                            <button type="button"
+                                onClick={(e) => { e.stopPropagation(); onSearch(); }}
+                                disabled={!!errorsSearch.documentNumber || !numDoc || numDoc.length === 0}
+                                className="absolute inset-y-0 right-0 pr-3 flex items-center text-indigo-600 hover:text-indigo-700 disabled:text-gray-400 disabled:cursor-not-allowed"
+                                title="Buscar">
+                                {loading ? <i className="fas fa-spinner fa-spin text-sm"></i> : <i className="fas fa-arrow-right text-sm"></i>}
                             </button>
-                        )}
-                        <button type="button" onClick={onSearch}
-                            disabled={!!errorsSearch.documentNumber || !numDoc || numDoc.length === 0}
-                            className="absolute inset-y-0 right-0 pr-3 flex items-center text-indigo-600 hover:text-indigo-700 disabled:text-gray-400 disabled:cursor-not-allowed"
-                            title="Buscar">
-                            {loading ? <i className="fas fa-spinner fa-spin text-sm"></i> : <i className="fas fa-arrow-right text-sm"></i>}
-                        </button>
-                    </div>
-                    <div className="h-4 mt-1">
-                        {errorsSearch.documentNumber && <p className="text-red-500 text-xs">{errorsSearch.documentNumber.message}</p>}
-                        {searchError && <p className="text-red-500 text-xs">{searchError}</p>}
-                        {searchSuccess && <p className="text-green-600 text-xs"><i className="fas fa-check mr-1"></i>Persona encontrada</p>}
+                        </div>
+                        <div className="h-4 mt-1">
+                            {errorsSearch.documentNumber && <p className="text-red-500 text-xs">{errorsSearch.documentNumber.message}</p>}
+                            {searchError && <p className="text-red-500 text-xs">{searchError}</p>}
+                            {searchSuccess && <p className="text-green-600 text-xs"><i className="fas fa-check mr-1"></i>Persona encontrada</p>}
+                        </div>
                     </div>
                 </div>
+
             </div>
 
             {/* Form grid */}
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+            {isOpen && (
+                <div className="p-4">
+                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
 
-                {/* CUI */}
-                <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">CUI <span className="text-red-500">*</span></label>
-                    <input type="text" {...registerForm('cui')} maxLength={8}
-                        className="w-full px-3 py-2 text-sm border border-gray-300 rounded-lg bg-white outline-0 focus:ring-2 focus:ring-indigo-500" placeholder="CUI" />
-                    {errorsForm.cui && <p className="text-red-500 text-xs mt-1">{errorsForm.cui.message}</p>}
-                </div>
+                        {/* CUI */}
+                        <div>
+                            <label className="block text-sm font-medium text-gray-700 mb-1">CUI <span className="text-red-500">*</span></label>
+                            <input type="text" {...registerForm('cui')} maxLength={8}
+                                className="w-full px-3 py-2 text-sm border border-gray-300 rounded-lg bg-white outline-0 focus:ring-2 focus:ring-indigo-500" placeholder="CUI" />
+                            {errorsForm.cui && <p className="text-red-500 text-xs mt-1">{errorsForm.cui.message}</p>}
+                        </div>
 
-                {/* Nombres */}
-                <div className="sm:col-span-2 lg:col-span-1">
-                    <label className="block text-sm font-medium text-gray-700 mb-1">Nombres <span className="text-red-500">*</span></label>
-                    <input type="text" {...registerForm('names')}
-                        className="w-full px-3 py-2 text-sm border border-gray-300 rounded-lg bg-white outline-0 focus:ring-2 focus:ring-indigo-500" placeholder="Nombres" />
-                    {errorsForm.names && <p className="text-red-500 text-xs mt-1">{errorsForm.names.message}</p>}
-                </div>
+                        {/* Nombres */}
+                        <div className="sm:col-span-2 lg:col-span-1">
+                            <label className="block text-sm font-medium text-gray-700 mb-1">Nombres <span className="text-red-500">*</span></label>
+                            <input type="text" {...registerForm('names')}
+                                className="w-full px-3 py-2 text-sm border border-gray-300 rounded-lg bg-white outline-0 focus:ring-2 focus:ring-indigo-500" placeholder="Nombres" />
+                            {errorsForm.names && <p className="text-red-500 text-xs mt-1">{errorsForm.names.message}</p>}
+                        </div>
 
-                {/* Ap. Paterno */}
-                <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">Apellido Paterno <span className="text-red-500">*</span></label>
-                    <input type="text" {...registerForm('paternalSurname')}
-                        className="w-full px-3 py-2 text-sm border border-gray-300 rounded-lg bg-white outline-0 focus:ring-2 focus:ring-indigo-500" placeholder="Apellido paterno" />
-                    {errorsForm.paternalSurname && <p className="text-red-500 text-xs mt-1">{errorsForm.paternalSurname.message}</p>}
-                </div>
+                        {/* Ap. Paterno */}
+                        <div>
+                            <label className="block text-sm font-medium text-gray-700 mb-1">Apellido Paterno <span className="text-red-500">*</span></label>
+                            <input type="text" {...registerForm('paternalSurname')}
+                                className="w-full px-3 py-2 text-sm border border-gray-300 rounded-lg bg-white outline-0 focus:ring-2 focus:ring-indigo-500" placeholder="Apellido paterno" />
+                            {errorsForm.paternalSurname && <p className="text-red-500 text-xs mt-1">{errorsForm.paternalSurname.message}</p>}
+                        </div>
 
-                {/* Ap. Materno */}
-                <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">Apellido Materno <span className="text-red-500">*</span></label>
-                    <input type="text" {...registerForm('maternalSurname')}
-                        className="w-full px-3 py-2 text-sm border border-gray-300 rounded-lg bg-white outline-0 focus:ring-2 focus:ring-indigo-500" placeholder="Apellido materno" />
-                    {errorsForm.maternalSurname && <p className="text-red-500 text-xs mt-1">{errorsForm.maternalSurname.message}</p>}
-                </div>
+                        {/* Ap. Materno */}
+                        <div>
+                            <label className="block text-sm font-medium text-gray-700 mb-1">Apellido Materno <span className="text-red-500">*</span></label>
+                            <input type="text" {...registerForm('maternalSurname')}
+                                className="w-full px-3 py-2 text-sm border border-gray-300 rounded-lg bg-white outline-0 focus:ring-2 focus:ring-indigo-500" placeholder="Apellido materno" />
+                            {errorsForm.maternalSurname && <p className="text-red-500 text-xs mt-1">{errorsForm.maternalSurname.message}</p>}
+                        </div>
 
-                {/* Fecha nacimiento */}
-                <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">Fecha Nacimiento <span className="text-red-500">*</span></label>
-                    <input type="date" {...registerForm('birthdate')}
-                        className="w-full px-3 py-2 text-sm border border-gray-300 rounded-lg bg-white outline-0 focus:ring-2 focus:ring-indigo-500" />
-                    {errorsForm.birthdate && <p className="text-red-500 text-xs mt-1">{errorsForm.birthdate.message}</p>}
-                </div>
+                        {/* Fecha nacimiento */}
+                        <div>
+                            <label className="block text-sm font-medium text-gray-700 mb-1">Fecha Nacimiento <span className="text-red-500">*</span></label>
+                            <input type="date" {...registerForm('birthdate')}
+                                className="w-full px-3 py-2 text-sm border border-gray-300 rounded-lg bg-white outline-0 focus:ring-2 focus:ring-indigo-500" />
+                            {errorsForm.birthdate && <p className="text-red-500 text-xs mt-1">{errorsForm.birthdate.message}</p>}
+                        </div>
 
-                {/* Sexo */}
-                <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">Sexo <span className="text-red-500">*</span></label>
-                    <select {...registerForm('gender')}
-                        className="w-full px-3 py-2 text-sm border border-gray-300 rounded-lg bg-white outline-0 focus:ring-2 focus:ring-indigo-500">
-                        <option value="">Seleccione</option>
-                        <option value="M">Masculino</option>
-                        <option value="F">Femenino</option>
-                    </select>
-                    {errorsForm.gender && <p className="text-red-500 text-xs mt-1">{errorsForm.gender.message}</p>}
-                </div>
+                        {/* Sexo */}
+                        <div>
+                            <label className="block text-sm font-medium text-gray-700 mb-1">Sexo <span className="text-red-500">*</span></label>
+                            <select {...registerForm('gender')}
+                                className="w-full px-3 py-2 text-sm border border-gray-300 rounded-lg bg-white outline-0 focus:ring-2 focus:ring-indigo-500">
+                                <option value="">Seleccione</option>
+                                <option value="M">Masculino</option>
+                                <option value="F">Femenino</option>
+                            </select>
+                            {errorsForm.gender && <p className="text-red-500 text-xs mt-1">{errorsForm.gender.message}</p>}
+                        </div>
 
-                {/* Dirección */}
-                <div className="sm:col-span-2">
-                    <label className="block text-sm font-medium text-gray-700 mb-1">Dirección <span className="text-red-500">*</span></label>
-                    <input type="text" {...registerForm('address')}
-                        className="w-full px-3 py-2 text-sm border border-gray-300 rounded-lg bg-white outline-0 focus:ring-2 focus:ring-indigo-500" placeholder="Dirección" />
-                    {errorsForm.address && <p className="text-red-500 text-xs mt-1">{errorsForm.address.message}</p>}
-                </div>
+                        {/* Dirección */}
+                        <div className="sm:col-span-2">
+                            <label className="block text-sm font-medium text-gray-700 mb-1">Dirección <span className="text-red-500">*</span></label>
+                            <input type="text" {...registerForm('address')}
+                                className="w-full px-3 py-2 text-sm border border-gray-300 rounded-lg bg-white outline-0 focus:ring-2 focus:ring-indigo-500" placeholder="Dirección" />
+                            {errorsForm.address && <p className="text-red-500 text-xs mt-1">{errorsForm.address.message}</p>}
+                        </div>
 
-                {/* Correo */}
-                <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">Correo Electrónico <span className="text-red-500">*</span></label>
-                    <input type="email" {...registerForm('email')}
-                        className="w-full px-3 py-2 text-sm border border-gray-300 rounded-lg bg-white outline-0 focus:ring-2 focus:ring-indigo-500" placeholder="correo@ejemplo.com" />
-                    {errorsForm.email && <p className="text-red-500 text-xs mt-1">{errorsForm.email.message}</p>}
-                </div>
+                        {/* Correo */}
+                        <div>
+                            <label className="block text-sm font-medium text-gray-700 mb-1">Correo Electrónico <span className="text-red-500">*</span></label>
+                            <input type="email" {...registerForm('email')}
+                                className="w-full px-3 py-2 text-sm border border-gray-300 rounded-lg bg-white outline-0 focus:ring-2 focus:ring-indigo-500" placeholder="correo@ejemplo.com" />
+                            {errorsForm.email && <p className="text-red-500 text-xs mt-1">{errorsForm.email.message}</p>}
+                        </div>
 
-                {/* Teléfono */}
-                <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">Teléfono <span className="text-red-500">*</span></label>
-                    <input type="text" {...registerForm('phone')} maxLength={9}
-                        className="w-full px-3 py-2 text-sm border border-gray-300 rounded-lg bg-white outline-0 focus:ring-2 focus:ring-indigo-500" placeholder="987654321" />
-                    {errorsForm.phone && <p className="text-red-500 text-xs mt-1">{errorsForm.phone.message}</p>}
-                </div>
+                        {/* Teléfono */}
+                        <div>
+                            <label className="block text-sm font-medium text-gray-700 mb-1">Teléfono <span className="text-red-500">*</span></label>
+                            <input type="text" {...registerForm('phone')} maxLength={9}
+                                className="w-full px-3 py-2 text-sm border border-gray-300 rounded-lg bg-white outline-0 focus:ring-2 focus:ring-indigo-500" placeholder="987654321" />
+                            {errorsForm.phone && <p className="text-red-500 text-xs mt-1">{errorsForm.phone.message}</p>}
+                        </div>
 
-                {/* Ubigeo */}
-                <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">Ubigeo <span className="text-red-500">*</span></label>
-                    <input type="text" {...registerForm('ubigeoId')} maxLength={6}
-                        className="w-full px-3 py-2 text-sm border border-gray-300 rounded-lg bg-white outline-0 focus:ring-2 focus:ring-indigo-500" placeholder="150101" />
-                    {errorsForm.ubigeoId && <p className="text-red-500 text-xs mt-1">{errorsForm.ubigeoId.message}</p>}
-                </div>
+                        {/* Ubigeo */}
+                        <div>
+                            <label className="block text-sm font-medium text-gray-700 mb-1">Ubigeo <span className="text-red-500">*</span></label>
+                            <input type="text" {...registerForm('ubigeoId')} maxLength={6}
+                                className="w-full px-3 py-2 text-sm border border-gray-300 rounded-lg bg-white outline-0 focus:ring-2 focus:ring-indigo-500" placeholder="150101" />
+                            {errorsForm.ubigeoId && <p className="text-red-500 text-xs mt-1">{errorsForm.ubigeoId.message}</p>}
+                        </div>
 
-                {/* Estado Civil */}
-                <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">Estado Civil <span className="text-red-500">*</span></label>
-                    <select {...registerForm('maritalStatus')}
-                        className="w-full px-3 py-2 text-sm border border-gray-300 rounded-lg bg-white outline-0 focus:ring-2 focus:ring-indigo-500">
-                        <option value="">Seleccione</option>
-                        <option value="Soltero">Soltero(a)</option>
-                        <option value="Casado">Casado(a)</option>
-                        <option value="Divorciado">Divorciado(a)</option>
-                        <option value="Viudo">Viudo(a)</option>
-                    </select>
-                    {errorsForm.maritalStatus && <p className="text-red-500 text-xs mt-1">{errorsForm.maritalStatus.message}</p>}
+                        {/* Estado Civil */}
+                        <div>
+                            <label className="block text-sm font-medium text-gray-700 mb-1">Estado Civil <span className="text-red-500">*</span></label>
+                            <select {...registerForm('maritalStatus')}
+                                className="w-full px-3 py-2 text-sm border border-gray-300 rounded-lg bg-white outline-0 focus:ring-2 focus:ring-indigo-500">
+                                <option value="">Seleccione</option>
+                                <option value="Soltero">Soltero(a)</option>
+                                <option value="Casado">Casado(a)</option>
+                                <option value="Divorciado">Divorciado(a)</option>
+                                <option value="Viudo">Viudo(a)</option>
+                            </select>
+                            {errorsForm.maritalStatus && <p className="text-red-500 text-xs mt-1">{errorsForm.maritalStatus.message}</p>}
+                        </div>
+                    </div>
+
+                    {/* Botones del formulario */}
+                    <div className="flex justify-end gap-3 pt-4 mt-2 border-t border-gray-100">
+                        <button
+                            type="button"
+                            onClick={onClear}
+                            disabled={isUpdating || savedIndividual}
+                            className="btn btn-soft btn-secondary border-secondary gap-2"
+                        >
+                            <i className="fas fa-eraser mr-1"></i> Limpiar Campos
+                        </button>
+                        <button
+                            type="button"
+                            onClick={onSave}
+                            disabled={isUpdating || savedIndividual}
+                            className="btn bg-indigo-600 hover:bg-indigo-700 text-white gap-2"
+                        >
+                            {isUpdating
+                                ? <><span className="loading loading-spinner loading-sm"></span> Guardando...</>
+                                : savedIndividual
+                                    ? <><i className="fas fa-check-circle mr-1"></i> Guardado</>
+                                    : <><i className="fas fa-save mr-1"></i> Guardar</>}
+                        </button>
+                    </div>
                 </div>
-            </div>
+            )}
         </div>
     );
 };
@@ -295,16 +354,21 @@ const Testigos_update = () => {
     const [searchOk1, setSearchOk1] = useState(false);
     const [searchErr2, setSearchErr2] = useState('');
     const [searchOk2, setSearchOk2] = useState(false);
+    const [open1, setOpen1] = useState(false);
+    const [open2, setOpen2] = useState(false);
+
+    const [saved1, setSaved1] = useState(false);
+    const [saved2, setSaved2] = useState(false);
     const [alert, setAlert] = useState<{ type: 'success' | 'error'; msg: string } | null>(null);
 
-    /* Carga de datos de testigos */
+    /* Carga de datos de testigos usando la asociación correcta contrayente ↔ testigo */
     useEffect(() => {
-        if (!application) return;
-        const testigos = application.participantes.filter(p => p.rol === 'TESTIGO');
-        if (testigos[0]) fillFormFromParticipant(testigos[0], sVal1);
-        if (testigos[1]) fillFormFromParticipant(testigos[1], sVal2);
-
-    }, [application]);
+        if (!participants) return;
+        const t1 = participants.contrayente1?.testigo;
+        const t2 = participants.contrayente2?.testigo;
+        if (t1) { fillFormFromParticipantItem(t1, sVal1); setOpen1(true); }
+        if (t2) { fillFormFromParticipantItem(t2, sVal2); setOpen2(true); }
+    }, [participants]);
 
     /* Search handler */
     const handleSearch = useCallback(async (num: 1 | 2) => {
@@ -336,6 +400,7 @@ const Testigos_update = () => {
             sVal('ubigeoId', d.ubigeoId || '');
             if (d.maritalStatus) sVal('maritalStatus', d.maritalStatus as any);
             setOk(true);
+            if (num === 1) setOpen1(true); else setOpen2(true);
             setTimeout(() => setOk(false), 2500);
         } catch (e: any) {
             setErr(e.response?.data?.message || 'Error al buscar persona');
@@ -344,59 +409,82 @@ const Testigos_update = () => {
 
     /* ── Clear handler ── */
     const handleClear = useCallback((num: 1 | 2) => {
-        if (num === 1) { resetSearch1(); resetF1(); setSearchErr1(''); setSearchOk1(false); }
-        else { resetSearch2(); resetF2(); setSearchErr2(''); setSearchOk2(false); }
+        if (num === 1) { resetSearch1(); resetF1(); setSearchErr1(''); setSearchOk1(false); setSaved1(false); }
+        else { resetSearch2(); resetF2(); setSearchErr2(''); setSearchOk2(false); setSaved2(false); }
     }, [resetSearch1, resetSearch2, resetF1, resetF2]);
 
-    /* Guardar */
-    const handleSave = () => {
-        let formOneData: TestigoFormData | null = null;
-        let formTwoData: TestigoFormData | null = null;
-        let pendingForms = 2;
-
-        const trySubmit = () => {
-            if (pendingForms > 0) return;
-            if (!formOneData || !formTwoData) return;
-
-            if (!applicationId) {
-                setAlert({ type: 'error', msg: 'No se encontró el ID de la solicitud' }); return;
-            }
-
-            const witnesses: WitnessUpdatePayload[] = [formOneData, formTwoData].map((d, i) => ({
-                documentTypeId: d.documentTypeId,
-                cui: d.cui,
-                names: d.names,
-                paternalSurname: d.paternalSurname,
-                maternalSurname: d.maternalSurname,
-                birthdate: d.birthdate,
-                gender: d.gender,
-                address: d.address,
-                email: d.email,
-                phone: d.phone,
-                ubigeoId: d.ubigeoId,
-                maritalStatus: d.maritalStatus,
+    /* ── Individual save handlers ── */
+    const handleSave1 = useCallback(() => {
+        hSub1((data) => {
+            if (!applicationId) { setAlert({ type: 'error', msg: 'No se encontró el ID de la solicitud' }); return; }
+            const witnesses: WitnessUpdatePayload[] = [{
+                documentTypeId: data.documentTypeId,
+                cui: data.cui,
+                names: data.names,
+                paternalSurname: data.paternalSurname,
+                maternalSurname: data.maternalSurname,
+                birthdate: data.birthdate,
+                gender: data.gender,
+                address: data.address,
+                email: data.email,
+                phone: data.phone,
+                ubigeoId: data.ubigeoId,
+                maritalStatus: data.maritalStatus,
                 rol: 'testigo',
-                ctry: contrayenteDnis[i],
-            }));
-
+                ctry: contrayenteDnis[0],
+            }];
             updateWitnesses(applicationId, witnesses)
                 .then(res => {
                     if (res.status) {
-                        setAlert({ type: 'success', msg: 'Testigos actualizados correctamente' });
-                        setTimeout(() => { setAlert(null); navigate(-1); }, 2500);
+                        setAlert({ type: 'success', msg: 'Testigo 1 actualizado correctamente' });
+                        setSaved1(true);
                     } else {
-                        setAlert({ type: 'error', msg: res.message || 'Error al actualizar testigos' });
+                        setAlert({ type: 'error', msg: res.message || 'Error al actualizar testigo' });
                     }
                 })
                 .catch((e: any) => {
-                    const detail = e?.response?.data?.message || e?.response?.data?.error || e?.message || 'Error al actualizar testigos';
+                    const detail = e?.response?.data?.message || e?.response?.data?.error || e?.message || 'Error al actualizar testigo';
                     setAlert({ type: 'error', msg: detail });
                 });
-        };
+        })();
+    }, [hSub1, applicationId, contrayenteDnis, updateWitnesses]);
 
-        hSub1((data) => { formOneData = data; pendingForms--; trySubmit(); })();
-        hSub2((data) => { formTwoData = data; pendingForms--; trySubmit(); })();
-    };
+    const handleSave2 = useCallback(() => {
+        hSub2((data) => {
+            if (!applicationId) { setAlert({ type: 'error', msg: 'No se encontró el ID de la solicitud' }); return; }
+            const witnesses: WitnessUpdatePayload[] = [{
+                documentTypeId: data.documentTypeId,
+                cui: data.cui,
+                names: data.names,
+                paternalSurname: data.paternalSurname,
+                maternalSurname: data.maternalSurname,
+                birthdate: data.birthdate,
+                gender: data.gender,
+                address: data.address,
+                email: data.email,
+                phone: data.phone,
+                ubigeoId: data.ubigeoId,
+                maritalStatus: data.maritalStatus,
+                rol: 'testigo',
+                ctry: contrayenteDnis[1],
+            }];
+            updateWitnesses(applicationId, witnesses)
+                .then(res => {
+                    if (res.status) {
+                        setAlert({ type: 'success', msg: 'Testigo 2 actualizado correctamente' });
+                        setSaved2(true);
+                    } else {
+                        setAlert({ type: 'error', msg: res.message || 'Error al actualizar testigo' });
+                    }
+                })
+                .catch((e: any) => {
+                    const detail = e?.response?.data?.message || e?.response?.data?.error || e?.message || 'Error al actualizar testigo';
+                    setAlert({ type: 'error', msg: detail });
+                });
+        })();
+    }, [hSub2, applicationId, contrayenteDnis, updateWitnesses]);
+
+    
 
 
     if (loadingDetail || loadingParticipants) {
@@ -469,7 +557,7 @@ const Testigos_update = () => {
                 <div className="bg-indigo-50 border border-indigo-200 rounded-lg p-5">
                     <h4 className="text-base font-bold text-gray-800 mb-4 flex items-center gap-2">
                         <i className="fas fa-user-check text-indigo-600"></i>
-                        {participants?.contrayente2 ? `Testigo de ${fullName(participants.contrayente2)}` : 'Testigo 1'}
+                        {participants?.contrayente1 ? `Testigo de ${fullName(participants.contrayente1)}` : 'Testigo 1'}
                     </h4>
                     <WitnessFormBlock
                         registerForm={regF1} errorsForm={fErr1}
@@ -478,16 +566,18 @@ const Testigos_update = () => {
                         registerSearch={reg1} errorsSearch={errs1} watchSearch={watch1}
                         onSearch={() => handleSearch(1)}
                         onClear={() => handleClear(1)}
+                        isOpen={open1} setIsOpen={setOpen1}
+                        onSave={handleSave1}
+                        savedIndividual={saved1}
+                        isUpdating={isUpdating}
                     />
                 </div>
-
-                <div className="border-b border-indigo-200"></div>
 
                 {/* Testigo 2 */}
                 <div className="bg-indigo-50 border border-indigo-200 rounded-lg p-5">
                     <h4 className="text-base font-bold text-gray-800 mb-4 flex items-center gap-2">
                         <i className="fas fa-user-check text-indigo-600"></i>
-                        {participants?.contrayente1 ? `Testigo de ${fullName(participants.contrayente1)}` : 'Testigo 2'}
+                        {participants?.contrayente2 ? `Testigo de ${fullName(participants.contrayente2)}` : 'Testigo 2'}
                     </h4>
                     <WitnessFormBlock
                         registerForm={regF2} errorsForm={fErr2}
@@ -496,6 +586,10 @@ const Testigos_update = () => {
                         registerSearch={reg2} errorsSearch={errs2} watchSearch={watch2}
                         onSearch={() => handleSearch(2)}
                         onClear={() => handleClear(2)}
+                        isOpen={open2} setIsOpen={setOpen2}
+                        onSave={handleSave2}
+                        savedIndividual={saved2}
+                        isUpdating={isUpdating}
                     />
                 </div>
 
@@ -507,17 +601,7 @@ const Testigos_update = () => {
                         disabled={isUpdating}
                         className="btn btn-soft btn-secondary border-secondary gap-2"
                     >
-                        <i className="fas fa-times mr-1"></i> Cancelar
-                    </button>
-                    <button
-                        type="button"
-                        onClick={handleSave}
-                        disabled={isUpdating}
-                        className="btn bg-indigo-600 hover:bg-indigo-700 text-white gap-2"
-                    >
-                        {isUpdating
-                            ? <><span className="loading loading-spinner loading-sm"></span> Guardando...</>
-                            : <><i className="fas fa-save mr-1"></i> Guardar Cambios</>}
+                        <i className="fas fa-angle-left mr-1"></i> Volver
                     </button>
                 </div>
             </div>

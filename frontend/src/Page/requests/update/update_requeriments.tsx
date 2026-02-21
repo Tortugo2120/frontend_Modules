@@ -197,8 +197,8 @@ const Update = () => {
                         disabled={isUpdating || isUploading}
                         className="btn btn-soft btn-secondary border-secondary gap-2"
                     >
-                        <i className="fas fa-times mr-2"></i>
-                        Cancelar
+                        <i className="fa-solid fa-angle-left mr-2"></i>
+                        Volver
                     </button>
                     <button
                         onClick={handleSaveChanges}

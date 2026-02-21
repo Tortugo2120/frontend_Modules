@@ -26,6 +26,7 @@ const Pagos = () => {
     const [alert, setAlert] = useState<{ type: 'success' | 'error'; msg: string } | null>(null);
     const [evidenceFile, setEvidenceFile] = useState<File | null>(null);
     const [isUploadingEvidence, setIsUploadingEvidence] = useState(false);
+    const [saved, setSaved] = useState(false);
 
     // Obtener el ID del pago desde application.pago.id
     const paymentId = application?.pago?.id;
@@ -90,7 +91,7 @@ const Pagos = () => {
                     setIsUploadingEvidence(false);
                 }
                 setAlert({ type: 'success', msg: 'Pago actualizado correctamente' });
-                setTimeout(() => { setAlert(null); navigate(-1); }, 2500);
+                setSaved(true);
             })
             .catch((e: Error) => {
                 setAlert({ type: 'error', msg: e.message || 'Error al actualizar el pago' });
@@ -309,14 +310,16 @@ const Pagos = () => {
                         </button>
                         <button
                             type="submit"
-                            disabled={isUpdating || isUploadingEvidence}
+                            disabled={isUpdating || isUploadingEvidence || saved}
                             className="btn btn-primary text-white gap-2"
                         >
                             {isUpdating
                                 ? <><span className="loading loading-spinner loading-sm"></span> Guardando...</>
                                 : isUploadingEvidence
                                     ? <><span className="loading loading-spinner loading-sm"></span> Subiendo evidencia...</>
-                                    : <><i className="fas fa-save mr-1"></i> Guardar Cambios</>}
+                                    : saved
+                                        ? <><i className="fas fa-check-circle mr-1"></i> Cambios Guardados</>
+                                        : <><i className="fas fa-save mr-1"></i> Guardar Cambios</>}
                         </button>
                     </div>
                 </div>

@@ -155,11 +155,11 @@ export default function ApplicantForm({
 
                     <div className="w-full flex flex-col items-center">
 
-                        <label className="block text-base sm:text-lg font-bold text-gray-900 mb-2">
+                        <label className="block text-lg sm:text-2xl font-bold text-gray-900 mb-2">
                             Número de Expediente <span className="text-red-500">*</span>
                         </label>
 
-                        <p className="text-sm text-gray-500 mb-6 max-w-md">
+                        <p className="text-base text-gray-500 mb-6 max-w-md">
                             Ingrese el código identificador del expediente para proceder con la validación.
                         </p>
 
@@ -169,7 +169,7 @@ export default function ApplicantForm({
                                     type="text"
                                     value={expedientNumber}
                                     onChange={handleExpedientInput}
-                                    className={`join-item input input-bordered w-full font-bold uppercase outline-0 ${
+                                    className={`px-4 rounded-l-lg  border-2 border-yellow-300 w-full font-bold text-2xl uppercase outline-0 ${
                                         isChecking
                                             ? 'input-warning'
                                             : expedientError && expedientNumber.length > 0
@@ -182,7 +182,7 @@ export default function ApplicantForm({
                                     maxLength={20}
                                 />
                                 <button
-                                    className="btn btn-primary join-item"
+                                    className="btn btn-primary rounded-r-lg p-4 text-lg h-15"
                                     type="button"
                                     onClick={handleValidateClick}
                                     disabled={!localValidationPassed || isChecking || backendValidated}
@@ -208,7 +208,7 @@ export default function ApplicantForm({
 
                             {/* Mensajes de validación local */}
                             {expedientError && expedientNumber.length > 0 && !isChecking && (
-                                <p className="text-error text-xs mt-2 flex items-center gap-1">
+                                <p className="text-error text-base mt-2 flex items-center gap-1">
                                     <i className="fas fa-exclamation-circle"></i>
                                     {expedientError}
                                 </p>
@@ -216,7 +216,7 @@ export default function ApplicantForm({
 
                             {/* Mensaje de verificación en proceso */}
                             {isChecking && (
-                                <p className="text-warning text-xs mt-2 flex items-center gap-1">
+                                <p className="text-warning text-base mt-2 flex items-center gap-1">
                                     <i className="fas fa-spinner fa-spin"></i>
                                     Verificando disponibilidad del expediente...
                                 </p>
@@ -224,7 +224,7 @@ export default function ApplicantForm({
 
                             {/* Mensaje de éxito */}
                             {backendValidated && !isChecking && !expedientError && (
-                                <p className="text-success text-xs mt-2 flex items-center gap-1">
+                                <p className="text-success text-base mt-2 flex items-center gap-1">
                                     <i className="fas fa-check-circle"></i>
                                     Expediente disponible y verificado correctamente
                                 </p>
