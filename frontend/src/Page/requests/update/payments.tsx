@@ -7,6 +7,11 @@ import { useUpdatePayment } from '../../../hooks/useUpdatePayment.ts';
 import { uploadPaymentEvidence } from '../../../services/PaymentUpdateService.ts';
 import { paymentSchema, type PaymentFormData } from '../../../Validations/validationPayment.ts';
 
+const getTodayStr = () => {
+    const d = new Date();
+    return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+};
+
 const estadoBadge: Record<string, string> = {
     Pendiente:   'bg-yellow-100 text-yellow-700 border-yellow-200',
     'En Proceso':'bg-blue-100   text-blue-700   border-blue-200',
@@ -27,6 +32,7 @@ const Pagos = () => {
     const [evidenceFile, setEvidenceFile] = useState<File | null>(null);
     const [isUploadingEvidence, setIsUploadingEvidence] = useState(false);
     const [saved, setSaved] = useState(false);
+    const [displayPago, setDisplayPago] = useState<{ estado: string; numero_comprobante: string; fecha_pago: string; pagado: string } | null>(null);
 
     // Obtener el ID del pago desde application.pago.id
     const paymentId = application?.pago?.id;
@@ -55,6 +61,12 @@ const Pagos = () => {
         const fechaPago = p.fecha_pago || '';
         const fechaFormateada = fechaPago ? fechaPago.split(' ')[0] : '';
         setValue('fecha_pago', fechaFormateada, { shouldDirty: true });
+        setDisplayPago({
+            estado: p.estado || 'Pendiente',
+            numero_comprobante: p.numero_comprobante || '',
+            fecha_pago: fechaFormateada,
+            pagado: p.pagado === '1' ? '1' : '0',
+        });
     }, [application]);
 
     const onSubmit = (data: PaymentFormData) => {
@@ -92,6 +104,12 @@ const Pagos = () => {
                 }
                 setAlert({ type: 'success', msg: 'Pago actualizado correctamente' });
                 setSaved(true);
+                setDisplayPago({
+                    estado: estadoFinal,
+                    numero_comprobante: data.numero_comprobante || '',
+                    fecha_pago: data.fecha_pago || '',
+                    pagado: data.pagado,
+                });
             })
             .catch((e: Error) => {
                 setAlert({ type: 'error', msg: e.message || 'Error al actualizar el pago' });
@@ -108,9 +126,6 @@ const Pagos = () => {
             </div>
         );
     }
-
-    const pago = application?.pago;
-    const estadoActual = pago?.estado || '—';
 
     return (
         <div className="min-h-screen bg-blue-300/40 p-4 sm:p-6">
@@ -143,22 +158,22 @@ const Pagos = () => {
             </div>
 
             {/* Current payment summary chips */}
-            {pago && (
+            {displayPago && (
                 <div className="bg-green-50 border border-green-200 shadow px-6 py-3 flex flex-wrap items-center gap-4 text-base text-green-800">
-                    <span className={`inline-flex items-center gap-1 border px-3 py-1.5 rounded-full font-semibold ${estadoBadge[estadoActual] ?? 'bg-gray-100 text-gray-700 border-gray-200'}`}>
-                        <i className="fas fa-tag"></i> {estadoActual}
+                    <span className={`inline-flex items-center gap-1 border px-3 py-1.5 rounded-full font-semibold ${estadoBadge[displayPago.estado] ?? 'bg-gray-100 text-gray-700 border-gray-200'}`}>
+                        <i className="fas fa-tag"></i> {displayPago.estado}
                     </span>
                     <span>
                         <i className="fas fa-receipt mr-1"></i>
-                        <strong>Comprobante:</strong> {pago.numero_comprobante || '—'}
+                        <strong>Comprobante:</strong> {displayPago.numero_comprobante || '—'}
                     </span>
                     <span>
                         <i className="fas fa-calendar mr-1"></i>
-                        <strong>Fecha pago:</strong> {pago.fecha_pago || '—'}
+                        <strong>Fecha pago:</strong> {displayPago.fecha_pago || '—'}
                     </span>
                     <span>
-                        <i className={`fas ${pago.pagado === '1' ? 'fa-check-circle text-green-600' : 'fa-times-circle text-red-500'} mr-1`}></i>
-                        <strong>Pagado:</strong> {pago.pagado === '1' ? 'Sí' : 'No'}
+                        <i className={`fas ${displayPago.pagado === '1' ? 'fa-check-circle text-green-600' : 'fa-times-circle text-red-500'} mr-1`}></i>
+                        <strong>Pagado:</strong> {displayPago.pagado === '1' ? 'Sí' : 'No'}
                     </span>
                     <span>
                         <i className="fas fa-dollar-sign mr-1"></i>
@@ -223,6 +238,7 @@ const Pagos = () => {
                                 </label>
                                 <input
                                     type="date"
+                                    max={getTodayStr()}
                                     {...register('fecha_pago')}
                                     disabled={pagadoValue !== '1'}
                                     className={`w-full px-3 py-2 text-base border rounded-lg outline-0 focus:ring-2 focus:ring-green-500 transition-all ${

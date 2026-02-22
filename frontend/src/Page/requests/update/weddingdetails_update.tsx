@@ -10,8 +10,21 @@ import { useUpdateWedding } from '../../../hooks/useUpdateWedding.ts';
 import { useGetMarriageDetails } from '../../../hooks/useGetMarriageDetails.ts';
 import { useState } from 'react';
 
+const getTodayStr = () => {
+  const d = new Date();
+  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+};
+
 const weddingSchema = z.object({
-  fecha: z.string().min(1, 'La fecha es obligatoria'),
+  fecha: z
+    .string()
+    .min(1, 'La fecha es obligatoria')
+    .refine(val => {
+      if (!val) return true;
+      const today = new Date();
+      today.setHours(0, 0, 0, 0);
+      return new Date(`${val}T00:00:00`) >= today;
+    }, 'No puede seleccionar una fecha anterior a hoy'),
   hora: z.string().min(1, 'La hora es obligatoria'),
   direccion: z
     .string()
@@ -39,6 +52,7 @@ const DetallesMatrimonio_update = () => {
 
   const [alert, setAlert] = useState<{ type: 'success' | 'error'; msg: string } | null>(null);
   const [saved, setSaved] = useState(false);
+  const [displayMatrimonio, setDisplayMatrimonio] = useState<{ fecha: string; hora: string; direccion: string; oficiante: string } | null>(null);
 
   const {
     register,
@@ -56,6 +70,7 @@ const DetallesMatrimonio_update = () => {
     setValue('fecha', m.fecha || '', { shouldDirty: true });
     setValue('hora', m.hora || '', { shouldDirty: true });
     setValue('direccion', m.direccion || '', { shouldDirty: true });
+    setDisplayMatrimonio({ fecha: m.fecha || '', hora: m.hora || '', direccion: m.direccion || '', oficiante: m.oficiante || '' });
   }, [application]);
 
   useEffect(() => {
@@ -79,6 +94,8 @@ const DetallesMatrimonio_update = () => {
         if (res.status) {
           setAlert({ type: 'success', msg: 'Detalles del matrimonio actualizados correctamente' });
           setSaved(true);
+          const oficianteName = oficiantes.find(o => String(o.id) === String(data.oficianteId))?.full_name ?? displayMatrimonio?.oficiante ?? '';
+          setDisplayMatrimonio({ fecha: data.fecha, hora: data.hora, direccion: data.direccion, oficiante: oficianteName });
         } else {
           setAlert({ type: 'error', msg: res.message || 'Error al actualizar' });
         }
@@ -100,8 +117,9 @@ const DetallesMatrimonio_update = () => {
     );
   }
 
-  const matrimonio = application?.matrimonio;
-  {/*const contrayentes = application?.participantes.filter(p => p.rol === 'CONTRAYENTE') ?? [];*/}
+  {/*
+    const matrimonio = application?.matrimonio;
+    const contrayentes = application?.participantes.filter(p => p.rol === 'CONTRAYENTE') ?? [];*/}
 
   return (
     <div className="min-h-screen bg-blue-300/40 p-4 sm:p-6">
@@ -134,25 +152,13 @@ const DetallesMatrimonio_update = () => {
         </div>
       </div>
 
-      {/* Contrayentes info chips 
-            {contrayentes.length > 0 && (
-                <div className="bg-pink-50 border border-pink-200 shadow px-6 py-3 flex flex-wrap gap-3">
-                    {contrayentes.map((c, i) => (
-                        <span key={i} className="inline-flex items-center gap-2 bg-white border border-pink-200 text-pink-700 text-lg px-3 py-1.5 rounded-full shadow-sm">
-                            <i className="fas fa-user"></i>
-                            <span className="font-semibold">Prometido {i + 1}:</span> {c.nombre} · {c.numero_identificacion}
-                        </span>
-                    ))}
-                </div>
-            )}
-      */}
       {/* Detalles */}
-      {matrimonio && (
+      {displayMatrimonio && (
         <div className="bg-pink-50 border border-pink-200 shadow px-6 py-3 flex flex-wrap gap-6 text-lg text-pink-800">
-          <span><i className="fas fa-calendar mr-1"></i><strong>Fecha actual:</strong> {matrimonio.fecha}</span>
-          <span><i className="fas fa-clock mr-1"></i><strong>Hora actual:</strong> {matrimonio.hora}</span>
-          <span><i className="fas fa-map-marker-alt mr-1"></i><strong>Lugar actual:</strong> {matrimonio.direccion}</span>
-          <span><i className="fas fa-user-tie mr-1"></i><strong>Oficiante actual:</strong> {matrimonio.oficiante}</span>
+          <span><i className="fas fa-calendar mr-1"></i><strong>Fecha actual:</strong> {displayMatrimonio.fecha}</span>
+          <span><i className="fas fa-clock mr-1"></i><strong>Hora actual:</strong> {displayMatrimonio.hora}</span>
+          <span><i className="fas fa-map-marker-alt mr-1"></i><strong>Lugar actual:</strong> {displayMatrimonio.direccion}</span>
+          <span><i className="fas fa-user-tie mr-1"></i><strong>Oficiante actual:</strong> {displayMatrimonio.oficiante}</span>
         </div>
       )}
 
@@ -174,6 +180,7 @@ const DetallesMatrimonio_update = () => {
                 </label>
                 <input
                   type="date"
+                  min={getTodayStr()}
                   {...register('fecha')}
                   className="w-full px-3 py-2 text-base border border-gray-300 rounded-lg bg-white outline-0 focus:ring-2 focus:ring-pink-500"
                 />

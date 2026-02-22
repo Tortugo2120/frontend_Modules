@@ -50,9 +50,14 @@ export const ESTADO_CLASSES: Record<string, string> = {
     CANCELADO:  "bg-red-100    text-red-700",
 };
 
+
+export const parseLocalDate = (fecha: string): Date => {
+    return fecha.length === 10 ? new Date(`${fecha}T00:00:00`) : new Date(fecha);
+};
+
 export const formatFecha = (fecha: string | null): string =>
     fecha
-        ? new Date(fecha).toLocaleDateString("es-PE", {
+        ? parseLocalDate(fecha).toLocaleDateString("es-PE", {
               day: "2-digit",
               month: "short",
               year: "numeric",

@@ -25,9 +25,9 @@ export const paymentSchema = z.object({
             });
         } else {
             // Validar que la fecha de pago no sea futura
-            const fechaPago = new Date(val.fecha_pago);
+            const fechaPago = new Date(`${val.fecha_pago}T00:00:00`);
             const hoy = new Date();
-            hoy.setHours(0, 0, 0, 0); // Resetear horas para comparar solo fechas
+            hoy.setHours(0, 0, 0, 0);
 
             if (fechaPago > hoy) {
                 ctx.addIssue({
