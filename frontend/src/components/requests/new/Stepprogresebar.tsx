@@ -1,38 +1,34 @@
-interface StepProgressBarProps {
-    currentStep: number;
+export interface StepItem {
+    label: string;
+    fullLabel?: string;
+    shortLabel: string;
 }
 
-export default function StepProgressBar({ currentStep }: StepProgressBarProps) {
-    const steps = [
-        { number: 1, label: 'Tipo ', fullLabel: 'de Solicitud', shortLabel: 'Tipo' },
-        { number: 2, label: 'N° Exp', fullLabel: 'ediente', shortLabel: 'EXP' },
-        { number: 3, label: 'Prometidos', fullLabel: '', shortLabel: 'Prometidos' },
-        { number: 4, label: 'Testigos', fullLabel: '', shortLabel: 'Testigos' },
-        { number: 5, label: 'Detalles Matrimonio', fullLabel: '', shortLabel: 'Detalles' },
-        { number: 6, label: 'Requisitos', fullLabel: '', shortLabel: 'Requisitos' },
-        { number: 7, label: 'Confirmación', fullLabel: '', shortLabel: 'Confirm.' }
-    ];
+interface StepProgressBarProps {
+    currentStep: number;
+    steps: StepItem[];
+}
 
+export default function StepProgressBar({ currentStep, steps }: StepProgressBarProps) {
     return (
         <>
             {/* Vista Desktop y Tablet */}
             <ol className="hidden sm:flex justify-between items-center w-full p-3 space-x-2 text-sm font-medium text-center text-gray-700 bg-white border border-gray-200 rounded-lg shadow-sm sm:p-4 sm:space-x-4">
-
                 {steps.map((step, index) => (
-                    <div key={step.number} className="flex items-center flex-1 justify-center">
+                    <div key={index} className="flex items-center flex-1 justify-center">
                         <li
-                            className={`flex items-center font-bold ${currentStep >= step.number
+                            className={`flex items-center font-bold ${currentStep >= index + 1
                                 ? 'text-blue-600'
                                 : 'text-gray-500'
                                 }`}
                         >
                             <span
-                                className={`flex items-center justify-center w-5 h-5 text-md shrink-0 ${currentStep >= step.number
+                                className={`flex items-center justify-center w-5 h-5 text-md shrink-0 ${currentStep >= index + 1
                                     ? 'border-blue-600'
                                     : 'border-gray-500'
                                     }`}
                             >
-                                {step.number}.
+                                {index + 1}.
                             </span>
 
                             <div className="flex flex-row gap-0 text-center">
@@ -46,7 +42,7 @@ export default function StepProgressBar({ currentStep }: StepProgressBarProps) {
 
                         {index < steps.length - 1 && (
                             <svg
-                                className={`w-4 h-4 sm:w-5 sm:h-5 rtl:rotate-180 ${currentStep >= step.number
+                                className={`w-4 h-4 sm:w-5 sm:h-5 rtl:rotate-180 ${currentStep >= index + 1
                                     ? 'text-blue-600'
                                     : 'text-gray-500'}`}
                                 aria-hidden="true"
@@ -81,7 +77,7 @@ export default function StepProgressBar({ currentStep }: StepProgressBarProps) {
                 <div className="w-full bg-gray-200 rounded-full h-2 mb-4">
                     <div
                         className="bg-blue-600 h-2 rounded-full transition-all duration-300"
-                        style={{ width: `${(currentStep / steps.length) * 100}% ` }}
+                        style={{ width: `${(currentStep / steps.length) * 100}%` }}
                     ></div>
                 </div>
 
@@ -102,14 +98,13 @@ export default function StepProgressBar({ currentStep }: StepProgressBarProps) {
                 </div>
 
                 <div className="flex justify-center gap-1.5">
-                    {steps.map((step) => (
+                    {steps.map((_, idx) => (
                         <div
-                            key={step.number}
-                            className={`h-1.5 flex-1 rounded-full transition-all ${currentStep >= step.number
+                            key={idx}
+                            className={`h-1.5 flex-1 rounded-full transition-all ${currentStep >= idx + 1
                                 ? 'bg-blue-600'
                                 : 'bg-gray-200'
                                 }`}
-                            title={`${step.label} ${step.fullLabel}`}
                         />
                     ))}
                 </div>

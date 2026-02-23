@@ -1,6 +1,7 @@
 import type { CreateApplicationPayload } from "../../../model/aplicationModel.ts";
 import type { Participant } from "../../../model/aplicationModel.ts";
 import { useGetOficiantes } from "../../../hooks/useGetOficiantes.ts";
+import { detectFlowType } from "../../../config/stepsConfig.ts";
 
 interface ConfirmationSummaryProps {
     tipoSolicitud: number | null;
@@ -20,12 +21,20 @@ export default function ConfirmationSummary({
     onConfirm,
     isSubmitting
 }: ConfirmationSummaryProps) {
+    // Detectar el tipo de flujo automáticamente a partir del nombre
+    const flowType = tipoNombre ? detectFlowType(tipoNombre) : 'generico';
+    const esMatrimonio = flowType === 'matrimonio';
+
     // Extraer datos del solicitante principal (participante con role 'solicitante')
     const solicitante = applicationData.participants.find(p => p.rol === 'solicitante');
 
     // Extraer contrayentes y testigos
     const contrayentes = applicationData.participants.filter(p => p.rol === 'contrayente');
     const testigos = applicationData.participants.filter(p => p.rol === 'testigo');
+
+    // Label dinámico según flujo
+    const labelInvolucrados = esMatrimonio ? 'Prometidos' : 'Involucrados';
+    const iconInvolucrados = esMatrimonio ? 'fa-user-friends' : 'fa-users';
 
     // Resolver nombre del oficiante
     const { oficiantes } = useGetOficiantes('oficiante');
@@ -125,19 +134,19 @@ export default function ConfirmationSummary({
 
             </div>
 
-            {/* Sección de Contrayentes */}
+            {/* Sección de Contrayentes / Involucrados */}
             {contrayentes.length > 0 && (
                 <div className="mt-6 bg-linear-to-br from-blue-50 to-blue-100 rounded-xl p-6 border border-blue-200">
                     <h3 className="text-lg font-bold text-gray-900 mb-4 flex items-center gap-2">
-                        <i className="fas fa-user-friends text-blue-600"></i>
-                        Prometidos ({contrayentes.length})
+                        <i className={`fas ${iconInvolucrados} text-blue-600`}></i>
+                        {labelInvolucrados} ({contrayentes.length})
                     </h3>
                     <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-2 gap-4">
                         {contrayentes.map((contrayente: Participant, index: number) => (
                             <div key={contrayente.cui} className="bg-white rounded-lg p-4 shadow-sm">
                                 <h4 className="font-semibold text-gray-800 mb-3 flex items-center gap-2">
                                     <i className="fas fa-user-circle text-blue-500"></i>
-                                    Prometido {index + 1}
+                                    {esMatrimonio ? `Prometido ${index + 1}` : `Involucrado ${index + 1}`}
                                 </h4>
                                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                                     <div>
@@ -175,8 +184,8 @@ export default function ConfirmationSummary({
                 </div>
             )}
 
-            {/* Sección de Testigos */}
-            {testigos.length > 0 && (
+            {/* Sección de Testigos — solo matrimonio */}
+            {esMatrimonio && testigos.length > 0 && (
                 <div className="mt-6 bg-linear-to-br from-green-50 to-green-100 rounded-xl p-6 border border-green-200">
                     <h3 className="text-lg font-bold text-gray-900 mb-4 flex items-center gap-2">
                         <i className="fas fa-users text-green-600"></i>
@@ -225,8 +234,8 @@ export default function ConfirmationSummary({
                 </div>
             )}
 
-            {/* Sección de Detalles del Matrimonio */}
-            {marriageDetails && (marriageDetails.marriageDate || marriageDetails.marriagePlace || marriageDetails.marriageTime || marriageDetails.marriageOfficiantId) && (
+            {/* Sección de Detalles del Matrimonio — solo matrimonio */}
+            {esMatrimonio && marriageDetails && (marriageDetails.marriageDate || marriageDetails.marriagePlace || marriageDetails.marriageTime || marriageDetails.marriageOfficiantId) && (
                 <div className="mt-6 bg-linear-to-br from-purple-50 to-pink-50 rounded-xl p-6 border border-purple-200">
                     <h3 className="text-lg font-bold text-gray-900 mb-4 flex items-center gap-2">
                         <i className="fas fa-ring text-purple-600"></i>

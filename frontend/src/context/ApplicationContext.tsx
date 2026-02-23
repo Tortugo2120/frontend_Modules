@@ -12,6 +12,7 @@ interface ApplicationContextType {
     updateApplicationData: (data: Partial<CreateApplicationPayload['application']>) => void;
     updateRequisitos: (requisitos: RequisitoEstado[]) => void;
     updateMarriageDetails: (details: Partial<MarriageDetails>) => void;
+    clearMarriageDetails: () => void;
     resetForm: () => void;
 }
 
@@ -23,15 +24,10 @@ export const ApplicationProvider: React.FC<{ children: React.ReactNode }> = ({ c
         if (saved) {
             try {
                 const parsed = JSON.parse(saved);
-                // Asegurar que marriageDetails esté presente
                 return {
                     ...parsed,
-                    marriageDetails: parsed.marriageDetails || {
-                        marriageOfficiantId: 0,
-                        marriagePlace: "",
-                        marriageDate: "",
-                        marriageTime: ""
-                    }
+                    // marriageDetails solo se preserva si existe en el guardado
+                    marriageDetails: parsed.marriageDetails ?? undefined
                 };
             } catch (error) {
                 console.error('Error al parsear datos guardados:', error);
@@ -39,12 +35,6 @@ export const ApplicationProvider: React.FC<{ children: React.ReactNode }> = ({ c
                     application: { userId: 0, applicationTypeId: 0, expedientNumber: "" },
                     participants: [],
                     requirements: [],
-                    marriageDetails: {
-                        marriageOfficiantId: 0,
-                        marriagePlace: "",
-                        marriageDate: "",
-                        marriageTime: ""
-                    }
                 };
             }
         }
@@ -52,12 +42,6 @@ export const ApplicationProvider: React.FC<{ children: React.ReactNode }> = ({ c
             application: { userId: 0, applicationTypeId: 0, expedientNumber: "" },
             participants: [],
             requirements: [],
-            marriageDetails: {
-                marriageOfficiantId: 0,
-                marriagePlace: "",
-                marriageDate: "",
-                marriageTime: ""
-            }
         };
     });
 
@@ -135,8 +119,22 @@ export const ApplicationProvider: React.FC<{ children: React.ReactNode }> = ({ c
     const updateMarriageDetails = useCallback((details: Partial<MarriageDetails>) => {
         setFormDataAplication(prev => ({
             ...prev,
-            marriageDetails: { ...prev.marriageDetails, ...details }
+            marriageDetails: {
+                marriageOfficiantId: prev.marriageDetails?.marriageOfficiantId ?? 0,
+                marriagePlace: prev.marriageDetails?.marriagePlace ?? "",
+                marriageDate: prev.marriageDetails?.marriageDate ?? "",
+                marriageTime: prev.marriageDetails?.marriageTime ?? "",
+                ...details
+            }
         }));
+    }, []);
+
+    const clearMarriageDetails = useCallback(() => {
+        setFormDataAplication(prev => {
+            const next = { ...prev };
+            delete next.marriageDetails;
+            return next;
+        });
     }, []);
 
     const resetForm = useCallback(() => {
@@ -145,12 +143,6 @@ export const ApplicationProvider: React.FC<{ children: React.ReactNode }> = ({ c
             application: {userId: 0, applicationTypeId: 0, expedientNumber: ""},
             participants: [],
             requirements: [],
-            marriageDetails: {
-                marriageOfficiantId: 0,
-                marriagePlace: "",
-                marriageDate: "",
-                marriageTime: ""
-            }
         });
     }, []);
 
@@ -165,7 +157,7 @@ export const ApplicationProvider: React.FC<{ children: React.ReactNode }> = ({ c
     }, []);
 
     return (
-        <ApplicationContext.Provider value={{ formDataAplication, addParticipant, updateApplicationData, updateRequisitos, updateMarriageDetails, resetForm, deleteParticipant }}>
+        <ApplicationContext.Provider value={{ formDataAplication, addParticipant, updateApplicationData, updateRequisitos, updateMarriageDetails, clearMarriageDetails, resetForm, deleteParticipant }}>
             {children}
         </ApplicationContext.Provider>
     );

@@ -37,7 +37,7 @@ export interface ApplicationBackendItem {
 }
 
 // Interfaz para usar en el frontend (ya transformada)
-export interface ApplicationItem {
+    export interface ApplicationItem {
     id: number;
     expediente: string;
     nombreSolicitud: string;
@@ -112,7 +112,7 @@ export interface CreateApplicationPayload {
     application: ApplicationData;
     participants: Participant[];
     requirements?: RequisitoEstado[];
-    marriageDetails: MarriageDetails;
+    marriageDetails?: MarriageDetails;
 }
 
 export interface AplicationResponse {
