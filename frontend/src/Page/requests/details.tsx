@@ -33,6 +33,7 @@ export const Detalles = () => {
 
   const contrayentes = application.participantes.filter(p => p.rol === "CONTRAYENTE");
   const testigos = application.participantes.filter(p => p.rol === "TESTIGO");
+  const isDivorcio = application.nombreSolicitud.toLowerCase().includes('divorcio');
 
   return (
     <div className="min-h-screen bg-blue-300/40 p-2 md:p-2">
@@ -116,15 +117,19 @@ export const Detalles = () => {
             )}
           </section>
 
-          {/* CONTRAYENTES DINÁMICOS */}
+          {/* CONTRAYENTES / PARTICIPANTES */}
           <section className="mb-8">
             <div className="bg-info-content text-white px-4 py-2 mb-4">
-              <h2 className="text-lg font-bold">PROMETIDOS</h2>
+              <h2 className="text-lg font-bold">{isDivorcio ? 'PARTICIPANTES' : 'PROMETIDOS'}</h2>
             </div>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               {contrayentes.map((c, index) => (
                 <div key={index} className="space-y-2 border-l-4 border-info-content pl-4">
-                  <h3 className="font-semibold text-gray-700 mb-3">Datos de {index === 0 ? 'del Prometido' : 'la Prometida'}:</h3>
+                  <h3 className="font-semibold text-gray-700 mb-3">
+                    {isDivorcio
+                      ? `Participante ${index + 1}:`
+                      : `Datos de ${index === 0 ? 'del Prometido' : 'la Prometida'}:`}
+                  </h3>
                   <div className="flex gap-2">
                     <span className="font-semibold text-gray-700">Nombre:</span>
                     <span className="text-gray-600">{c.nombre}</span>
@@ -150,31 +155,33 @@ export const Detalles = () => {
             </div>
           </section>
 
-          {/* TESTIGOS DINÁMICOS */}
-          <section className="mb-8">
-            <div className="bg-info-content text-white px-4 py-2 mb-4">
-              <h2 className="text-lg font-bold">TESTIGOS</h2>
-            </div>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              {testigos.map((t, index) => (
-                <div key={index} className="space-y-2 border-l-4 border-gray-300 pl-4">
-                  <h3 className="font-semibold text-gray-700 mb-3">Testigo {index + 1}:</h3>
-                  <div className="flex gap-2">
-                    <span className="font-semibold text-gray-700">Nombre:</span>
-                    <span className="text-gray-600">{t.nombre}</span>
+          {/* TESTIGOS — ocultos en solicitudes de divorcio */}
+          {!isDivorcio && testigos.length > 0 && (
+            <section className="mb-8">
+              <div className="bg-info-content text-white px-4 py-2 mb-4">
+                <h2 className="text-lg font-bold">TESTIGOS</h2>
+              </div>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                {testigos.map((t, index) => (
+                  <div key={index} className="space-y-2 border-l-4 border-gray-300 pl-4">
+                    <h3 className="font-semibold text-gray-700 mb-3">Testigo {index + 1}:</h3>
+                    <div className="flex gap-2">
+                      <span className="font-semibold text-gray-700">Nombre:</span>
+                      <span className="text-gray-600">{t.nombre}</span>
+                    </div>
+                    <div className="flex gap-2">
+                      <span className="font-semibold text-gray-700">{t.tipo_identificacion} :</span>
+                      <span className="text-gray-600">N° {t.numero_identificacion}</span>
+                    </div>
+                    <div className="flex gap-2">
+                      <span className="font-semibold text-gray-700">Domiciliado:</span>
+                      <span className="text-gray-600 text-sm">{t.direccion}</span>
+                    </div>
                   </div>
-                  <div className="flex gap-2">
-                    <span className="font-semibold text-gray-700">{t.tipo_identificacion} :</span>
-                    <span className="text-gray-600">N° {t.numero_identificacion}</span>
-                  </div>
-                  <div className="flex gap-2">
-                    <span className="font-semibold text-gray-700">Domiciliado:</span>
-                    <span className="text-gray-600 text-sm">{t.direccion}</span>
-                  </div>
-                </div>
-              ))}
-            </div>
-          </section>
+                ))}
+              </div>
+            </section>
+          )}
 
           {/* REQUISITOS DINÁMICOS */}
           <section className="mb-8">

@@ -12,6 +12,7 @@ const Update_Page = () => {
     const id = (location.state as { id?: string })?.id;
     const navigate = useNavigate();
     const { application, loading } = useDetailsApplication(id);
+    const isDivorcio = application?.nombreSolicitud.toLowerCase().includes('divorcio') ?? false;
 
     const [showConfirm, setShowConfirm] = useState(false);
     const { loading: cancelling, error: cancelError, cancelApplication } = useCancelApplication();
@@ -60,7 +61,7 @@ const Update_Page = () => {
                 )}
             </div>
 
-            <ActionCards id={id} application={application ?? null} />
+            <ActionCards id={id} application={application ?? null} isDivorcio={isDivorcio} />
         </div>
     );
 };

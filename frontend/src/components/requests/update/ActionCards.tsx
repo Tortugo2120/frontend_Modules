@@ -5,10 +5,15 @@ import type { ApplicationDetailItem } from "../../../model/detailRequestModel.ts
 interface Props {
     id: string | undefined;
     application: ApplicationDetailItem | null;
+    isDivorcio?: boolean;
 }
 
-export default function ActionCards({ id, application }: Props) {
+export default function ActionCards({ id, application, isDivorcio }: Props) {
     const navigate = useNavigate();
+
+    const visibleCards = isDivorcio
+        ? ACTION_CARDS.filter(c => c.key === 'requerimientos' || c.key === 'pagos')
+        : ACTION_CARDS;
 
     return (
         <section>
@@ -16,7 +21,7 @@ export default function ActionCards({ id, application }: Props) {
                 Seleccione una sección para editar
             </p>
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-                {ACTION_CARDS.map(card => {
+                {visibleCards.map(card => {
                     const c = COLOR_MAP[card.color];
                     const stateToSend =
                         card.key === "pagos"
