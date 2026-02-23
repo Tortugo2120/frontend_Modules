@@ -26,6 +26,9 @@ const Contrayente = (props: Solicitud) => {
         ? tipoSolicitudNombre.toLowerCase().includes('divorcio')
         : false;
 
+    // Rol dinámico según el tipo de solicitud
+    const rolParticipante = esDivorcio ? 'divorciado' : 'contrayente';
+
     // Estados para búsqueda de Contrayente 1
     const {
         register: register1,
@@ -133,7 +136,7 @@ const Contrayente = (props: Solicitud) => {
     // Cargar datos desde localStorage al montar el componente
     useEffect(() => {
         const contrayentes = formDataAplication.participants.filter((p: Participant) =>
-            p.rol === 'contrayente'
+            p.rol === rolParticipante
         );
 
         // Llenar formulario del contrayente 1 si existe en localStorage
@@ -180,7 +183,7 @@ const Contrayente = (props: Solicitud) => {
     // Sincronizar con el estado global del contexto
     useEffect(() => {
         const contrayentes = formDataAplication.participants.filter((p: Participant) =>
-            p.rol === 'contrayente'
+            p.rol === rolParticipante
         );
         setContrayente1Added(contrayentes.length >= 1);
         setContrayente2Added(contrayentes.length >= 2);
@@ -306,7 +309,7 @@ const Contrayente = (props: Solicitud) => {
         handleSubmit((data: ContrayenteFormData) => {
             // Verificar si ya existe como contrayente
             const isDuplicateContrayente = formDataAplication.participants.some((p: Participant) =>
-                p.cui === data.cui && p.rol === 'contrayente'
+                p.cui === data.cui && p.rol === rolParticipante
             );
 
             if (isDuplicateContrayente) {
@@ -316,7 +319,7 @@ const Contrayente = (props: Solicitud) => {
 
             // Validar que los contrayentes sean de sexo diferente
             const contrayentes = formDataAplication.participants.filter((p: Participant) =>
-                p.rol === 'contrayente'
+                p.rol === rolParticipante
             );
 
             if (contrayentes.length > 0) {
@@ -333,10 +336,10 @@ const Contrayente = (props: Solicitud) => {
             // Limpiar error de mismo sexo si existe
             setSameGenderError('');
 
-            // Agregar como contrayente con ctry null
+            // Agregar con el rol dinámico según tipo de solicitud y ctry null
             addParticipant({
                 ...data,
-                rol: 'contrayente',
+                rol: rolParticipante,
                 documentTypeId: documentTypeMapping[tipoDoc] || 1,
                 ctry: null
             });
@@ -793,7 +796,7 @@ const Contrayente = (props: Solicitud) => {
                 />
             )}
             {/* Tabla de contrayentes agregados */}
-            {formDataAplication.participants.filter((p: Participant) => p.rol === 'contrayente').length > 0 && (
+            {formDataAplication.participants.filter((p: Participant) => p.rol === rolParticipante).length > 0 && (
                 <div className="mt-6">
                     <h4 className="text-lg font-semibold text-gray-800 mb-4 flex items-center gap-2">
                         <i className="fas fa-list text-blue-600"></i>
@@ -813,7 +816,7 @@ const Contrayente = (props: Solicitud) => {
                                 </tr>
                             </thead>
                             <tbody>
-                                {formDataAplication.participants.filter((p: Participant) => p.rol === 'contrayente').map((contrayente: Participant, index: number) => (
+                                {formDataAplication.participants.filter((p: Participant) => p.rol === rolParticipante).map((contrayente: Participant, index: number) => (
                                     <tr key={contrayente.cui} className="border-t border-gray-200">
                                         <td className="px-4 py-2 text-sm text-gray-700">{contrayente.cui}</td>
                                         <td className="px-4 py-2 text-sm text-gray-700">
