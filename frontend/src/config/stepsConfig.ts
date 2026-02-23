@@ -18,12 +18,6 @@ export interface StepConfig {
     component: ComponentType<any>;
 }
 
-// ─── Identificadores de flujo ─────────────────────────────────────────────────
-
-/**
- * Detecta el "tipo de flujo" a partir del nombre del tipo de solicitud.
- * Devuelve una clave estable ('matrimonio' | 'divorcio' | 'generico').
- */
 export type FlowType = 'matrimonio' | 'divorcio' | 'generico';
 
 export function detectFlowType(nombreSolicitud: string): FlowType {
@@ -36,9 +30,6 @@ export function detectFlowType(nombreSolicitud: string): FlowType {
     }
     return 'generico';
 }
-
-// ─── Registro de pasos por flujo ──────────────────────────────────────────────
-// Se usa una función lazy para evitar importaciones circulares en el bundle.
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 type StepsMap = Record<FlowType, StepConfig[]>;

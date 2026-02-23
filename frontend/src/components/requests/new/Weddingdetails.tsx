@@ -93,7 +93,7 @@ const Weddingdetails = (props: Solicitud) => {
         // Validar fecha si el campo es fechaBoda
         if (name === 'fechaBoda') {
             if (value && !validateDate(value)) {
-                setDateError('La fecha de casamiento no puede ser una fecha pasada. Por favor, seleccione una fecha actual o futura.');
+                setDateError('La fecha de casamiento no puede ser una fecha pasada');
             } else {
                 setDateError('');
             }

@@ -43,6 +43,7 @@ const RequisitosMatrimonio = ({
     const [archivos] = useState<ArchivoSubido[]>([]);
     const [archivosRequisitos, setArchivosRequisitos] = useState<Map<number, ArchivoSubido[]>>(new Map());
     const [requisitosEstados, setRequisitosEstados] = useState<Map<number, number>>(new Map());
+    const [erroresArchivo, setErroresArchivo] = useState<Map<number, string>>(new Map());
     const { formDataAplication, updateRequisitos } = useApplicationContext();
     const { requirements, fetchRequirements } = useGetRequirements();
     const { addDocument, deleteDocument } = useDocument();
@@ -249,12 +250,13 @@ const RequisitosMatrimonio = ({
     //Validar avanzar con al menos un requisito
     useEffect(() => {
         if (onValidationChange) {
-            // Evaluamos si el número de completados es mayor a 0
-            const isStepValid = progreso.completados > 0;
+            // Bloqueamos si hay errores de tamaño de archivo pendientes
+            const hayErroresArchivo = erroresArchivo.size > 0;
+            const isStepValid = progreso.completados > 0 && !hayErroresArchivo;
             onValidationChange(isStepValid);
         }
         // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [progreso.completados]);
+    }, [progreso.completados, erroresArchivo]);
 
     const formatearTamaño = (bytes: number): string => {
         if (bytes === 0) return '0 Bytes';
@@ -269,6 +271,25 @@ const RequisitosMatrimonio = ({
         const files = e.target.files;
         if (!files || files.length === 0) return;
         const file = files[0];
+
+        const MAX_SIZE = 5 * 1024 * 1024; // 5 MB en bytes
+        if (file.size > MAX_SIZE) {
+            setErroresArchivo(prev => {
+                const newMap = new Map(prev);
+                newMap.set(requisitoId, `El archivo "${file.name}" supera el límite de 5 MB (${formatearTamaño(file.size)}). Por favor selecciona un archivo más pequeño.`);
+                return newMap;
+            });
+            e.target.value = '';
+            return;
+        }
+
+        // Limpiar error previo si el archivo es válido
+        setErroresArchivo(prev => {
+            const newMap = new Map(prev);
+            newMap.delete(requisitoId);
+            return newMap;
+        });
+
         const nuevoArchivo: ArchivoSubido = {
             id: crypto?.randomUUID?.() || `${Date.now()}-${Math.random()}`,
             nombre: file.name,
@@ -308,6 +329,13 @@ const RequisitosMatrimonio = ({
         }
 
         setArchivosRequisitos(prev => {
+            const newMap = new Map(prev);
+            newMap.delete(requisitoId);
+            return newMap;
+        });
+
+        // Limpiar error de tamaño si existía
+        setErroresArchivo(prev => {
             const newMap = new Map(prev);
             newMap.delete(requisitoId);
             return newMap;
@@ -561,6 +589,32 @@ const RequisitosMatrimonio = ({
                                                                             </button>
                                                                         </div>
                                                                     ))}
+                                                                </div>
+                                                            )}
+
+                                                            {/* Mensaje de error por tamaño de archivo */}
+                                                            {erroresArchivo.has(requistoIdNum) && (
+                                                                <div className="flex items-start gap-2 bg-red-50 border border-red-300 rounded-lg px-3 py-2 mt-1">
+                                                                    <i className="fas fa-exclamation-circle text-red-500 mt-0.5 shrink-0"></i>
+                                                                    <div className="flex-1 min-w-0">
+                                                                        <p className="text-xs font-semibold text-red-700">Archivo inválido</p>
+                                                                        <p className="text-xs text-red-600 mt-0.5">{erroresArchivo.get(requistoIdNum)}</p>
+                                                                        <p className="text-xs text-red-500 mt-1 font-medium">
+                                                                            ⚠ No podrás continuar al siguiente paso hasta seleccionar un archivo válido o eliminar este error.
+                                                                        </p>
+                                                                    </div>
+                                                                    <button
+                                                                        type="button"
+                                                                        onClick={() => setErroresArchivo(prev => {
+                                                                            const newMap = new Map(prev);
+                                                                            newMap.delete(requistoIdNum);
+                                                                            return newMap;
+                                                                        })}
+                                                                        className="shrink-0 text-red-400 hover:text-red-600 transition-colors"
+                                                                        title="Descartar error"
+                                                                    >
+                                                                        <i className="fas fa-times text-xs"></i>
+                                                                    </button>
                                                                 </div>
                                                             )}
                                                         </div>
