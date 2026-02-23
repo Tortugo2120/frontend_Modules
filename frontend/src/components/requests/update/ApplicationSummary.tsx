@@ -19,17 +19,21 @@ function StatCard({ label, children }: { label: string; children: React.ReactNod
 function ParticipantsSection({ application }: Props) {
     const contrayentes = application.participantes.filter(p => p.rol === "CONTRAYENTE");
     const testigos     = application.participantes.filter(p => p.rol === "TESTIGO");
+    const isDivorcio   = application.nombreSolicitud.toLowerCase().includes('divorcio');
 
     if (contrayentes.length === 0 && testigos.length === 0) return null;
 
     return (
         <div className="mt-4 pt-4 border-t border-gray-300">
             <p className="text-base sm:text-lg font-semibold text-gray-800 uppercase tracking-wide mb-2">
-                <i className="fas fa-user-friends text-indigo-400 mr-1.5"></i>Participantes
+                <i className="fas fa-user-friends text-indigo-400 mr-1.5"></i>
+                {isDivorcio ? 'Involucrados' : 'Participantes'}
             </p>
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+            <div className={`grid grid-cols-1 ${isDivorcio ? '' : 'sm:grid-cols-2'} gap-3`}>
                 <div className="flex flex-col">
-                    <span className="text-lg font-semibold text-indigo-600">Prometidos:</span>
+                    <span className="text-lg font-semibold text-indigo-600">
+                        {isDivorcio ? 'Participantes:' : 'Prometidos:'}
+                    </span>
                     <div className="flex items-center flex-wrap gap-2 mt-1">
                         {contrayentes.map((p, i) => (
                             <span key={i} className="inline-flex items-center gap-1.5 bg-indigo-50 text-indigo-700 text-base font-medium px-3 py-1 rounded-full">
@@ -39,17 +43,19 @@ function ParticipantsSection({ application }: Props) {
                         ))}
                     </div>
                 </div>
-                <div className="flex flex-col">
-                    <span className="text-lg font-semibold text-green-600">Testigos:</span>
-                    <div className="flex items-center flex-wrap gap-2 mt-1">
-                        {testigos.map((p, i) => (
-                            <span key={i} className="inline-flex items-center gap-1.5 bg-gray-100 text-green-600 text-base font-medium px-3 py-1 rounded-full">
-                                <i className="fas fa-user-friends text-green-400"></i>
-                                {p.nombre} - {p.numero_identificacion}
-                            </span>
-                        ))}
+                {!isDivorcio && (
+                    <div className="flex flex-col">
+                        <span className="text-lg font-semibold text-green-600">Testigos:</span>
+                        <div className="flex items-center flex-wrap gap-2 mt-1">
+                            {testigos.map((p, i) => (
+                                <span key={i} className="inline-flex items-center gap-1.5 bg-gray-100 text-green-600 text-base font-medium px-3 py-1 rounded-full">
+                                    <i className="fas fa-user-friends text-green-400"></i>
+                                    {p.nombre} - {p.numero_identificacion}
+                                </span>
+                            ))}
+                        </div>
                     </div>
-                </div>
+                )}
             </div>
         </div>
     );

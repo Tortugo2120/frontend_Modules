@@ -43,6 +43,7 @@ const RequisitosMatrimonio = ({
     const [archivos] = useState<ArchivoSubido[]>([]);
     const [archivosRequisitos, setArchivosRequisitos] = useState<Map<number, ArchivoSubido[]>>(new Map());
     const [requisitosEstados, setRequisitosEstados] = useState<Map<number, number>>(new Map());
+    const [observacionesMap, setObservacionesMap] = useState<Map<number, string>>(new Map());
     const [erroresArchivo, setErroresArchivo] = useState<Map<number, string>>(new Map());
     const { formDataAplication, updateRequisitos } = useApplicationContext();
     const { requirements, fetchRequirements } = useGetRequirements();
@@ -51,14 +52,23 @@ const RequisitosMatrimonio = ({
     // Cargar requisitos guardados desde el contexto al iniciar
     useEffect(() => {
         if (formDataAplication.requirements && formDataAplication.requirements.length > 0) {
-            const newMap = new Map(
+            const estadosMap = new Map(
                 formDataAplication.requirements.map(r => {
-                    // Convertir ID a número si es string
                     const idNum = typeof r.requirementId === 'string' ? parseInt(r.requirementId) : r.requirementId;
                     return [idNum, r.delivered];
                 })
             );
-            setRequisitosEstados(newMap);
+            setRequisitosEstados(estadosMap);
+
+            const obsMap = new Map(
+                formDataAplication.requirements
+                    .filter(r => r.observacion)
+                    .map(r => {
+                        const idNum = typeof r.requirementId === 'string' ? parseInt(r.requirementId) : r.requirementId;
+                        return [idNum, r.observacion as string];
+                    })
+            );
+            setObservacionesMap(obsMap);
         }
     }, []);
 
@@ -98,19 +108,20 @@ const RequisitosMatrimonio = ({
         if (requirements.length === 0) return;
         const requisitosArray = requirements.map(req => {
             const reqId = typeof req.id === 'string' ? parseInt(req.id) : req.id;
-            const estadoEntregado = requisitosEstados.get(reqId) ?? 0; // ✅ Devuelve number
+            const estadoEntregado = requisitosEstados.get(reqId) ?? 0;
+            const observacion = observacionesMap.get(reqId) ?? '';
 
             return {
                 requirementId: reqId,
-                delivered: estadoEntregado
+                delivered: estadoEntregado,
+                observacion,
             };
         });
 
-        console.log('Sincronizando requisitos:', requisitosArray);
         updateRequisitos(requisitosArray);
 
         // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [requisitosEstados, requirements]);
+    }, [requisitosEstados, observacionesMap, requirements]);
 
     // Notificar cambios en requisitos
     useEffect(() => {
@@ -591,6 +602,29 @@ const RequisitosMatrimonio = ({
                                                                     ))}
                                                                 </div>
                                                             )}
+
+                                                            {/* Observación del requisito */}
+                                                            <div className="mt-2">
+                                                                <label className="block text-xs font-medium text-gray-600 mb-1">
+                                                                    <i className="fas fa-comment-alt mr-1 text-gray-400" />
+                                                                    Observación <span className="text-gray-400 font-normal">(opcional)</span>
+                                                                </label>
+                                                                <textarea
+                                                                    rows={2}
+                                                                    value={observacionesMap.get(requistoIdNum) ?? ''}
+                                                                    onChange={(e) => {
+                                                                        const val = e.target.value;
+                                                                        setObservacionesMap(prev => {
+                                                                            const next = new Map(prev);
+                                                                            if (val.trim()) next.set(requistoIdNum, val);
+                                                                            else next.delete(requistoIdNum);
+                                                                            return next;
+                                                                        });
+                                                                    }}
+                                                                    placeholder="Ingrese alguna observación sobre este requisito..."
+                                                                    className="w-full px-3 py-2 text-xs border border-gray-300 rounded-lg outline-0 resize-none focus:ring-2 focus:ring-blue-400 bg-white transition-all"
+                                                                />
+                                                            </div>
 
                                                             {/* Mensaje de error por tamaño de archivo */}
                                                             {erroresArchivo.has(requistoIdNum) && (
