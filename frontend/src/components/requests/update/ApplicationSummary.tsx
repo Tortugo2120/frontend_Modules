@@ -62,7 +62,7 @@ function WeddingSection({ application }: Props) {
     const { fecha, hora, direccion, oficiante } = application.matrimonio;
 
     const fields = [
-        { icon: "fa-calendar",        label: "Fecha",     value: parseLocalDate(fecha).toLocaleDateString("es-PE", { day: "2-digit", month: "short", year: "numeric" }) },
+        { icon: "fa-calendar",        label: "Fecha Programada",     value: parseLocalDate(fecha).toLocaleDateString("es-PE", { day: "2-digit", month: "short", year: "numeric" }) },
         { icon: "fa-clock",           label: "Hora",      value: hora.slice(0, 5) },
         { icon: "fa-map-marker-alt",  label: "Dirección", value: direccion },
         { icon: "fa-user-tie",        label: "Oficiante", value: oficiante },

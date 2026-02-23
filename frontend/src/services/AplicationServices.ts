@@ -171,8 +171,10 @@ export const ExportApplicationsExcel = async (filters?: ExportExcelFilters): Pro
 };
 
 //Anular solicitud
-export const CancelApplication = async (id: string): Promise<CancelApplicationResponse> => {
-    const response = await apiAxios.delete(`/api/v1/application/${id}`);
+export const CancelApplication = async (id: string, observacion: string): Promise<CancelApplicationResponse> => {
+    const response = await apiAxios.delete(`/api/v1/application/${id}`, {
+        data: { observacion },
+    });
     return response.data;
 };
 

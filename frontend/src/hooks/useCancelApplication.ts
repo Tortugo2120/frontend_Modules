@@ -6,12 +6,12 @@ export default function useCancelApplication() {
     const [error, setError] = useState<string | null>(null);
     const [success, setSuccess] = useState(false);
 
-    const cancelApplication = async (id: string) => {
+    const cancelApplication = async (id: string, observacion: string) => {
         setLoading(true);
         setError(null);
         setSuccess(false);
         try {
-            const response = await CancelApplication(id);
+            const response = await CancelApplication(id, observacion);
             setSuccess(true);
             return response;
         } catch (err: unknown) {
