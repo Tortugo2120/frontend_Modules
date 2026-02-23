@@ -104,6 +104,16 @@ export const Detalles = () => {
                 <span>{new Date(application.fechaActualizacion).toLocaleDateString()}</span>
               </div>
             </div>
+
+            {/* MOTIVO DE ANULACIÓN */}
+            {application.estado === 'Anulada' && application.observacion && (
+              <div className="mt-5 flex items-start border border-info-content gap-3 py-4 px-3">
+                <div className="flex gap-2 ">
+                  <p className="font-semibold text-gray-700 mb-0.5">Motivo de anulación:</p>
+                  <span>{application.observacion}</span>
+                </div>
+              </div>
+            )}
           </section>
 
           {/* CONTRAYENTES DINÁMICOS */}
@@ -114,7 +124,7 @@ export const Detalles = () => {
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               {contrayentes.map((c, index) => (
                 <div key={index} className="space-y-2 border-l-4 border-info-content pl-4">
-                  <h3 className="font-semibold text-gray-700 mb-3">Datos de {index === 0 ? 'la Prometida' : 'del Prometido'}:</h3>
+                  <h3 className="font-semibold text-gray-700 mb-3">Datos de {index === 0 ? 'del Prometido' : 'la Prometida'}:</h3>
                   <div className="flex gap-2">
                     <span className="font-semibold text-gray-700">Nombre:</span>
                     <span className="text-gray-600">{c.nombre}</span>
@@ -209,7 +219,7 @@ export const Detalles = () => {
               </div>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-x-8 gap-y-3">
                 <div className="flex flex-col sm:flex-row sm:gap-2">
-                  <span className="font-semibold text-gray-700">Fecha:</span>
+                  <span className="font-semibold text-gray-700">Fecha Programada:</span>
                   <span>{(application.matrimonio.fecha.length === 10 ? new Date(`${application.matrimonio.fecha}T00:00:00`) : new Date(application.matrimonio.fecha)).toLocaleDateString("es-PE", { day: "2-digit", month: "long", year: "numeric" })}</span>
                 </div>
                 <div className="flex flex-col sm:flex-row sm:gap-2">

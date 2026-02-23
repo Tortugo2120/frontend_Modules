@@ -18,6 +18,7 @@ const transformDetalleSolicitud = (backendData: ApplicationBackendDetail): Appli
         descripcionSolicitud: backendData.descripcion_solicitud,
         precio: parseFloat(backendData.precio),
         encargado: backendData.encargado,
+        observacion: backendData.observacion ?? null,
         participantes: backendData.participantes || [],
         requisitos: backendData.requisitos || [],
         pago: backendData.pago,

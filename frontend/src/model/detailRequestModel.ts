@@ -49,6 +49,7 @@ export interface ApplicationBackendDetail {
     descripcion_solicitud: string;
     precio: string;
     encargado: string;
+    observacion: string | null;
     participantes: ParticipanteDetalle[];
     requisitos: RequisitoDetalle[];
     pago: PagoDetalle;
@@ -74,6 +75,7 @@ export interface ApplicationDetailItem {
     descripcionSolicitud: string;
     precio: number;
     encargado: string;
+    observacion: string | null;
     participantes: ParticipanteDetalle[];
     requisitos: RequisitoDetalle[];
     pago: PagoDetalle;

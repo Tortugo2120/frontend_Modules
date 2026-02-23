@@ -16,9 +16,9 @@ const Update_Page = () => {
     const [showConfirm, setShowConfirm] = useState(false);
     const { loading: cancelling, error: cancelError, cancelApplication } = useCancelApplication();
 
-    const handleCancel = async () => {
+    const handleCancel = async (motivo: string) => {
         if (!id) return;
-        const result = await cancelApplication(id);
+        const result = await cancelApplication(id, motivo);
         if (result) {
             setShowConfirm(false);
             navigate(-1);
