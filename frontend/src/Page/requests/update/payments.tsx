@@ -341,7 +341,7 @@ const Pagos = () => {
                             disabled={isUpdating || isUploadingEvidence}
                             className="btn btn-soft btn-secondary border-secondary gap-2"
                         >
-                            <i className="fas fa-times mr-1"></i> Cancelar
+                            <i className="fas fa-angle-left mr-1"></i> Volver
                         </button>
                         <button
                             type="submit"

@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { getDetalleSolicitudById } from "../services/detailsApplicationService";
 import type { ApplicationDetailItem } from "../model/detailRequestModel";
 
@@ -7,6 +7,9 @@ export const useDetailsApplication = (id: string | undefined) => {
     const [application, setApplication] = useState<ApplicationDetailItem | null>(null);
     const [loading, setLoading] = useState<boolean>(true);
     const [error, setError] = useState<string | null>(null);
+    const [refetchKey, setRefetchKey] = useState(0);
+
+    const refetch = useCallback(() => setRefetchKey(k => k + 1), []);
 
     useEffect(() => {
 
@@ -26,7 +29,7 @@ export const useDetailsApplication = (id: string | undefined) => {
         };
 
         fetchDetail();
-    }, [id]);
+    }, [id, refetchKey]);
 
-    return { application, loading, error };
+    return { application, loading, error, refetch };
 };

@@ -114,7 +114,7 @@ export const Detalles = () => {
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               {contrayentes.map((c, index) => (
                 <div key={index} className="space-y-2 border-l-4 border-info-content pl-4">
-                  <h3 className="font-semibold text-gray-700 mb-3">Datos de {index === 0 ? 'la Prometida' : 'del Prometido'}:</h3>
+                  <h3 className="font-semibold text-gray-700 mb-3">Datos de {index === 0 ? 'del Prometido' : 'la Prometida'}:</h3>
                   <div className="flex gap-2">
                     <span className="font-semibold text-gray-700">Nombre:</span>
                     <span className="text-gray-600">{c.nombre}</span>

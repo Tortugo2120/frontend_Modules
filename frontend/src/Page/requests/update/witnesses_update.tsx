@@ -322,12 +322,12 @@ const Testigos_update = () => {
     const id = (location.state as { id?: string })?.id;
     const applicationId = id ? parseInt(id, 10) : null;
 
-    const { application, loading: loadingDetail } = useDetailsApplication(id);
+    const { application, loading: loadingDetail, refetch: refetchApplication } = useDetailsApplication(id);
     const { fetchPersonSearch, loading: loadingSearch } = usePersonSearch();
     const { updateWitnesses, isUpdating } = useUpdateWitnesses();
     const { participants, loading: loadingParticipants } = useGetParticipants(applicationId);
 
-    /* Helper: nombre completo de un participante */
+    /* nombre completo de un participante */
     const fullName = (p: ParticipantItem) =>
         `${p.nombres} ${p.apellidoPaterno} ${p.apellidoMaterno}`.trim();
 
@@ -370,7 +370,6 @@ const Testigos_update = () => {
         if (t2) { fillFormFromParticipantItem(t2, sVal2); setOpen2(true); }
     }, [participants]);
 
-    /* Search handler */
     const handleSearch = useCallback(async (num: 1 | 2) => {
         const tipoDoc = num === 1 ? watch1('documentType') : watch2('documentType');
         const numDoc = num === 1 ? watch1('documentNumber') : watch2('documentNumber');
@@ -379,6 +378,13 @@ const Testigos_update = () => {
         const sVal = num === 1 ? sVal1 : sVal2;
 
         setErr(''); setOk(false);
+
+        // Validar que el documento buscado no pertenezca a uno de los contrayentes
+        if (numDoc && contrayenteDnis.includes(numDoc)) {
+            setErr('Esta persona es uno de los contrayentes y no puede ser registrada como testigo');
+            return;
+        }
+
         try {
             const docTypeNum = documentTypeMap[tipoDoc] ?? 1;
             const response = await fetchPersonSearch(numDoc, docTypeNum);
@@ -405,7 +411,7 @@ const Testigos_update = () => {
         } catch (e: any) {
             setErr(e.response?.data?.message || 'Error al buscar persona');
         }
-    }, [watch1, watch2, fetchPersonSearch, sVal1, sVal2]);
+    }, [watch1, watch2, fetchPersonSearch, sVal1, sVal2, contrayenteDnis]);
 
     /* ── Clear handler ── */
     const handleClear = useCallback((num: 1 | 2) => {
@@ -438,6 +444,7 @@ const Testigos_update = () => {
                     if (res.status) {
                         setAlert({ type: 'success', msg: 'Testigo 1 actualizado correctamente' });
                         setSaved1(true);
+                        refetchApplication();
                     } else {
                         setAlert({ type: 'error', msg: res.message || 'Error al actualizar testigo' });
                     }
@@ -447,7 +454,7 @@ const Testigos_update = () => {
                     setAlert({ type: 'error', msg: detail });
                 });
         })();
-    }, [hSub1, applicationId, contrayenteDnis, updateWitnesses]);
+    }, [hSub1, applicationId, contrayenteDnis, updateWitnesses, refetchApplication]);
 
     const handleSave2 = useCallback(() => {
         hSub2((data) => {
@@ -473,6 +480,7 @@ const Testigos_update = () => {
                     if (res.status) {
                         setAlert({ type: 'success', msg: 'Testigo 2 actualizado correctamente' });
                         setSaved2(true);
+                        refetchApplication();
                     } else {
                         setAlert({ type: 'error', msg: res.message || 'Error al actualizar testigo' });
                     }
@@ -482,7 +490,7 @@ const Testigos_update = () => {
                     setAlert({ type: 'error', msg: detail });
                 });
         })();
-    }, [hSub2, applicationId, contrayenteDnis, updateWitnesses]);
+    }, [hSub2, applicationId, contrayenteDnis, updateWitnesses, refetchApplication]);
 
     
 
@@ -553,26 +561,6 @@ const Testigos_update = () => {
             {/* Forms */}
             <div className="bg-white shadow-lg rounded-b-lg p-6 space-y-8">
 
-                {/* Testigo 1 */}
-                <div className="bg-indigo-50 border border-indigo-200 rounded-lg p-5">
-                    <h4 className="text-base font-bold text-gray-800 mb-4 flex items-center gap-2">
-                        <i className="fas fa-user-check text-indigo-600"></i>
-                        {participants?.contrayente1 ? `Testigo de ${fullName(participants.contrayente1)}` : 'Testigo 1'}
-                    </h4>
-                    <WitnessFormBlock
-                        registerForm={regF1} errorsForm={fErr1}
-                        searchError={searchErr1} searchSuccess={searchOk1}
-                        loading={loadingSearch}
-                        registerSearch={reg1} errorsSearch={errs1} watchSearch={watch1}
-                        onSearch={() => handleSearch(1)}
-                        onClear={() => handleClear(1)}
-                        isOpen={open1} setIsOpen={setOpen1}
-                        onSave={handleSave1}
-                        savedIndividual={saved1}
-                        isUpdating={isUpdating}
-                    />
-                </div>
-
                 {/* Testigo 2 */}
                 <div className="bg-indigo-50 border border-indigo-200 rounded-lg p-5">
                     <h4 className="text-base font-bold text-gray-800 mb-4 flex items-center gap-2">
@@ -589,6 +577,26 @@ const Testigos_update = () => {
                         isOpen={open2} setIsOpen={setOpen2}
                         onSave={handleSave2}
                         savedIndividual={saved2}
+                        isUpdating={isUpdating}
+                    />
+                </div>
+
+                {/* Testigo 1 */}
+                <div className="bg-indigo-50 border border-indigo-200 rounded-lg p-5">
+                    <h4 className="text-base font-bold text-gray-800 mb-4 flex items-center gap-2">
+                        <i className="fas fa-user-check text-indigo-600"></i>
+                        {participants?.contrayente1 ? `Testigo de ${fullName(participants.contrayente1)}` : 'Testigo 1'}
+                    </h4>
+                    <WitnessFormBlock
+                        registerForm={regF1} errorsForm={fErr1}
+                        searchError={searchErr1} searchSuccess={searchOk1}
+                        loading={loadingSearch}
+                        registerSearch={reg1} errorsSearch={errs1} watchSearch={watch1}
+                        onSearch={() => handleSearch(1)}
+                        onClear={() => handleClear(1)}
+                        isOpen={open1} setIsOpen={setOpen1}
+                        onSave={handleSave1}
+                        savedIndividual={saved1}
                         isUpdating={isUpdating}
                     />
                 </div>
