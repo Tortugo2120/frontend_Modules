@@ -33,6 +33,8 @@ const Pagos = () => {
     const [isUploadingEvidence, setIsUploadingEvidence] = useState(false);
     const [saved, setSaved] = useState(false);
     const [displayPago, setDisplayPago] = useState<{ estado: string; numero_comprobante: string; fecha_pago: string; pagado: string } | null>(null);
+    // Si el pago ya fue realizado (pagado === '1' al cargar), bloquear el formulario
+    const [yaFuePagado, setYaFuePagado] = useState(false);
 
     // Obtener el ID del pago desde application.pago.id
     const paymentId = application?.pago?.id;
@@ -53,7 +55,9 @@ const Pagos = () => {
     useEffect(() => {
         if (!application?.pago) return;
         const p = application.pago;
-        setValue('pagado', (p.pagado === '1' ? '1' : '0') as '0' | '1', { shouldDirty: true });
+        const esPagado = p.pagado === '1';
+
+        setValue('pagado', (esPagado ? '1' : '0') as '0' | '1', { shouldDirty: true });
         setValue('estado', p.estado || 'Pendiente', { shouldDirty: true });
         setValue('numero_comprobante', p.numero_comprobante || '', { shouldDirty: true });
 
@@ -65,8 +69,11 @@ const Pagos = () => {
             estado: p.estado || 'Pendiente',
             numero_comprobante: p.numero_comprobante || '',
             fecha_pago: fechaFormateada,
-            pagado: p.pagado === '1' ? '1' : '0',
+            pagado: esPagado ? '1' : '0',
         });
+
+        // Si ya fue pagado al cargar, bloquear el formulario
+        if (esPagado) setYaFuePagado(true);
     }, [application]);
 
     const onSubmit = (data: PaymentFormData) => {
@@ -182,6 +189,14 @@ const Pagos = () => {
                 </div>
             )}
 
+            {/* Banner de pago ya registrado */}
+            {yaFuePagado && (
+                <div className="flex items-center gap-3 bg-green-100 border border-green-400 rounded-lg px-5 py-3 mt-4 text-green-800 font-medium shadow-sm">
+                    <i className="fas fa-lock text-green-600 text-lg"></i>
+                    <span>Este pago ya fue <strong>confirmado y registrado</strong>. No se puede modificar.</span>
+                </div>
+            )}
+
             {/* Form */}
             <form onSubmit={handleSubmit(onSubmit)} noValidate>
                 <div className="bg-white shadow-lg rounded-b-lg p-6">
@@ -200,7 +215,8 @@ const Pagos = () => {
                                 </label>
                                 <select
                                     {...register('pagado')}
-                                    className="w-full px-3 py-2 text-base border border-gray-300 rounded-lg bg-white outline-0 focus:ring-2 focus:ring-green-500"
+                                    disabled={yaFuePagado}
+                                    className={`w-full px-3 py-2 text-base border border-gray-300 rounded-lg outline-0 focus:ring-2 focus:ring-green-500 ${yaFuePagado ? 'bg-gray-100 text-gray-400 cursor-not-allowed' : 'bg-white'}`}
                                 >
                                     <option value="0">No pagado</option>
                                     <option value="1">Pagado</option>
@@ -218,9 +234,9 @@ const Pagos = () => {
                                     type="text"
                                     {...register('numero_comprobante')}
                                     placeholder="Ej: 001-0000123"
-                                    disabled={pagadoValue !== '1'}
+                                    disabled={yaFuePagado || pagadoValue !== '1'}
                                     className={`w-full px-3 py-2 text-base border rounded-lg outline-0 focus:ring-2 focus:ring-green-500 transition-all ${
-                                        pagadoValue !== '1' 
+                                        yaFuePagado || pagadoValue !== '1'
                                             ? 'bg-gray-100 text-gray-400 cursor-not-allowed' 
                                             : errors.numero_comprobante 
                                                 ? 'border-red-300 bg-red-50' 
@@ -240,9 +256,9 @@ const Pagos = () => {
                                     type="date"
                                     max={getTodayStr()}
                                     {...register('fecha_pago')}
-                                    disabled={pagadoValue !== '1'}
+                                    disabled={yaFuePagado || pagadoValue !== '1'}
                                     className={`w-full px-3 py-2 text-base border rounded-lg outline-0 focus:ring-2 focus:ring-green-500 transition-all ${
-                                        pagadoValue !== '1'
+                                        yaFuePagado || pagadoValue !== '1'
                                             ? 'bg-gray-100 text-gray-400 cursor-not-allowed'
                                             : errors.fecha_pago
                                                 ? 'border-red-300 bg-red-50'
@@ -259,17 +275,20 @@ const Pagos = () => {
                                     <span className="ml-2 text-xs font-normal text-gray-400">(PDF, JPG, PNG — máx. 5 MB)</span>
                                 </label>
                                 <div
-                                    className={`relative flex flex-col items-center justify-center gap-2 border-2 border-dashed rounded-lg p-5 cursor-pointer transition-all ${
-                                        evidenceFile
-                                            ? 'border-green-400 bg-green-50'
-                                            : 'border-gray-300 bg-white hover:border-green-400 hover:bg-green-50'
+                                    className={`relative flex flex-col items-center justify-center gap-2 border-2 border-dashed rounded-lg p-5 transition-all ${
+                                        yaFuePagado
+                                            ? 'border-gray-200 bg-gray-50 cursor-not-allowed opacity-60'
+                                            : evidenceFile
+                                                ? 'border-green-400 bg-green-50 cursor-pointer'
+                                                : 'border-gray-300 bg-white hover:border-green-400 hover:bg-green-50 cursor-pointer'
                                     }`}
-                                    onClick={() => document.getElementById('evidence-input')?.click()}
+                                    onClick={() => !yaFuePagado && document.getElementById('evidence-input')?.click()}
                                 >
                                     <input
                                         id="evidence-input"
                                         type="file"
                                         accept=".pdf,.jpg,.jpeg,.png"
+                                        disabled={yaFuePagado}
                                         className="hidden"
                                         onChange={(e) => {
                                             const file = e.target.files?.[0] ?? null;
@@ -326,7 +345,7 @@ const Pagos = () => {
                         </button>
                         <button
                             type="submit"
-                            disabled={isUpdating || isUploadingEvidence || saved}
+                            disabled={isUpdating || isUploadingEvidence || saved || yaFuePagado}
                             className="btn btn-primary text-white gap-2"
                         >
                             {isUpdating
