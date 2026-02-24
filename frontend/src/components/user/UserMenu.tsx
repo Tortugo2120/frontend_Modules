@@ -27,8 +27,8 @@ const UserMenu = () => {
     }, [showUserMenu]);
 
     //Cierre de sesión
-    const handleLogout = () => {
-        logout();
+    const handleLogout = async () => {
+        await logout();
         setShowUserMenu(false);
     };
     //Navegación de elementos del menú

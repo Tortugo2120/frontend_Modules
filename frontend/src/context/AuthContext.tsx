@@ -2,11 +2,12 @@ import {createContext, type ReactNode, useContext, useState, useCallback, useEff
 import type {LoginResponse, Usuario} from "../model/authModel.ts";
 import {jwtDecode} from "jwt-decode";
 import {registerAuthCallbacks} from "../api/Axios.tsx";
+import {logout as logoutService} from "../services/AuthService.ts"; // cookie HttpOnly enviada automáticamente vía withCredentials: true
 
 interface AuthContextType {
   isAuthenticated: boolean;
   login: (userData: LoginResponse) => void;
-  logout: () => void;
+  logout: () => Promise<void>;
   user: Usuario | null;
   updateUserFromToken: (token: string) => void;
 }
@@ -33,11 +34,18 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 
   const isAuthenticated = !!user;
 
-  const logout = useCallback(() => {
-    setUser(null);
-    sessionStorage.clear();
-    localStorage.clear();
-    window.location.href = '/';
+  const logout = useCallback(async () => {
+    try {
+      // El refresh token viaja como cookie HttpOnly — Axios lo envía automáticamente
+      await logoutService();
+    } catch (e) {
+      console.warn("Error al cerrar sesión en el servidor:", e);
+    } finally {
+      setUser(null);
+      sessionStorage.clear();
+      localStorage.clear();
+      //window.location.href = '/';
+    }
   }, []);
 
   const login = (loginResponse: LoginResponse) => {

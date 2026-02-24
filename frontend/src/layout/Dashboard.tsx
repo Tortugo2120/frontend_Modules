@@ -11,6 +11,7 @@ export default function Dashboard() {
   const toggleSidebar = () => setSidebarOpen((v) => !v);
   const closeSidebar = () => setSidebarOpen(false);
   const { user, logout } = Auth();
+  const handleLogout = async () => { await logout(); };
   return (
     <div className={"flex min-h-screen"}>
 
@@ -52,7 +53,7 @@ export default function Dashboard() {
               <p className="font-medium text-sm truncate">{user?.sub.toUpperCase()}</p>
               <p className="text-slate-50 text-xs font-normal">Administrador</p>
             </div>
-            <button className="text-slate-50 hover:text-slate-400 transition-colors p-2 cursor-pointer" onClick={logout}>
+            <button className="text-slate-50 hover:text-slate-400 transition-colors p-2 cursor-pointer" onClick={handleLogout}>
               <i className="fas fa-sign-out-alt"></i>
             </button>
           </div>
