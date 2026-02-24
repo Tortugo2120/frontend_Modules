@@ -34,7 +34,7 @@ export default function CancelModal({
             <div className="bg-white rounded-2xl shadow-xl p-6 w-full max-w-lg mx-4">
                 <div className="flex flex-col items-center text-center gap-3">
                     <div className="w-14 h-14 rounded-full bg-red-100 flex items-center justify-center">
-                        <i className="fas fa-ban text-red-600 text-2xl" />
+                        <i className="fas fa-ban text-red-600 text-2xl fa-beat-fade"/>
                     </div>
                     <h2 className="text-2xl font-bold text-gray-800">¿Anular solicitud?</h2>
                     <p className="text-lg text-gray-500">

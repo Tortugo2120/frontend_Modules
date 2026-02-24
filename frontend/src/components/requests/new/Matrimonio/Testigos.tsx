@@ -1,5 +1,6 @@
 import { useState, useCallback, useEffect } from 'react';
 import { usePersonSearch } from '../../../../hooks/usePersonSearch.ts';
+import { useUbigeo } from '../../../../hooks/useUbigeo';
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { searchTypeDocument } from "../../../../Validations/validationSearchTypeDocument.ts";
@@ -57,7 +58,8 @@ const Testigo = (props: Solicitud) => {
         handleSubmit: handleSubmitForm1,
         formState: { errors: formErrors1 },
         setValue: setValueForm1,
-        reset: resetForm1
+        reset: resetForm1,
+        watch: watchForm1
     } = useForm<TestigoFormData>({
         resolver: zodResolver(testigoSchema),
         defaultValues: {
@@ -82,7 +84,8 @@ const Testigo = (props: Solicitud) => {
         handleSubmit: handleSubmitForm2,
         formState: { errors: formErrors2 },
         setValue: setValueForm2,
-        reset: resetForm2
+        reset: resetForm2,
+        watch: watchForm2
     } = useForm<TestigoFormData>({
         resolver: zodResolver(testigoSchema),
         defaultValues: {
@@ -123,6 +126,11 @@ const Testigo = (props: Solicitud) => {
     // Estados para controlar apertura del panel de formulario
     const [open1, setOpen1] = useState(false);
     const [open2, setOpen2] = useState(false);
+
+    // Ubigeo
+    const { ubigeos, loading: ubigeoLoading } = useUbigeo();
+    const [ubigeoFilter1, setUbigeoFilter1] = useState('');
+    const [ubigeoFilter2, setUbigeoFilter2] = useState('');
 
     // Cargar datos desde localStorage al montar el componente
     useEffect(() => {
@@ -630,7 +638,7 @@ const Testigo = (props: Solicitud) => {
                             </div>
 
                             {/* Teléfono */}
-                            <div className='mb-0 sm:col-span-2 lg:col-span-1'>
+                            <div className='mb-0 sm:col-span-2 lg:col-span-1 mt-1.5'>
                                 <label className="block text-sm font-medium text-gray-700 mb-2">
                                     Teléfono <span className="text-red-500">*</span>
                                 </label>
@@ -648,23 +656,83 @@ const Testigo = (props: Solicitud) => {
 
                             {/* Ubigeo */}
                             <div className='mb-0 sm:col-span-2 lg:col-span-1'>
-                                <label className="block text-sm font-medium text-gray-700 mb-2">
-                                    Ubigeo <span className="text-red-500">*</span>
-                                </label>
-                                <input
-                                    type="text"
-                                    {...registerForm('ubigeoId')}
-                                    className="w-full px-3 sm:px-4 py-2 text-sm sm:text-base border border-gray-300 rounded-lg bg-white outline-0 transition-all focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                                    placeholder="150101"
-                                    maxLength={6}
-                                />
+                                {(() => {
+                                    const currentUbigeoId = testigoNum === 1 ? watchForm1('ubigeoId') : watchForm2('ubigeoId');
+                                    const setVal = testigoNum === 1 ? setValueForm1 : setValueForm2;
+                                    const ubigeoFilter = testigoNum === 1 ? ubigeoFilter1 : ubigeoFilter2;
+                                    const setUbigeoFilter = testigoNum === 1 ? setUbigeoFilter1 : setUbigeoFilter2;
+                                    const filtered = ubigeoFilter.trim().length === 0
+                                        ? ubigeos
+                                        : ubigeos.filter(u => {
+                                            const text = `${u.departamento} ${u.provincia} ${u.distrito}`.toLowerCase();
+                                            return text.includes(ubigeoFilter.toLowerCase());
+                                        });
+                                    const selectedLabel = ubigeos.find(u => u.id === currentUbigeoId);
+                                    return ubigeoLoading ? (
+                                        <div className="flex items-center gap-2 text-xs text-gray-400 py-2">
+                                            <span className="loading loading-spinner loading-xs"></span> Cargando ubigeos...
+                                        </div>
+                                    ) : (
+                                        <div className="space-y-1.5">
+                                            {/* Label + buscador en la misma fila */}
+                                            <div className="flex items-center gap-2 mb-1">
+                                                <label className="text-sm font-medium text-gray-700 whitespace-nowrap">
+                                                    Ubigeo <span className="text-red-500">*</span>
+                                                </label>
+                                                <div className="relative flex-1">
+                                                    <div className="absolute inset-y-0 left-0 pl-2.5 flex items-center pointer-events-none">
+                                                        <i className="fas fa-search text-gray-400 text-xs"></i>
+                                                    </div>
+                                                    <input
+                                                        type="text"
+                                                        placeholder="Buscar depto., provincia o distrito..."
+                                                        value={ubigeoFilter}
+                                                        onChange={e => setUbigeoFilter(e.target.value)}
+                                                        className="w-full pl-7 pr-3 py-1.5 text-xs border border-gray-300 rounded-lg bg-white outline-0 focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                                                    />
+                                                </div>
+                                            </div>
+                                            {/* Código de ubigeo bajo el label */}
+                                            <p className="w-full px-3 sm:px-4 py-2 text-sm sm:text-base border border-gray-300 rounded-lg bg-white outline-0 transition-all focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+                                                {currentUbigeoId
+                                                    ? <><span className="">{currentUbigeoId}</span></>
+                                                    : <span className="text-gray-300">Código: —</span>
+                                                }
+                                            </p>
+                                            {ubigeoFilter.trim().length > 0 && (
+                                                <ul className="w-full max-h-40 overflow-y-auto border border-blue-300 rounded-lg bg-white shadow-md text-xs divide-y divide-gray-100">
+                                                    {filtered.length === 0 ? (
+                                                        <li className="px-3 py-2 text-gray-400 italic">Sin resultados</li>
+                                                    ) : filtered.map(u => (
+                                                        <li
+                                                            key={u.id}
+                                                            onMouseDown={() => {
+                                                                setVal('ubigeoId', u.id);
+                                                                setUbigeoFilter('');
+                                                            }}
+                                                            className={`px-3 py-2 cursor-pointer hover:bg-blue-50 hover:text-blue-700 transition-colors ${currentUbigeoId === u.id ? 'bg-blue-100 text-blue-700 font-semibold' : 'text-gray-700'}`}
+                                                        >
+                                                            {u.departamento}, {u.provincia}, {u.distrito}
+                                                        </li>
+                                                    ))}
+                                                </ul>
+                                            )}
+                                            {selectedLabel && ubigeoFilter.trim().length === 0 && (
+                                                <p className="text-xs text-blue-600 font-medium">
+                                                    <i className="fas fa-map-marker-alt mr-1"></i>
+                                                    {selectedLabel.departamento}, {selectedLabel.provincia}, {selectedLabel.distrito}
+                                                </p>
+                                            )}
+                                        </div>
+                                    );
+                                })()}
                                 {errorsForm.ubigeoId && (
                                     <p className="text-red-500 text-xs mt-1">{errorsForm.ubigeoId.message}</p>
                                 )}
                             </div>
 
                             {/* Estado Civil */}
-                            <div className='mb-0 sm:col-span-2 lg:col-span-1'>
+                            <div className='mb-0 sm:col-span-2 lg:col-span-1 mt-1.5'>
                                 <label className="block text-sm font-medium text-gray-700 mb-2">
                                     Estado Civil <span className="text-red-500">*</span>
                                 </label>
