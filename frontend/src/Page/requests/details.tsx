@@ -31,7 +31,7 @@ export const Detalles = () => {
   if (error) return <div className="min-h-screen flex items-center justify-center text-red-500">Error: {error}</div>;
   if (!application) return null;
 
-  const contrayentes = application.participantes.filter(p => p.rol === "CONTRAYENTE");
+  const contrayentes = application.participantes.filter(p => p.rol === "CONTRAYENTE" || p.rol === "DIVORCIADO");
   const testigos = application.participantes.filter(p => p.rol === "TESTIGO");
   const isDivorcio = application.nombreSolicitud.toLowerCase().includes('divorcio');
 

@@ -99,7 +99,7 @@ export interface ApplicationData {
 export interface RequisitoEstado {
     requirementId: number | string;
     delivered: number;
-    observacion?: string;
+    observation?: string;
 }
 
 export interface MarriageDetails{

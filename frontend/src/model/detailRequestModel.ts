@@ -1,7 +1,7 @@
 
 export interface ParticipanteDetalle {
     nombre: string;
-    rol: 'CONTRAYENTE' | 'TESTIGO' | string;
+    rol: 'CONTRAYENTE' | 'TESTIGO | DIVORCIADO' | string;
     numero_identificacion: string;
     tipo_identificacion: string;
     sexo: 'M' | 'F' | string;

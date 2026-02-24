@@ -79,7 +79,7 @@ export default function TableList({ data }: Props) {
                             {item.participantes && item.participantes.length > 0 && (
                                 <div className="mb-2 space-y-1">
                                     {item.participantes
-                                        .filter(p => p.rol.toLowerCase().includes('contrayente'))
+                                        .filter(p => p.rol.toLowerCase().includes('contrayente') || p.rol.toLowerCase().includes('divorciado'))
                                         .map((p, idx) => (
                                             <div key={idx} className="flex items-center justify-between text-sm">
                                                 <span className="text-gray-700 font-medium truncate mr-2">{p.nombre}</span>
@@ -127,15 +127,15 @@ export default function TableList({ data }: Props) {
 
                 {/* Vista desktop - Tabla */}
                 <div className="hidden lg:block overflow-x-auto">
-                    <table className="w-full table-fixed">
+                    <table className="w-full min-w-250">
                         <thead className="bg-info-content text-white">
                             <tr>
-                                <th className="px-2 py-3 w-35 text-center text-sm font-semibold">Expediente</th>
-                                <th className="px-2 py-3 w-45 text-center text-sm font-semibold">Tipo de Solicitud</th>
-                                <th className="px-2 py-3 w-65 text-center text-sm font-semibold">Contrayentes</th>
-                                <th className="px-2 py-3 w-32 text-center text-sm font-semibold">DNI/CIU</th>
+                                <th className="px-2 py-3 text-center text-sm font-semibold">Expediente</th>
+                                <th className="px-2 py-3 text-center text-sm font-semibold">Tipo de Solicitud</th>
+                                <th className="px-2 py-3 text-center text-sm font-semibold">Nombres</th>
+                                <th className="px-2 py-3 text-center text-sm font-semibold">Documento</th>
                                 <th className="px-2 py-3 text-center text-sm font-semibold">Fecha Trámite</th>
-                                <th className="px-2 py-3 w-36 text-center text-sm font-semibold">Estado</th>
+                                <th className="px-2 py-3 text-center text-sm font-semibold">Estado</th>
                                 <th className="px-2 py-3 text-center text-sm font-semibold">Precio</th>
                                 <th className="px-2 py-3 text-center text-sm font-semibold">Acciones</th>
                             </tr>
@@ -155,13 +155,15 @@ export default function TableList({ data }: Props) {
                                         </div>
                                     </td>
 
-                                    <td className="px-3 text-gray-600 ">
-                                        <div className="flex flex-col gap-1">
+                                    <td className="px-3 py-2">
+                                        <div className="flex flex-col gap-2">
                                             {item.participantes && item.participantes.length > 0 ? (
                                                 item.participantes
-                                                    .filter(p => p.rol.toLowerCase().includes('contrayente'))
+                                                    .filter(p => p.rol.toLowerCase().includes('contrayente') || p.rol.toLowerCase().includes('divorciado'))
                                                     .map((p, idx) => (
-                                                        <span key={idx} className="text-sm font-medium">{p.nombre}</span>
+                                                        <span key={idx} className="text-sm font-semibold text-gray-800 whitespace-nowrap">
+                                                            {p.nombre}
+                                                        </span>
                                                     ))
                                             ) : (
                                                 <span className="text-gray-400 italic text-sm">No registrados</span>
@@ -169,18 +171,18 @@ export default function TableList({ data }: Props) {
                                         </div>
                                     </td>
 
-                                    <td className=" text-md text-gray-600">
-                                        <div className="flex flex-col gap-1">
+                                    <td className="px-3 py-2">
+                                        <div className="flex flex-col gap-2">
                                             {item.participantes && item.participantes.length > 0 ? (
                                                 item.participantes
-                                                    .filter(p => p.rol.toLowerCase().includes('contrayente'))
+                                                    .filter(p => p.rol.toLowerCase().includes('contrayente') || p.rol.toLowerCase().includes('divorciado'))
                                                     .map((p, idx) => (
-                                                        <div key={idx} className="flex flex-row">
-                                                            <span className="text-sm font-black pl-1">{p.tipo_identificacion}: {p.numero_identificacion}</span>
-                                                        </div>
+                                                        <span key={idx} className="text-sm font-semibold text-indigo-600 font-mono whitespace-nowrap bg-indigo-50 px-2 py-0.5 rounded">
+                                                            {p.tipo_identificacion}: {p.numero_identificacion}
+                                                        </span>
                                                     ))
                                             ) : (
-                                                <span className="text-gray-400 italic text-sm">No registrados</span>
+                                                <span className="text-gray-400 italic text-sm">—</span>
                                             )}
                                         </div>
                                     </td>

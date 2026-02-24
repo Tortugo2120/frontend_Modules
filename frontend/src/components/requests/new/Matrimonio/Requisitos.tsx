@@ -62,10 +62,10 @@ const RequisitosMatrimonio = ({
 
             const obsMap = new Map(
                 formDataAplication.requirements
-                    .filter(r => r.observacion)
+                    .filter(r => r.observation)
                     .map(r => {
                         const idNum = typeof r.requirementId === 'string' ? parseInt(r.requirementId) : r.requirementId;
-                        return [idNum, r.observacion as string];
+                        return [idNum, r.observation as string];
                     })
             );
             setObservacionesMap(obsMap);
@@ -109,12 +109,12 @@ const RequisitosMatrimonio = ({
         const requisitosArray = requirements.map(req => {
             const reqId = typeof req.id === 'string' ? parseInt(req.id) : req.id;
             const estadoEntregado = requisitosEstados.get(reqId) ?? 0;
-            const observacion = observacionesMap.get(reqId) ?? '';
+            const observation = observacionesMap.get(reqId) ?? '';
 
             return {
                 requirementId: reqId,
                 delivered: estadoEntregado,
-                observacion,
+                observation,
             };
         });
 
