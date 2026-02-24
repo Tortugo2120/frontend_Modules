@@ -1,5 +1,6 @@
 import { useState, useCallback, useEffect } from 'react';
 import { usePersonSearch } from '../../../../hooks/usePersonSearch';
+import { useUbigeo } from '../../../../hooks/useUbigeo';
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { searchTypeDocument } from "../../../../Validations/validationSearchTypeDocument.ts";
@@ -132,6 +133,15 @@ const Contrayente = (props: Solicitud) => {
     // Estados para controlar apertura del panel de formulario
     const [open1, setOpen1] = useState(false);
     const [open2, setOpen2] = useState(false);
+
+    // Ubigeo
+    const { ubigeos, loading: ubigeoLoading } = useUbigeo();
+    const [ubigeoFilter1, setUbigeoFilter1] = useState('');
+    const [ubigeoFilter2, setUbigeoFilter2] = useState('');
+
+    // Campos bloqueados (rellenados por la API)
+    const [lockedFields1, setLockedFields1] = useState<Set<string>>(new Set());
+    const [lockedFields2, setLockedFields2] = useState<Set<string>>(new Set());
 
     // Cargar datos desde localStorage al montar el componente
     useEffect(() => {
@@ -269,6 +279,21 @@ const Contrayente = (props: Solicitud) => {
             setValueForm('ubigeoId', personData.ubigeoId || '');
             if (personData.maritalStatus) setValueForm('maritalStatus', personData.maritalStatus as any);
 
+            // Bloquear solo los campos que la API proporcionó con valor
+            const locked = new Set<string>();
+            locked.add('cui'); // siempre viene del doc buscado
+            if (personData.name)          locked.add('names');
+            if (personData.paternalSurname) locked.add('paternalSurname');
+            if (personData.maternalSurname) locked.add('maternalSurname');
+            if (personData.birthdate)     locked.add('birthdate');
+            if (validGender)              locked.add('gender');
+            if (personData.address)       locked.add('address');
+            if (personData.email)         locked.add('email');
+            if (personData.phone)         locked.add('phone');
+            if (personData.ubigeoId)      locked.add('ubigeoId');
+            if (personData.maritalStatus) locked.add('maritalStatus');
+            if (isContrayente1) setLockedFields1(locked); else setLockedFields2(locked);
+
             setSuccess(true);
             // Auto-abrir el formulario al encontrar persona
             if (isContrayente1) setOpen1(true); else setOpen2(true);
@@ -291,6 +316,8 @@ const Contrayente = (props: Solicitud) => {
         setSuccess(false);
         resetForm();
         resetSearch();
+        // Liberar campos al limpiar
+        if (isContrayente1) setLockedFields1(new Set()); else setLockedFields2(new Set());
     }, [resetForm1, resetForm2, resetSearch1, resetSearch2]);
 
     // Función para agregar contrayente al contexto
@@ -401,6 +428,14 @@ const Contrayente = (props: Solicitud) => {
         const numDoc = watchSearch('documentNumber');
         const isOpen = contrayenteNum === 1 ? open1 : open2;
         const setIsOpen = contrayenteNum === 1 ? setOpen1 : setOpen2;
+        const lockedFields = contrayenteNum === 1 ? lockedFields1 : lockedFields2;
+        const isLocked = (field: string) => lockedFields.has(field);
+        const inputCls = (field: string) =>
+            `w-full px-3 sm:px-4 py-2 text-sm sm:text-base border rounded-lg outline-0 transition-all focus:ring-2 focus:ring-blue-500 focus:border-transparent ${
+                isLocked(field)
+                    ? 'border-gray-200 bg-gray-100 cursor-not-allowed'
+                    : 'border-gray-300 bg-white'
+            }`;
 
         return (
             <div className="space-y-4">
@@ -423,7 +458,7 @@ const Contrayente = (props: Solicitud) => {
                         <div className='flex flex-col md:flex-row items-start gap-4 relative pr-10'>
                             {/* Tipo de documento */}
                             <div className={"flex-1 w-full"}>
-                                <label className="block text-sm font-medium text-gray-700 mb-2">
+                                <label className="text-sm font-medium text-gray-700 mb-2">
                                     Tipo de documento
                                 </label>
                                 <p className="mt-2 text-xs text-gray-500 mb-3 min-h-8">
@@ -443,7 +478,7 @@ const Contrayente = (props: Solicitud) => {
                             </div>
                             {/* Número de documento */}
                             <div className={"flex-1 w-full"}>
-                                <label className="block text-sm font-medium text-gray-700 mb-2">
+                                <label className="text-sm font-medium text-gray-700 mb-2">
                                     Buscar por Documento
                                 </label>
                                 <p className="mt-2 text-xs text-gray-500 mb-3 min-h-8">
@@ -510,13 +545,15 @@ const Contrayente = (props: Solicitud) => {
                             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
                                 {/* DNI */}
                                 <div className='mb-0'>
-                                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                                    <label className="text-sm font-medium text-gray-700 mb-2 flex items-center gap-1">
                                         CUI <span className="text-red-500">*</span>
+                                        {isLocked('cui') && <i className="fas fa-lock text-gray-400 text-xs"></i>}
                                     </label>
                                     <input
                                         type="text"
                                         {...registerForm('cui')}
-                                        className="w-full px-3 sm:px-4 py-2 text-sm sm:text-base border border-gray-300 rounded-lg bg-white outline-0 transition-all focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                                        disabled={isLocked('cui')}
+                                        className={inputCls('cui')}
                                         placeholder="DNI"
                                         maxLength={8}
                                     />
@@ -527,13 +564,15 @@ const Contrayente = (props: Solicitud) => {
 
                                 {/* Nombres */}
                                 <div className='mb-0 sm:col-span-2 lg:col-span-1'>
-                                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                                    <label className="text-sm font-medium text-gray-700 mb-2 flex items-center gap-1">
                                         Nombres <span className="text-red-500">*</span>
+                                        {isLocked('names') && <i className="fas fa-lock text-gray-400 text-xs"></i>}
                                     </label>
                                     <input
                                         type="text"
                                         {...registerForm('names')}
-                                        className="w-full px-3 sm:px-4 py-2 text-sm sm:text-base border border-gray-300 rounded-lg bg-white outline-0 transition-all focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                                        disabled={isLocked('names')}
+                                        className={inputCls('names')}
                                         placeholder="Nombres"
                                     />
                                     {errorsForm.names && (
@@ -543,13 +582,15 @@ const Contrayente = (props: Solicitud) => {
 
                                 {/* Apellido Paterno */}
                                 <div className='mb-0 sm:col-span-2 lg:col-span-1'>
-                                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                                    <label className="text-sm font-medium text-gray-700 mb-2 flex items-center gap-1">
                                         Apellido Paterno <span className="text-red-500">*</span>
+                                        {isLocked('paternalSurname') && <i className="fas fa-lock text-gray-400 text-xs"></i>}
                                     </label>
                                     <input
                                         type="text"
                                         {...registerForm('paternalSurname')}
-                                        className="w-full px-3 sm:px-4 py-2 text-sm sm:text-base border border-gray-300 rounded-lg bg-white outline-0 transition-all focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                                        disabled={isLocked('paternalSurname')}
+                                        className={inputCls('paternalSurname')}
                                         placeholder="Apellido paterno"
                                     />
                                     {errorsForm.paternalSurname && (
@@ -559,13 +600,15 @@ const Contrayente = (props: Solicitud) => {
 
                                 {/* Apellido Materno */}
                                 <div className='mb-0 sm:col-span-2 lg:col-span-1'>
-                                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                                    <label className="text-sm font-medium text-gray-700 mb-2 flex items-center gap-1">
                                         Apellido Materno <span className="text-red-500">*</span>
+                                        {isLocked('maternalSurname') && <i className="fas fa-lock text-gray-400 text-xs"></i>}
                                     </label>
                                     <input
                                         type="text"
                                         {...registerForm('maternalSurname')}
-                                        className="w-full px-3 sm:px-4 py-2 text-sm sm:text-base border border-gray-300 rounded-lg bg-white outline-0 transition-all focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                                        disabled={isLocked('maternalSurname')}
+                                        className={inputCls('maternalSurname')}
                                         placeholder="Apellido materno"
                                     />
                                     {errorsForm.maternalSurname && (
@@ -575,13 +618,15 @@ const Contrayente = (props: Solicitud) => {
 
                                 {/* Fecha de Nacimiento */}
                                 <div className='mb-0'>
-                                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                                    <label className="text-sm font-medium text-gray-700 mb-2 flex items-center gap-1">
                                         Fecha Nacimiento <span className="text-red-500">*</span>
+                                        {isLocked('birthdate') && <i className="fas fa-lock text-gray-400 text-xs"></i>}
                                     </label>
                                     <input
                                         type="date"
                                         {...registerForm('birthdate')}
-                                        className="w-full px-3 sm:px-4 py-2 text-sm sm:text-base border border-gray-300 rounded-lg bg-white outline-0 transition-all focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                                        disabled={isLocked('birthdate')}
+                                        className={inputCls('birthdate')}
                                     />
                                     {errorsForm.birthdate && (
                                         <p className="text-red-500 text-xs mt-1">{errorsForm.birthdate.message}</p>
@@ -590,12 +635,14 @@ const Contrayente = (props: Solicitud) => {
 
                                 {/* Sexo */}
                                 <div className='mb-0'>
-                                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                                    <label className="text-sm font-medium text-gray-700 mb-2 flex items-center gap-1">
                                         Sexo <span className="text-red-500">*</span>
+                                        {isLocked('gender') && <i className="fas fa-lock text-gray-400 text-xs"></i>}
                                     </label>
                                     <select
                                         {...registerForm('gender')}
-                                        className="w-full px-3 sm:px-4 py-2 text-sm sm:text-base border border-gray-300 rounded-lg bg-white outline-0 transition-all focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                                        disabled={isLocked('gender')}
+                                        className={inputCls('gender')}
                                     >
                                         <option value="">Seleccione</option>
                                         <option value="M">Masculino</option>
@@ -608,13 +655,15 @@ const Contrayente = (props: Solicitud) => {
 
                                 {/* Dirección */}
                                 <div className='mb-0 sm:col-span-2 lg:col-span-2'>
-                                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                                    <label className="text-sm font-medium text-gray-700 mb-2 flex items-center gap-1">
                                         Dirección <span className="text-red-500">*</span>
+                                        {isLocked('address') && <i className="fas fa-lock text-gray-400 text-xs"></i>}
                                     </label>
                                     <input
                                         type="text"
                                         {...registerForm('address')}
-                                        className="w-full px-3 sm:px-4 py-2 text-sm sm:text-base border border-gray-300 rounded-lg bg-white outline-0 transition-all focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                                        disabled={isLocked('address')}
+                                        className={inputCls('address')}
                                         placeholder="Dirección"
                                     />
                                     {errorsForm.address && (
@@ -624,13 +673,15 @@ const Contrayente = (props: Solicitud) => {
 
                                 {/* Correo */}
                                 <div className='mb-0 sm:col-span-2 lg:col-span-1'>
-                                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                                    <label className="text-sm font-medium text-gray-700 mb-2 flex items-center gap-1">
                                         Correo Electrónico <span className="text-red-500">*</span>
+                                        {isLocked('email') && <i className="fas fa-lock text-gray-400 text-xs"></i>}
                                     </label>
                                     <input
                                         type="email"
                                         {...registerForm('email')}
-                                        className="w-full px-3 sm:px-4 py-2 text-sm sm:text-base border border-gray-300 rounded-lg bg-white outline-0 transition-all focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                                        disabled={isLocked('email')}
+                                        className={inputCls('email')}
                                         placeholder="correo@ejemplo.com"
                                     />
                                     {errorsForm.email && (
@@ -639,14 +690,16 @@ const Contrayente = (props: Solicitud) => {
                                 </div>
 
                                 {/* Teléfono */}
-                                <div className='mb-0 sm:col-span-2 lg:col-span-1'>
-                                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                                <div className='mb-0 sm:col-span-2 lg:col-span-1 mt-1.5'>
+                                    <label className="text-sm font-medium text-gray-700 mb-2 flex items-center gap-1">
                                         Teléfono <span className="text-red-500">*</span>
+                                        {isLocked('phone') && <i className="fas fa-lock text-gray-400 text-xs"></i>}
                                     </label>
                                     <input
                                         type="text"
                                         {...registerForm('phone')}
-                                        className="w-full px-3 sm:px-4 py-2 text-sm sm:text-base border border-gray-300 rounded-lg bg-white outline-0 transition-all focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                                        disabled={isLocked('phone')}
+                                        className={inputCls('phone')}
                                         placeholder="987654321"
                                         maxLength={9}
                                     />
@@ -657,29 +710,95 @@ const Contrayente = (props: Solicitud) => {
 
                                 {/* Ubigeo */}
                                 <div className='mb-0 sm:col-span-2 lg:col-span-1'>
-                                    <label className="block text-sm font-medium text-gray-700 mb-2">
-                                        Ubigeo <span className="text-red-500">*</span>
-                                    </label>
-                                    <input
-                                        type="text"
-                                        {...registerForm('ubigeoId')}
-                                        className="w-full px-3 sm:px-4 py-2 text-sm sm:text-base border border-gray-300 rounded-lg bg-white outline-0 transition-all focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                                        placeholder="150101"
-                                        maxLength={6}
-                                    />
+                                    {(() => {
+                                        const currentUbigeoId = contrayenteNum === 1 ? watchForm1('ubigeoId') : watchForm2('ubigeoId');
+                                        const setVal = contrayenteNum === 1 ? setValueForm1 : setValueForm2;
+                                        const ubigeoFilter = contrayenteNum === 1 ? ubigeoFilter1 : ubigeoFilter2;
+                                        const setUbigeoFilter = contrayenteNum === 1 ? setUbigeoFilter1 : setUbigeoFilter2;
+                                        const filtered = ubigeoFilter.trim().length === 0
+                                            ? ubigeos
+                                            : ubigeos.filter(u => {
+                                                const text = `${u.departamento} ${u.provincia} ${u.distrito}`.toLowerCase();
+                                                return text.includes(ubigeoFilter.toLowerCase());
+                                            });
+                                        const selectedLabel = ubigeos.find(u => u.id === currentUbigeoId);
+                                        return ubigeoLoading ? (
+                                            <div className="flex items-center gap-2 text-xs text-gray-400 py-2">
+                                                <span className="loading loading-spinner loading-xs"></span> Cargando ubigeos...
+                                            </div>
+                                        ) : (
+                                            <div className="space-y-1.5">
+                                                {/* Label + buscador en la misma fila */}
+                                                <div className="flex items-center gap-2 mb-1">
+                                                    <label className="text-sm font-medium text-gray-700 whitespace-nowrap flex items-center gap-1">
+                                                        Ubigeo <span className="text-red-500">*</span>
+                                                        {isLocked('ubigeoId') && <i className="fas fa-lock text-gray-400 text-xs"></i>}
+                                                    </label>
+                                                    <div className="relative flex-1">
+                                                        <div className="absolute inset-y-0 left-0 pl-2.5 flex items-center pointer-events-none">
+                                                            <i className={`fas fa-search text-xs ${isLocked('ubigeoId') ? 'text-gray-300' : 'text-gray-400'}`}></i>
+                                                        </div>
+                                                        <input
+                                                            type="text"
+                                                            placeholder={isLocked('ubigeoId') ? 'Bloqueado por la API' : 'Buscar depto., provincia o distrito...'}
+                                                            value={ubigeoFilter}
+                                                            disabled={isLocked('ubigeoId')}
+                                                            onChange={e => setUbigeoFilter(e.target.value)}
+                                                            className={`w-full pl-7 pr-3 py-1.5 text-xs border rounded-lg outline-0 focus:ring-2 focus:ring-blue-500 focus:border-transparent ${
+                                                                isLocked('ubigeoId') ? 'border-gray-200 bg-gray-100 text-gray-400 cursor-not-allowed' : 'border-gray-300 bg-white'
+                                                            }`}
+                                                        />
+                                                    </div>
+                                                </div>
+                                                {/* Código de ubigeo bajo el label */}
+                                                <p className="w-full px-3 sm:px-4 py-2 text-sm sm:text-base border border-gray-300 rounded-lg bg-white outline-0 transition-all focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+                                                    {currentUbigeoId
+                                                        ? <><span className="">{currentUbigeoId}</span></>
+                                                        : <span className="text-gray-300">Código: —</span>
+                                                    }
+                                                </p>
+                                                {ubigeoFilter.trim().length > 0 && (
+                                                    <ul className="w-full max-h-40 overflow-y-auto border border-blue-300 rounded-lg bg-white shadow-md text-xs divide-y divide-gray-100">
+                                                        {filtered.length === 0 ? (
+                                                            <li className="px-3 py-2 text-gray-400 italic">Sin resultados</li>
+                                                        ) : filtered.map(u => (
+                                                            <li
+                                                                key={u.id}
+                                                                onMouseDown={() => {
+                                                                    setVal('ubigeoId', u.id);
+                                                                    setUbigeoFilter('');
+                                                                }}
+                                                                className={`px-3 py-2 cursor-pointer hover:bg-blue-50 hover:text-blue-700 transition-colors ${currentUbigeoId === u.id ? 'bg-blue-100 text-blue-700 font-semibold' : 'text-gray-700'}`}
+                                                            >
+                                                                {u.departamento}, {u.provincia}, {u.distrito}
+                                                            </li>
+                                                        ))}
+                                                    </ul>
+                                                )}
+                                                {selectedLabel && ubigeoFilter.trim().length === 0 && (
+                                                    <p className="text-xs text-blue-600 font-medium">
+                                                        <i className="fas fa-map-marker-alt mr-1"></i>
+                                                        {selectedLabel.departamento}, {selectedLabel.provincia}, {selectedLabel.distrito}
+                                                    </p>
+                                                )}
+                                            </div>
+                                        );
+                                    })()}
                                     {errorsForm.ubigeoId && (
                                         <p className="text-red-500 text-xs mt-1">{errorsForm.ubigeoId.message}</p>
                                     )}
                                 </div>
 
                                 {/* Estado Civil */}
-                                <div className='mb-0 sm:col-span-2 lg:col-span-1'>
-                                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                                <div className='mb-0 sm:col-span-2 lg:col-span-1 mt-1.5'>
+                                    <label className="text-sm font-medium text-gray-700 mb-2 flex items-center gap-1">
                                         Estado Civil <span className="text-red-500">*</span>
+                                        {isLocked('maritalStatus') && <i className="fas fa-lock text-gray-400 text-xs"></i>}
                                     </label>
                                     <select
                                         {...registerForm('maritalStatus')}
-                                        className="w-full px-3 sm:px-4 py-2 text-sm sm:text-base border border-gray-300 rounded-lg bg-white outline-0 transition-all focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                                        disabled={isLocked('maritalStatus')}
+                                        className={inputCls('maritalStatus')}
                                     >
                                         <option value="">Seleccione</option>
                                         <option value="Soltero">Soltero(a)</option>

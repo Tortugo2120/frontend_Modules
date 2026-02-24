@@ -131,7 +131,7 @@ export default function TableList({ data }: Props) {
                         <thead className="bg-info-content text-white">
                             <tr>
                                 <th className="px-2 py-3 text-center text-sm font-semibold">Expediente</th>
-                                <th className="px-2 py-3 text-center text-sm font-semibold">Tipo de Solicitud</th>
+                                <th className="px-2 py-3 w-45 text-center text-sm font-semibold">Tipo de Solicitud</th>
                                 <th className="px-2 py-3 text-center text-sm font-semibold">Nombres</th>
                                 <th className="px-2 py-3 text-center text-sm font-semibold">Documento</th>
                                 <th className="px-2 py-3 text-center text-sm font-semibold">Fecha Trámite</th>

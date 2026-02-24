@@ -33,7 +33,7 @@ export default function TablaPagos({ data, loading, error }: Props) {
     return (
         <div className="overflow-x-auto rounded-md border border-gray-100">
             <table className="w-full text-sm">
-                <thead className="bg-slate-800 text-slate-300">
+                <thead className="bg-info-content text-white">
                     <tr>
                         {HEADERS.map(h => (
                             <th key={h} className="px-4 py-3 text-left font-semibold whitespace-nowrap">{h}</th>
@@ -66,7 +66,7 @@ export default function TablaPagos({ data, loading, error }: Props) {
                             </td>
                             <td className="px-4 py-3">
                                 <button
-                                    onClick={() => navigate("/dashboard/solicitudes/update", { state: { id: String(app.id) } })}
+                                    onClick={() => navigate("/dashboard/actualizar/pagos", { state: { id: String(app.id) } })}
                                     className="inline-flex items-center gap-1.5 bg-sky-50 hover:bg-sky-100 text-sky-600 text-xs font-semibold px-3 py-1.5 rounded-lg border border-sky-200 transition-colors whitespace-nowrap"
                                 >
                                     <i className="fas fa-credit-card"></i> Ver Pago

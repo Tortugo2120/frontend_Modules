@@ -60,7 +60,7 @@ export default function FiltrosPagos({ filters, tiposolicitud, onUpdateFilter, o
             </button>
             <button
                 onClick={onReset}
-                className="bg-gray-100 hover:bg-gray-200 text-gray-600 text-sm font-semibold px-4 py-2 rounded-lg transition-colors"
+                className="bg-gray-100 hover:bg-gray-200 text-gray-600 text-sm font-semibold px-4 py-2 rounded-lg border border-gray-300 transition-colors"
             >
                 <i className="fas fa-times mr-1.5"></i> Limpiar
             </button>
