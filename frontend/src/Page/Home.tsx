@@ -2,9 +2,7 @@
 import StatsCard from '../components/home/StatsCard';
 import RecentReq from '../components/home/RecentReq';
 import QuickActions from '../components/home/QuickActions';
-import RecentActivity from '../components/home/RecentActivity';
-import RevenueChart from '../components/home/RevenueChart';
-import type { Solicitud, Actividad, RecaudacionData } from '../Types/index';
+import type { Solicitud } from '../Types/index';
 import useAplicatCountPendig from "../hooks/useAplicatCountPendig.ts";
 import useAplicatCountComplet from "../hooks/useAplicCountComple.ts";
 import {usePagosResumen} from "../hooks/usePagosResumen.ts";
@@ -49,46 +47,14 @@ export default function Home() {
         }
     ];
 
-    const actividades: Actividad[] = [
-        {
-            tipo: 'pago',
-            titulo: 'Pago registrado',
-            descripcion: 'EXP-2026-001244 - S/ 35.00',
-            tiempo: 'Hace 15 minutos'
-        },
-        {
-            tipo: 'documento',
-            titulo: 'Documento generado',
-            descripcion: 'Acta de Nacimiento #1244',
-            tiempo: 'Hace 32 minutos'
-        },
-        {
-            tipo: 'espera',
-            titulo: 'Solicitud en espera',
-            descripcion: 'EXP-2026-001245',
-            tiempo: 'Hace 1 hora'
-        },
-        {
-            tipo: 'nueva',
-            titulo: 'Nueva solicitud creada',
-            descripcion: 'Matrimonio Civil',
-            tiempo: 'Hace 2 horas'
-        }
-    ];
-
-    const recaudacionData: RecaudacionData[] = [
-        { mes: 'Jul', monto: 5200 },
-        { mes: 'Ago', monto: 6800 },
-        { mes: 'Sep', monto: 5900 },
-        { mes: 'Oct', monto: 7200 },
-        { mes: 'Nov', monto: 8100 },
-        { mes: 'Dic', monto: 7500 },
-        { mes: 'Ene', monto: 8420 }
-    ];
-
     const {aplicatCountPendig} = useAplicatCountPendig();
     const {aplicatCountComplet} = useAplicatCountComplet();
     const {data} = usePagosResumen();
+
+    const formatPayment = new Intl.NumberFormat('es-PE', {
+        style: 'currency',
+        currency: 'PEN',
+    }).format(data?.data.total ?? 0);
     return (
         <>
             <div className="bg-blue-300/40 p-4 sm:p-6 lg:p-6">
@@ -98,9 +64,9 @@ export default function Home() {
                 </div>
 
                 {/* Stats Cards */}
-                <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-4 lg:gap-6 mb-6 lg:mb-10">
+                <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-4 lg:gap-6 mb-6 lg:mb-10">
                     <StatsCard
-                        title="Solicitudes Pendientes"
+                        title="Solicitudes En Proceso"
                         value={aplicatCountPendig?.applications ?? '0'}
                         subtitle="desde ayer"
                         highlightText={String(aplicatCountPendig?.delta ?? '0')}
@@ -117,19 +83,11 @@ export default function Home() {
                     />
                     <StatsCard
                         title={data?.message}
-                        value={data?.data.total}
+                        value={formatPayment}
                         subtitle={data?.data.total_hoy}
                         highlightText="Hoy:"
                         bgColor="bg-orange-400"
                         textColor='text-orange-600'
-                    />
-                    <StatsCard
-                        title="Documentos Pendientes"
-                        value="7"
-                        subtitle="2"
-                        highlightText="Urgentes:"
-                        bgColor="bg-red-600"
-                        textColor='text-red-600'
                     />
                 </div>
 
@@ -141,13 +99,8 @@ export default function Home() {
                     <div className="xl:col-span-4 space-y-4 lg:space-y-6">
                         {/* Acciones Rápidas */}
                         <QuickActions />
-                        {/* Actividad Reciente */}
-                        <RecentActivity actividades={actividades} />
                     </div>
                 </div>
-
-                {/* Gráfico de Recaudación - Nueva Sección */}
-                <RevenueChart data={recaudacionData} />
             </div>
         </>
     )
