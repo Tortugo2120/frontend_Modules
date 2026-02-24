@@ -31,7 +31,7 @@ export default function TablaPagos({ data, loading, error }: Props) {
     }
 
     return (
-        <div className="overflow-x-auto rounded-xl border border-gray-100">
+        <div className="overflow-x-auto rounded-md border border-gray-100">
             <table className="w-full text-sm">
                 <thead className="bg-slate-800 text-slate-300">
                     <tr>

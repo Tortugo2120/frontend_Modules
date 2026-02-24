@@ -38,8 +38,8 @@ export default function HistorialPagos() {
             {/* Header */}
             <div className="flex flex-wrap justify-between items-center gap-3 mb-5">
                 <div>
-                    <h2 className="text-xl font-bold text-gray-900">Historial de Pagos</h2>
-                    <p className="text-sm text-gray-400 mt-0.5">Solicitudes y sus estados de pago</p>
+                    <h2 className="text-3xl font-bold text-slate-800">Historial de Pagos</h2>
+                    <p className="text-base text-gray-400 mt-0.5">Solicitudes y sus estados de pago</p>
                 </div>
             </div>
 

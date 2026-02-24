@@ -18,7 +18,7 @@ interface Props {
 
 export default function FiltrosPagos({ filters, tiposolicitud, onUpdateFilter, onApply, onReset }: Props) {
     return (
-        <div className="flex flex-wrap gap-3 mb-5">
+        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 mb-6">
             <input
                 type="date"
                 value={filters.beginDate || ""}

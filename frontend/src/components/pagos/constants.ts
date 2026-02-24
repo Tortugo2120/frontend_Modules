@@ -22,4 +22,4 @@ export const ESTADO_ICON: Record<string, string> = {
 };
 
 export const INPUT_CLASS =
-    "border border-gray-200 rounded-lg px-3 py-2 text-sm text-gray-700 focus:outline-none focus:ring-2 focus:ring-sky-300";
+    "w-full input input-lg border border-gray-200 rounded-lg px-3 py-2 text-sm text-gray-700 focus:outline-none focus:ring-2 focus:ring-sky-300";
