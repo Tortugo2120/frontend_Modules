@@ -20,11 +20,13 @@ export default function useLogin(): UseLoginResult {
        return response;
     } catch (e: any) {
       console.log("error", e.response);
-      const errorResponse = e.response.data.error;
+      const status = e?.response?.status;
 
-      if (errorResponse === "404") {
+      if (!status) {
+        setError("No se pudo conectar al servidor");
+      }else if (status === 404) {
         setError("Usuario no encontrado");
-      }else if (errorResponse === "401") {
+      }else if (status === 401) {
         setError("Contraseña incorrecta");
       }
 
