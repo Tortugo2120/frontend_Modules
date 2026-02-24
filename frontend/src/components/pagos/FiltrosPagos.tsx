@@ -1,17 +1,11 @@
 import type { Tiposolicitud } from "../../model/typeRequestModel";
+import type { PaymentHistoryParams } from "../../services/PaymentHistoryService";
 import { INPUT_CLASS } from "./constants";
 
-interface Filters {
-    state?: string;
-    beginDate?: string;
-    endDate?: string;
-    ApplicationType?: number;
-}
-
 interface Props {
-    filters: Filters;
+    filters: PaymentHistoryParams;
     tiposolicitud: Tiposolicitud[];
-    onUpdateFilter: <K extends keyof Filters>(key: K, value: Filters[K]) => void;
+    onUpdateFilter: <K extends keyof PaymentHistoryParams>(key: K, value: PaymentHistoryParams[K]) => void;
     onApply: () => void;
     onReset: () => void;
 }
@@ -20,6 +14,13 @@ export default function FiltrosPagos({ filters, tiposolicitud, onUpdateFilter, o
     return (
         <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 mb-6">
             <input
+                type="text"
+                placeholder="N° Expediente"
+                value={filters.expedientNumber || ""}
+                onChange={e => onUpdateFilter("expedientNumber", e.target.value)}
+                className={INPUT_CLASS}
+            />
+            <input 
                 type="date"
                 value={filters.beginDate || ""}
                 onChange={e => onUpdateFilter("beginDate", e.target.value)}
@@ -38,18 +39,16 @@ export default function FiltrosPagos({ filters, tiposolicitud, onUpdateFilter, o
             >
                 <option value="">Todos los estados</option>
                 <option value="Pendiente">Pendiente</option>
-                <option value="En Proceso">En Proceso</option>
-                <option value="Completada">Completada</option>
-                <option value="Anulada">Anulada</option>
+                <option value="Completado">Completado</option>
             </select>
             <select
-                value={filters.ApplicationType || 0}
-                onChange={e => onUpdateFilter("ApplicationType", Number(e.target.value))}
+                value={filters.applicationType || ""}
+                onChange={e => onUpdateFilter("applicationType", e.target.value)}
                 className={INPUT_CLASS}
             >
-                <option value={0}>Todos los tipos</option>
+                <option value="">Todos los tipos</option>
                 {tiposolicitud.map(t => (
-                    <option key={t.id} value={t.id}>{t.nombre_solicitud}</option>
+                    <option key={t.id} value={t.nombre_solicitud}>{t.nombre_solicitud}</option>
                 ))}
             </select>
             <button

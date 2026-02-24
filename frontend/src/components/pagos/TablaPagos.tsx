@@ -1,11 +1,11 @@
 import { useNavigate } from "react-router-dom";
-import type { ApplicationItem } from "../../model/aplicationModel";
+import type { PaymentHistoryItem } from "../../model/paymentHistoryModel";
 import { ESTADO_CLASSES, ESTADO_ICON } from "./constants";
 
-const HEADERS = ["Expediente", "Tipo de Solicitud", "Encargado", "Precio", "Estado", "Fecha Inicio", "Pago"];
+const HEADERS = ["Expediente", "Tipo de Solicitud", "Estado Solicitud", "Monto", "Estado Pago", "Fecha de Pago", "Acciones"];
 
 interface Props {
-    data: ApplicationItem[];
+    data: PaymentHistoryItem[];
     loading: boolean;
     error: string | null;
 }
@@ -48,29 +48,33 @@ export default function TablaPagos({ data, loading, error }: Props) {
                                 No hay registros disponibles
                             </td>
                         </tr>
-                    ) : data.map(app => (
-                        <tr key={app.id} className="border-t border-gray-50 hover:bg-gray-50 transition-colors">
+                    ) : data.map(item => (
+                        <tr key={item.id} className="border-t border-gray-50 hover:bg-gray-50 transition-colors">
                             <td className="px-4 py-3 font-mono text-sky-600 font-medium whitespace-nowrap">
-                                {app.expediente}
+                                {item.expediente}
                             </td>
-                            <td className="px-4 py-3 text-gray-700 whitespace-nowrap">{app.nombreSolicitud}</td>
-                            <td className="px-4 py-3 text-gray-500 whitespace-nowrap">{app.encargado || "—"}</td>
+                            <td className="px-4 py-3 text-gray-700 whitespace-nowrap">{item.tipo_solicitud}</td>
+                            <td className="px-4 py-3">
+                                <EstadoBadge estado={item.estado_solicitud} />
+                            </td>
                             <td className="px-4 py-3 font-semibold text-gray-800 whitespace-nowrap">
-                                S/ {app.precio.toFixed(2)}
+                                S/ {item.monto.toFixed(2)}
                             </td>
                             <td className="px-4 py-3">
-                                <EstadoBadge estado={app.estado} />
+                                <EstadoBadge estado={item.estado} />
                             </td>
                             <td className="px-4 py-3 text-gray-500 whitespace-nowrap">
-                                {app.fecha ? app.fecha.split(" ")[0] : "—"}
+                                {item.fecha_pago ? item.fecha_pago.split(" ")[0] : "—"}
                             </td>
                             <td className="px-4 py-3">
-                                <button
-                                    onClick={() => navigate("/dashboard/actualizar/pagos", { state: { id: String(app.id) } })}
-                                    className="inline-flex items-center gap-1.5 bg-sky-50 hover:bg-sky-100 text-sky-600 text-xs font-semibold px-3 py-1.5 rounded-lg border border-sky-200 transition-colors whitespace-nowrap"
-                                >
-                                    <i className="fas fa-credit-card"></i> Ver Pago
-                                </button>
+                                {!(item.estado_solicitud === "Anulada" && item.estado === "Pendiente") && (
+                                    <button
+                                        onClick={() => navigate("/dashboard/actualizar/pagos", { state: { id: String(item.id_solicitud) } })}
+                                        className="inline-flex items-center gap-1.5 bg-sky-50 hover:bg-sky-100 text-sky-600 text-xs font-semibold px-3 py-1.5 rounded-lg border border-sky-200 transition-colors whitespace-nowrap"
+                                    >
+                                        <i className="fas fa-credit-card"></i> Ver Pago
+                                    </button>
+                                )}
                             </td>
                         </tr>
                     ))}
@@ -80,7 +84,6 @@ export default function TablaPagos({ data, loading, error }: Props) {
     );
 }
 
-// ── Sub-componente: badge de estado ───────────────────────────────────
 function EstadoBadge({ estado }: { estado: string }) {
     return (
         <span className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-semibold ${ESTADO_CLASSES[estado] ?? "bg-gray-100 text-gray-600 border border-gray-200"}`}>
@@ -89,3 +92,4 @@ function EstadoBadge({ estado }: { estado: string }) {
         </span>
     );
 }
+ 

@@ -1,8 +1,7 @@
 import { useEffect } from "react";
-import useFilterApplications from "../../hooks/useFilterApplications";
+import usePaymentHistory from "../../hooks/usePaymentHistory";
 import useTipoSolici from "../../hooks/useTipoSolici";
 import FiltrosPagos from "./FiltrosPagos";
-
 import TablaPagos from "./TablaPagos";
 import PaginacionPagos from "./PaginacionPagos";
 
@@ -10,22 +9,18 @@ export default function HistorialPagos() {
     const { tiposolicitud } = useTipoSolici();
 
     const {
-        draftFilters,
         data,
         pagination,
         loading,
         error,
+        filters,
         updateFilter,
         applyFilters,
         changePage,
         resetFilters,
-    } = useFilterApplications();
+    } = usePaymentHistory();
 
-    // Carga inicial
-    // eslint-disable-next-line react-hooks/exhaustive-deps
     useEffect(() => { applyFilters(); }, []);
-
-
 
     return (
         <div className="bg-white rounded-md shadow-sm border border-gray-100 p-6 mb-6">
@@ -40,13 +35,12 @@ export default function HistorialPagos() {
             <hr className="border-dashed border-gray-200 mb-5" />
 
             <FiltrosPagos
-                filters={draftFilters}
+                filters={filters}
                 tiposolicitud={tiposolicitud}
                 onUpdateFilter={updateFilter}
                 onApply={applyFilters}
                 onReset={resetFilters}
             />
-
 
             <TablaPagos data={data} loading={loading} error={error} />
 
