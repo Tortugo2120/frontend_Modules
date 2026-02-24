@@ -3,7 +3,7 @@ export interface ApplicationRequirement {
     nombre_requisito: string;
     entregado: "0" | "1" | number;
     fecha_entrega: string;
-    observacion: string;
+    observation: string;
 }
 
 export interface UpdateRequirementsResponse {
