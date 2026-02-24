@@ -9,7 +9,7 @@ export const authLogin = async (authData: LoginRequest): Promise<LoginResponse> 
 // El refresh token viaja como cookie HttpOnly — Axios lo envía automáticamente con withCredentials: true
 // Se marca _skipRetry para que el interceptor NO intente refresh si el access token ya expiró al cerrar sesión
 export const logout = async (): Promise<void> => {
-  const response = await apiAxios.post("/api/v1/logout", {}, { headers: { _skipRetry: true } as any });
+  const response = await apiAxios.post("/api/v1/logout");
   const data = response.data;
 
   if (!data?.status || data?.code !== 200) {
