@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from 'react';
+import {useEffect, useState} from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { loginSchema } from '../Validations/validationLogin.ts';
@@ -46,24 +46,20 @@ export default function Login() {
     }, 3000);
   };
 
+  useEffect(() => {
+    if (error) {
+      showToastMessage(error, 'error');
+    }
+  }, [error]);
+
   const onSubmit = async (data: LoginFormData) => {
-    //setIsLoading(true);
     showToastMessage('Iniciando sesión...', 'success');
 
     const loginResponse = await loginUser(data);
-    if (loginResponse?.code === 200) {
-      setTimeout(() => {
-        login(loginResponse);
-        //setIsLoading(false);
-        navigate('/dashboard');
-      }, 1500);
-    }
+    if (!loginResponse) return;
 
-    if (loginResponse?.code === 401) {
-      showToastMessage('Contraseña o usuario incorrecto', 'error');
-      console.error(error);
-      //setIsLoading(false);
-    }
+    login(loginResponse);
+    navigate('/dashboard');
 
   };
 
@@ -146,10 +142,6 @@ export default function Login() {
                   </label>
                 )}
               </div>
-
-             
-
-              {error && <span className="text-red-600">{error}</span>}
 
               {/* Botón Enviar */}
               <div className="form-control mt-6">

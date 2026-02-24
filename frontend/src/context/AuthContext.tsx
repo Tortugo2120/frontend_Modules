@@ -37,8 +37,6 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     setUser(null);
     sessionStorage.clear();
     localStorage.clear();
-    // Usamos window.location para evitar dependencia de useNavigate
-    // que requiere estar dentro del árbol del Router en el momento del llamado
     window.location.href = '/';
   }, []);
 
