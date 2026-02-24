@@ -67,7 +67,7 @@ export interface GetAplicationState {
     delta: number;
 }
 
-export type ParticipantRol = 'solicitante' | 'contrayente' | 'testigo';
+export type ParticipantRol = 'solicitante' | 'contrayente' | 'testigo' | 'divorciado';
 
 export type Gender = 'M' | 'F';
 

@@ -6,6 +6,8 @@ import { z } from 'zod';
 import { testigoSchema, type TestigoFormData } from '../../../Validations/validationTestigo.ts';
 import { searchTypeDocument } from '../../../Validations/validationSearchTypeDocument.ts';
 import { usePersonSearch } from '../../../hooks/usePersonSearch.ts';
+import { useUbigeo } from '../../../hooks/useUbigeo.ts';
+import type { UbigeoItem } from '../../../model/ubigeoModel.ts';
 import { useDetailsApplication } from '../../../hooks/useApplicationDetails.ts';
 import { useUpdateWitnesses } from '../../../hooks/useUpdateWitnesses.ts';
 import { useGetParticipants } from '../../../hooks/useGetParticipants.ts';
@@ -66,6 +68,15 @@ interface WitnessFormBlockProps {
     onSave: () => void;
     savedIndividual: boolean;
     isUpdating: boolean;
+    /* ubigeo */
+    ubigeos: UbigeoItem[];
+    ubigeoLoading: boolean;
+    ubigeoFilter: string;
+    setUbigeoFilter: (v: string) => void;
+    currentUbigeoId: string;
+    onUbigeoSelect: (id: string) => void;
+    /* field locking */
+    lockedFields: Set<string>;
 }
 
 const WitnessFormBlock = ({
@@ -84,9 +95,24 @@ const WitnessFormBlock = ({
     onSave,
     savedIndividual,
     isUpdating,
+    ubigeos,
+    ubigeoLoading,
+    ubigeoFilter,
+    setUbigeoFilter,
+    currentUbigeoId,
+    onUbigeoSelect,
+    lockedFields,
 }: WitnessFormBlockProps) => {
     const tipoDoc = watchSearch('documentType');
     const numDoc = watchSearch('documentNumber');
+
+    const isLocked = (field: string) => lockedFields.has(field);
+    const inputCls = (field: string) =>
+        `w-full px-3 py-2 text-sm border rounded-lg outline-0 focus:ring-2 focus:ring-indigo-500 transition-all ${
+            isLocked(field)
+                ? 'border-gray-200 bg-gray-100 text-gray-500 cursor-not-allowed'
+                : 'border-gray-300 bg-white'
+        }`;
 
     const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
         if (e.key === 'Enter') { e.preventDefault(); onSearch(); }
@@ -188,49 +214,73 @@ const WitnessFormBlock = ({
 
                         {/* CUI */}
                         <div>
-                            <label className="block text-sm font-medium text-gray-700 mb-1">CUI <span className="text-red-500">*</span></label>
+                            <label className="text-sm font-medium text-gray-700 mb-1 flex items-center gap-1">
+                                CUI <span className="text-red-500">*</span>
+                                {isLocked('cui') && <i className="fas fa-lock text-gray-400 text-xs"></i>}
+                            </label>
                             <input type="text" {...registerForm('cui')} maxLength={8}
-                                className="w-full px-3 py-2 text-sm border border-gray-300 rounded-lg bg-white outline-0 focus:ring-2 focus:ring-indigo-500" placeholder="CUI" />
+                                disabled={isLocked('cui')}
+                                className={inputCls('cui')} placeholder="CUI" />
                             {errorsForm.cui && <p className="text-red-500 text-xs mt-1">{errorsForm.cui.message}</p>}
                         </div>
 
                         {/* Nombres */}
                         <div className="sm:col-span-2 lg:col-span-1">
-                            <label className="block text-sm font-medium text-gray-700 mb-1">Nombres <span className="text-red-500">*</span></label>
+                            <label className="text-sm font-medium text-gray-700 mb-1 flex items-center gap-1">
+                                Nombres <span className="text-red-500">*</span>
+                                {isLocked('names') && <i className="fas fa-lock text-gray-400 text-xs"></i>}
+                            </label>
                             <input type="text" {...registerForm('names')}
-                                className="w-full px-3 py-2 text-sm border border-gray-300 rounded-lg bg-white outline-0 focus:ring-2 focus:ring-indigo-500" placeholder="Nombres" />
+                                disabled={isLocked('names')}
+                                className={inputCls('names')} placeholder="Nombres" />
                             {errorsForm.names && <p className="text-red-500 text-xs mt-1">{errorsForm.names.message}</p>}
                         </div>
 
                         {/* Ap. Paterno */}
                         <div>
-                            <label className="block text-sm font-medium text-gray-700 mb-1">Apellido Paterno <span className="text-red-500">*</span></label>
+                            <label className="text-sm font-medium text-gray-700 mb-1 flex items-center gap-1">
+                                Apellido Paterno <span className="text-red-500">*</span>
+                                {isLocked('paternalSurname') && <i className="fas fa-lock text-gray-400 text-xs"></i>}
+                            </label>
                             <input type="text" {...registerForm('paternalSurname')}
-                                className="w-full px-3 py-2 text-sm border border-gray-300 rounded-lg bg-white outline-0 focus:ring-2 focus:ring-indigo-500" placeholder="Apellido paterno" />
+                                disabled={isLocked('paternalSurname')}
+                                className={inputCls('paternalSurname')} placeholder="Apellido paterno" />
                             {errorsForm.paternalSurname && <p className="text-red-500 text-xs mt-1">{errorsForm.paternalSurname.message}</p>}
                         </div>
 
                         {/* Ap. Materno */}
                         <div>
-                            <label className="block text-sm font-medium text-gray-700 mb-1">Apellido Materno <span className="text-red-500">*</span></label>
+                            <label className="text-sm font-medium text-gray-700 mb-1 flex items-center gap-1">
+                                Apellido Materno <span className="text-red-500">*</span>
+                                {isLocked('maternalSurname') && <i className="fas fa-lock text-gray-400 text-xs"></i>}
+                            </label>
                             <input type="text" {...registerForm('maternalSurname')}
-                                className="w-full px-3 py-2 text-sm border border-gray-300 rounded-lg bg-white outline-0 focus:ring-2 focus:ring-indigo-500" placeholder="Apellido materno" />
+                                disabled={isLocked('maternalSurname')}
+                                className={inputCls('maternalSurname')} placeholder="Apellido materno" />
                             {errorsForm.maternalSurname && <p className="text-red-500 text-xs mt-1">{errorsForm.maternalSurname.message}</p>}
                         </div>
 
                         {/* Fecha nacimiento */}
                         <div>
-                            <label className="block text-sm font-medium text-gray-700 mb-1">Fecha Nacimiento <span className="text-red-500">*</span></label>
+                            <label className="text-sm font-medium text-gray-700 mb-1 flex items-center gap-1">
+                                Fecha Nacimiento <span className="text-red-500">*</span>
+                                {isLocked('birthdate') && <i className="fas fa-lock text-gray-400 text-xs"></i>}
+                            </label>
                             <input type="date" {...registerForm('birthdate')}
-                                className="w-full px-3 py-2 text-sm border border-gray-300 rounded-lg bg-white outline-0 focus:ring-2 focus:ring-indigo-500" />
+                                disabled={isLocked('birthdate')}
+                                className={inputCls('birthdate')} />
                             {errorsForm.birthdate && <p className="text-red-500 text-xs mt-1">{errorsForm.birthdate.message}</p>}
                         </div>
 
                         {/* Sexo */}
                         <div>
-                            <label className="block text-sm font-medium text-gray-700 mb-1">Sexo <span className="text-red-500">*</span></label>
+                            <label className="text-sm font-medium text-gray-700 mb-1 flex items-center gap-1">
+                                Sexo <span className="text-red-500">*</span>
+                                {isLocked('gender') && <i className="fas fa-lock text-gray-400 text-xs"></i>}
+                            </label>
                             <select {...registerForm('gender')}
-                                className="w-full px-3 py-2 text-sm border border-gray-300 rounded-lg bg-white outline-0 focus:ring-2 focus:ring-indigo-500">
+                                disabled={isLocked('gender')}
+                                className={inputCls('gender')}>
                                 <option value="">Seleccione</option>
                                 <option value="M">Masculino</option>
                                 <option value="F">Femenino</option>
@@ -240,41 +290,124 @@ const WitnessFormBlock = ({
 
                         {/* Dirección */}
                         <div className="sm:col-span-2">
-                            <label className="block text-sm font-medium text-gray-700 mb-1">Dirección <span className="text-red-500">*</span></label>
+                            <label className="text-sm font-medium text-gray-700 mb-1 flex items-center gap-1">
+                                Dirección <span className="text-red-500">*</span>
+                                {isLocked('address') && <i className="fas fa-lock text-gray-400 text-xs"></i>}
+                            </label>
                             <input type="text" {...registerForm('address')}
-                                className="w-full px-3 py-2 text-sm border border-gray-300 rounded-lg bg-white outline-0 focus:ring-2 focus:ring-indigo-500" placeholder="Dirección" />
+                                disabled={isLocked('address')}
+                                className={inputCls('address')} placeholder="Dirección" />
                             {errorsForm.address && <p className="text-red-500 text-xs mt-1">{errorsForm.address.message}</p>}
                         </div>
 
                         {/* Correo */}
                         <div>
-                            <label className="block text-sm font-medium text-gray-700 mb-1">Correo Electrónico <span className="text-red-500">*</span></label>
+                            <label className="text-sm font-medium text-gray-700 mb-1 flex items-center gap-1">
+                                Correo Electrónico <span className="text-red-500">*</span>
+                                {isLocked('email') && <i className="fas fa-lock text-gray-400 text-xs"></i>}
+                            </label>
                             <input type="email" {...registerForm('email')}
-                                className="w-full px-3 py-2 text-sm border border-gray-300 rounded-lg bg-white outline-0 focus:ring-2 focus:ring-indigo-500" placeholder="correo@ejemplo.com" />
+                                disabled={isLocked('email')}
+                                className={inputCls('email')} placeholder="correo@ejemplo.com" />
                             {errorsForm.email && <p className="text-red-500 text-xs mt-1">{errorsForm.email.message}</p>}
                         </div>
 
                         {/* Teléfono */}
                         <div>
-                            <label className="block text-sm font-medium text-gray-700 mb-1">Teléfono <span className="text-red-500">*</span></label>
+                            <label className="text-sm font-medium text-gray-700 mb-1 flex items-center gap-1 mt-2.5">
+                                Teléfono <span className="text-red-500">*</span>
+                                {isLocked('phone') && <i className="fas fa-lock text-gray-400 text-xs"></i>}
+                            </label>
                             <input type="text" {...registerForm('phone')} maxLength={9}
-                                className="w-full px-3 py-2 text-sm border border-gray-300 rounded-lg bg-white outline-0 focus:ring-2 focus:ring-indigo-500" placeholder="987654321" />
+                                disabled={isLocked('phone')}
+                                className={inputCls('phone')} placeholder="987654321" />
                             {errorsForm.phone && <p className="text-red-500 text-xs mt-1">{errorsForm.phone.message}</p>}
                         </div>
 
                         {/* Ubigeo */}
                         <div>
-                            <label className="block text-sm font-medium text-gray-700 mb-1">Ubigeo <span className="text-red-500">*</span></label>
-                            <input type="text" {...registerForm('ubigeoId')} maxLength={6}
-                                className="w-full px-3 py-2 text-sm border border-gray-300 rounded-lg bg-white outline-0 focus:ring-2 focus:ring-indigo-500" placeholder="150101" />
+                            {ubigeoLoading ? (
+                                <div className="flex items-center gap-2 text-xs text-gray-400 py-2">
+                                    <span className="loading loading-spinner loading-xs"></span> Cargando ubigeos...
+                                </div>
+                            ) : (
+                                <div className="space-y-1.5">
+                                    {/* Label + buscador en la misma fila */}
+                                    <div className="flex items-center gap-2 mb-1">
+                                        <label className="text-sm font-medium text-gray-700 whitespace-nowrap flex items-center gap-1">
+                                            Ubigeo <span className="text-red-500">*</span>
+                                            {isLocked('ubigeoId') && <i className="fas fa-lock text-gray-400 text-xs"></i>}
+                                        </label>
+                                        <div className="relative flex-1">
+                                            <div className="absolute inset-y-0 left-0 pl-2.5 flex items-center pointer-events-none">
+                                                <i className={`fas fa-search text-xs ${isLocked('ubigeoId') ? 'text-gray-300' : 'text-gray-400'}`}></i>
+                                            </div>
+                                            <input
+                                                type="text"
+                                                placeholder={isLocked('ubigeoId') ? 'Bloqueado por la API' : 'Buscar depto., provincia o distrito...'}
+                                                value={ubigeoFilter}
+                                                disabled={isLocked('ubigeoId')}
+                                                onChange={e => setUbigeoFilter(e.target.value)}
+                                                className={`w-full pl-7 pr-3 py-1.5 text-xs border rounded-lg outline-0 focus:ring-2 focus:ring-indigo-500 focus:border-transparent ${
+                                                    isLocked('ubigeoId') ? 'border-gray-200 bg-gray-100 text-gray-400 cursor-not-allowed' : 'border-gray-300 bg-white'
+                                                }`}
+                                            />
+                                        </div>
+                                    </div>
+                                    {/* Código de ubigeo */}
+                                    <p className="w-full px-3 py-2 text-sm border border-gray-300 rounded-lg bg-white outline-0">
+                                        {currentUbigeoId
+                                            ? <span>{currentUbigeoId}</span>
+                                            : <span className="text-gray-300">Código: —</span>
+                                        }
+                                    </p>
+                                    {ubigeoFilter.trim().length > 0 && (() => {
+                                        const filtered = ubigeos.filter(u => {
+                                            const text = `${u.departamento} ${u.provincia} ${u.distrito}`.toLowerCase();
+                                            return text.includes(ubigeoFilter.toLowerCase());
+                                        });
+                                        return (
+                                            <ul className="w-full max-h-40 overflow-y-auto border border-indigo-300 rounded-lg bg-white shadow-md text-xs divide-y divide-gray-100">
+                                                {filtered.length === 0 ? (
+                                                    <li className="px-3 py-2 text-gray-400 italic">Sin resultados</li>
+                                                ) : filtered.map(u => (
+                                                    <li
+                                                        key={u.id}
+                                                        onMouseDown={() => {
+                                                            onUbigeoSelect(u.id);
+                                                            setUbigeoFilter('');
+                                                        }}
+                                                        className={`px-3 py-2 cursor-pointer hover:bg-indigo-50 hover:text-indigo-700 transition-colors ${currentUbigeoId === u.id ? 'bg-indigo-100 text-indigo-700 font-semibold' : 'text-gray-700'}`}
+                                                    >
+                                                        {u.departamento}, {u.provincia}, {u.distrito}
+                                                    </li>
+                                                ))}
+                                            </ul>
+                                        );
+                                    })()}
+                                    {(() => {
+                                        const selectedLabel = ubigeos.find(u => u.id === currentUbigeoId);
+                                        return selectedLabel && ubigeoFilter.trim().length === 0 ? (
+                                            <p className="text-xs text-indigo-600 font-medium">
+                                                <i className="fas fa-map-marker-alt mr-1"></i>
+                                                {selectedLabel.departamento}, {selectedLabel.provincia}, {selectedLabel.distrito}
+                                            </p>
+                                        ) : null;
+                                    })()}
+                                </div>
+                            )}
                             {errorsForm.ubigeoId && <p className="text-red-500 text-xs mt-1">{errorsForm.ubigeoId.message}</p>}
                         </div>
 
                         {/* Estado Civil */}
                         <div>
-                            <label className="block text-sm font-medium text-gray-700 mb-1">Estado Civil <span className="text-red-500">*</span></label>
+                            <label className="text-sm font-medium text-gray-700 mb-1 flex items-center gap-1 mt-2.5">
+                                Estado Civil <span className="text-red-500">*</span>
+                                {isLocked('maritalStatus') && <i className="fas fa-lock text-gray-400 text-xs"></i>}
+                            </label>
                             <select {...registerForm('maritalStatus')}
-                                className="w-full px-3 py-2 text-sm border border-gray-300 rounded-lg bg-white outline-0 focus:ring-2 focus:ring-indigo-500">
+                                disabled={isLocked('maritalStatus')}
+                                className={inputCls('maritalStatus')}>
                                 <option value="">Seleccione</option>
                                 <option value="Soltero">Soltero(a)</option>
                                 <option value="Casado">Casado(a)</option>
@@ -344,9 +477,9 @@ const Testigos_update = () => {
         useForm<InputSearch>({ resolver: zodResolver(searchTypeDocument), defaultValues: { documentType: 'dni', documentNumber: '' } });
 
     /* ── Data forms ── */
-    const { register: regF1, handleSubmit: hSub1, formState: { errors: fErr1 }, setValue: sVal1, reset: resetF1 } =
+    const { register: regF1, handleSubmit: hSub1, formState: { errors: fErr1 }, setValue: sVal1, reset: resetF1, watch: wVal1 } =
         useForm<TestigoFormData>({ resolver: zodResolver(testigoSchema), defaultValues: buildDefaultTestigo() });
-    const { register: regF2, handleSubmit: hSub2, formState: { errors: fErr2 }, setValue: sVal2, reset: resetF2 } =
+    const { register: regF2, handleSubmit: hSub2, formState: { errors: fErr2 }, setValue: sVal2, reset: resetF2, watch: wVal2 } =
         useForm<TestigoFormData>({ resolver: zodResolver(testigoSchema), defaultValues: buildDefaultTestigo() });
 
     /* ── UI state ── */
@@ -360,6 +493,15 @@ const Testigos_update = () => {
     const [saved1, setSaved1] = useState(false);
     const [saved2, setSaved2] = useState(false);
     const [alert, setAlert] = useState<{ type: 'success' | 'error'; msg: string } | null>(null);
+
+    /* Ubigeo */
+    const { ubigeos, loading: ubigeoLoading } = useUbigeo();
+    const [ubigeoFilter1, setUbigeoFilter1] = useState('');
+    const [ubigeoFilter2, setUbigeoFilter2] = useState('');
+
+    /* Campos bloqueados */
+    const [lockedFields1, setLockedFields1] = useState<Set<string>>(new Set());
+    const [lockedFields2, setLockedFields2] = useState<Set<string>>(new Set());
 
     /* Carga de datos de testigos usando la asociación correcta contrayente ↔ testigo */
     useEffect(() => {
@@ -405,6 +547,22 @@ const Testigos_update = () => {
             sVal('phone', d.phone || '');
             sVal('ubigeoId', d.ubigeoId || '');
             if (d.maritalStatus) sVal('maritalStatus', d.maritalStatus as any);
+
+            // Bloquear campos que la API proporcionó con valor
+            const locked = new Set<string>();
+            locked.add('cui');
+            if (d.name)            locked.add('names');
+            if (d.paternalSurname) locked.add('paternalSurname');
+            if (d.maternalSurname) locked.add('maternalSurname');
+            if (d.birthdate)       locked.add('birthdate');
+            if (validGender)       locked.add('gender');
+            if (d.address)         locked.add('address');
+            if (d.email)           locked.add('email');
+            if (d.phone)           locked.add('phone');
+            if (d.ubigeoId)        locked.add('ubigeoId');
+            if (d.maritalStatus)   locked.add('maritalStatus');
+            if (num === 1) setLockedFields1(locked); else setLockedFields2(locked);
+
             setOk(true);
             if (num === 1) setOpen1(true); else setOpen2(true);
             setTimeout(() => setOk(false), 2500);
@@ -415,8 +573,13 @@ const Testigos_update = () => {
 
     /* ── Clear handler ── */
     const handleClear = useCallback((num: 1 | 2) => {
-        if (num === 1) { resetSearch1(); resetF1(); setSearchErr1(''); setSearchOk1(false); setSaved1(false); }
-        else { resetSearch2(); resetF2(); setSearchErr2(''); setSearchOk2(false); setSaved2(false); }
+        if (num === 1) {
+            resetSearch1(); resetF1(); setSearchErr1(''); setSearchOk1(false); setSaved1(false);
+            setLockedFields1(new Set()); setUbigeoFilter1('');
+        } else {
+            resetSearch2(); resetF2(); setSearchErr2(''); setSearchOk2(false); setSaved2(false);
+            setLockedFields2(new Set()); setUbigeoFilter2('');
+        }
     }, [resetSearch1, resetSearch2, resetF1, resetF2]);
 
     /* ── Individual save handlers ── */
@@ -578,6 +741,13 @@ const Testigos_update = () => {
                         onSave={handleSave2}
                         savedIndividual={saved2}
                         isUpdating={isUpdating}
+                        ubigeos={ubigeos}
+                        ubigeoLoading={ubigeoLoading}
+                        ubigeoFilter={ubigeoFilter2}
+                        setUbigeoFilter={setUbigeoFilter2}
+                        currentUbigeoId={wVal2('ubigeoId') ?? ''}
+                        onUbigeoSelect={(id) => sVal2('ubigeoId', id)}
+                        lockedFields={lockedFields2}
                     />
                 </div>
 
@@ -598,6 +768,13 @@ const Testigos_update = () => {
                         onSave={handleSave1}
                         savedIndividual={saved1}
                         isUpdating={isUpdating}
+                        ubigeos={ubigeos}
+                        ubigeoLoading={ubigeoLoading}
+                        ubigeoFilter={ubigeoFilter1}
+                        setUbigeoFilter={setUbigeoFilter1}
+                        currentUbigeoId={wVal1('ubigeoId') ?? ''}
+                        onUbigeoSelect={(id) => sVal1('ubigeoId', id)}
+                        lockedFields={lockedFields1}
                     />
                 </div>
 
