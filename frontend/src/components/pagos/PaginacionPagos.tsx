@@ -1,7 +1,7 @@
-import type { Pager } from "../../model/aplicationFilterModel";
+import type { PaymentHistoryPager } from "../../model/paymentHistoryModel";
 
 interface Props {
-    pagination: Pager;
+    pagination: PaymentHistoryPager;
     onPrev: () => void;
     onNext: () => void;
 }
@@ -31,3 +31,4 @@ export default function PaginacionPagos({ pagination, onPrev, onNext }: Props) {
         </div>
     );
 }
+
