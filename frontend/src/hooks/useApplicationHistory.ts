@@ -44,21 +44,6 @@ export const useApplicationHistory = () => {
         cargarDatos();
     }, [cargarDatos]);
 
-    /**
-     * Lógica de filtrado:
-     * Nota: Si tu backend no filtra, este filtro es "local" sobre los 10 registros actuales.
-     * Si quieres filtrar en toda la base de datos, deberías pasar los filtros a ListApplications.
-     */
-    const solicitudesFiltradas = solicitudes.filter(s => {
-        const cumpleBusqueda = !filtros.busqueda.trim() ||
-            s.expediente?.toLowerCase().includes(filtros.busqueda.toLowerCase()) ||
-            s.participantes?.some(p => p.numero_identificacion?.includes(filtros.busqueda));
-
-        const cumpleTipo = !filtros.tipo || s.nombreSolicitud === filtros.tipo;
-        const cumpleEstado = !filtros.estado || s.estado === filtros.estado;
-
-        return cumpleBusqueda && cumpleTipo && cumpleEstado;
-    });
 
     // 4. Handlers de interfaz
     const handleSetFiltros = (f: Partial<Filtros>) => {
@@ -80,7 +65,7 @@ export const useApplicationHistory = () => {
 
     return {
         // Datos
-        solicitudes: solicitudesFiltradas,
+        solicitudes,
         loading,
         error,
 
