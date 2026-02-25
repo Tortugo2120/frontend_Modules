@@ -25,14 +25,17 @@ export default function HistorialPagos() {
     return (
         <div className="bg-white rounded-md shadow-sm border border-gray-100 p-6 mb-6">
             {/* Header */}
-            <div className="flex flex-wrap justify-between items-center gap-3 mb-5">
+            <div className="flex flex-row items-center gap-2 mb-6">
+                <div className="w-12 h-12 bg-info-content rounded-xl flex items-center justify-center shadow-lg text-2xl">
+                    <i className="fas fa-history text-white"></i>
+                </div>
                 <div>
-                    <h2 className="text-3xl font-bold text-slate-800">Historial de Pagos</h2>
-                    <p className="text-base text-gray-400 mt-0.5">Solicitudes y sus estados de pago</p>
+                    <h1 className="text-3xl font-bold text-info-content">
+                        Historial de Pagos
+                    </h1>
+                    <p className="text-sm text-gray-600 mt-1">Consulta el historial de pagos realizados por solicitudes</p>
                 </div>
             </div>
-
-            <hr className="border-dashed border-gray-200 mb-5" />
 
             <FiltrosPagos
                 filters={filters}
