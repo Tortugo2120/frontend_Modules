@@ -4,7 +4,6 @@ import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useDetailsApplication } from '../../../hooks/useApplicationDetails.ts';
 import { useUpdatePayment } from '../../../hooks/useUpdatePayment.ts';
-import { uploadPaymentEvidence } from '../../../services/PaymentUpdateService.ts';
 import { paymentSchema, type PaymentFormData } from '../../../Validations/validationPayment.ts';
 
 const getTodayStr = () => {
@@ -95,19 +94,6 @@ const Pagos = () => {
                 if (!res.status) {
                     setAlert({ type: 'error', msg: res.message || 'Error al actualizar el pago' });
                     return;
-                }
-                // Upload evidence file if provided
-                if (evidenceFile && applicationId) {
-                    setIsUploadingEvidence(true);
-                    try {
-                        await uploadPaymentEvidence(applicationId as number, evidenceFile);
-                    } catch (e: unknown) {
-                        const error = e as Error;
-                        setAlert({ type: 'error', msg: error.message || 'Pago guardado, pero no se pudo subir la evidencia' });
-                        setIsUploadingEvidence(false);
-                        return;
-                    }
-                    setIsUploadingEvidence(false);
                 }
                 setAlert({ type: 'success', msg: 'Pago actualizado correctamente' });
                 setSaved(true);
@@ -269,6 +255,7 @@ const Pagos = () => {
                             </div>
 
                             {/* Evidencia del comprobante */}
+                            {/*
                             <div className="sm:col-span-2 lg:col-span-3">
                                 <label className="block text-base font-medium text-gray-700 mb-1">
                                     Comprobante / Evidencia de Pago
@@ -321,6 +308,7 @@ const Pagos = () => {
                                     )}
                                 </div>
                             </div>
+                            */}
 
                         </div>
 

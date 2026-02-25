@@ -331,8 +331,7 @@ const Testigo = (props: Solicitud) => {
                 );
 
                 setShowAlert(true);
-                setAlertMessage(`El contrayente ${contrayente?.names} ${contrayente?.paternalSurname} ya tiene un testigo asignado. ` +
-                    `Cada contrayente solo puede tener un testigo.`);
+                setAlertMessage(`El contrayente ${contrayente?.names} ${contrayente?.paternalSurname} ya tiene un testigo asignado`);
                 return;
             }
 

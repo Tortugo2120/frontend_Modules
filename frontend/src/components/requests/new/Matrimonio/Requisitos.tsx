@@ -411,7 +411,7 @@ const RequisitosMatrimonio = ({
             <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-3 sm:gap-2 pb-3 border-b border-b-blue-300">
                 <h3 className="text-base sm:text-lg font-semibold text-gray-900 flex items-center gap-2">
                     <i className="fas fa-clipboard-check text-blue-600"></i>
-                    <span>Requisitos para el Matrimonio</span>
+                    <span className={"text-lg"}>Requisitos para el Matrimonio</span>
                 </h3>
                 {tipoSolicitudNombre && (
                     <span className="bg-blue-100 text-blue-800 text-xs sm:text-sm font-medium px-3 sm:px-4 py-1.5 sm:py-2 rounded-lg flex flex-col items-center w-fit">
@@ -430,10 +430,10 @@ const RequisitosMatrimonio = ({
             <div className="bg-linear-to-r from-blue-50 to-purple-50 border border-blue-200 rounded-lg p-4 sm:p-6">
                 <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 mb-3">
                     <div>
-                        <h4 className="text-sm font-semibold text-gray-900 mb-1">
+                        <h4 className="text-lg font-semibold text-gray-900 mb-1">
                             Progreso de Requisitos Obligatorios
                         </h4>
-                        <p className="text-xs text-gray-600">
+                        <p className="text-md text-gray-600">
                             {progreso.completados} de {progreso.total} requisitos completados
                         </p>
                     </div>
@@ -529,7 +529,7 @@ const RequisitosMatrimonio = ({
                                                         className="cursor-pointer"
                                                     >
                                                         <div className="flex items-start justify-between gap-2 mb-1">
-                                                            <span className={`text-sm font-medium ${isCompleted
+                                                            <span className={`text-lg font-medium ${isCompleted
                                                                 ? 'text-gray-500 line-through'
                                                                 : 'text-gray-900'
                                                                 }`}>
@@ -556,7 +556,7 @@ const RequisitosMatrimonio = ({
                                                                         className="hidden"
                                                                         accept=".pdf,.jpg,.jpeg,.png"
                                                                     />
-                                                                    <span className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-blue-600 text-white text-xs font-medium rounded hover:bg-blue-700 transition-colors">
+                                                                    <span className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-blue-600 text-white text-md font-medium rounded hover:bg-blue-700 transition-colors">
                                                                         <i className="fas fa-paperclip"></i>
                                                                         Adjuntar documento
                                                                     </span>
@@ -584,10 +584,10 @@ const RequisitosMatrimonio = ({
                                                                             className="flex items-center gap-2 bg-white rounded p-2 text-xs"
                                                                         >
                                                                             <i className={`fas ${getIconoArchivo(archivo.tipo)}`}></i>
-                                                                            <span className="flex-1 truncate font-medium text-gray-900">
+                                                                            <span className="flex-1 truncate font-medium text-gray-900 text-lg">
                                                                                 {archivo.nombre}
                                                                             </span>
-                                                                            <span className="text-gray-500">
+                                                                            <span className="text-gray-500 text-lg">
                                                                                 {formatearTamaño(archivo.tamaño)}
                                                                             </span>
                                                                             <button
@@ -596,7 +596,7 @@ const RequisitosMatrimonio = ({
                                                                                 className="p-1 text-red-600 hover:text-red-800 hover:bg-red-50 rounded transition-colors"
                                                                                 title="Eliminar archivo"
                                                                             >
-                                                                                <i className="fas fa-times"></i>
+                                                                                <i className="fas fa-times text-lg"></i>
                                                                             </button>
                                                                         </div>
                                                                     ))}
@@ -605,7 +605,7 @@ const RequisitosMatrimonio = ({
 
                                                             {/* Observación del requisito */}
                                                             <div className="mt-2">
-                                                                <label className="block text-xs font-medium text-gray-600 mb-1">
+                                                                <label className="block text-lg font-medium text-gray-600 mb-1">
                                                                     <i className="fas fa-comment-alt mr-1 text-gray-400" />
                                                                     Observación <span className="text-gray-400 font-normal">(opcional)</span>
                                                                 </label>
@@ -622,7 +622,7 @@ const RequisitosMatrimonio = ({
                                                                         });
                                                                     }}
                                                                     placeholder="Ingrese alguna observación sobre este requisito..."
-                                                                    className="w-full px-3 py-2 text-xs border border-gray-300 rounded-lg outline-0 resize-none focus:ring-2 focus:ring-blue-400 bg-white transition-all"
+                                                                    className="w-full px-3 py-2 text-md border border-gray-300 rounded-lg outline-0 resize-none focus:ring-2 focus:ring-blue-400 bg-white transition-all"
                                                                 />
                                                             </div>
 
