@@ -627,6 +627,8 @@ const Contrayente = (props: Solicitud) => {
                                         {...registerForm('birthdate')}
                                         disabled={isLocked('birthdate')}
                                         className={inputCls('birthdate')}
+                                        min="1900-01-01"
+                                        max="9999-12-31"
                                     />
                                     {errorsForm.birthdate && (
                                         <p className="text-red-500 text-xs mt-1">{errorsForm.birthdate.message}</p>

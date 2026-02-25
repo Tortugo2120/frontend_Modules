@@ -9,8 +9,8 @@ type ActionButton = {
 
 const actionButtons: ActionButton[] = [
     { icon: 'fa-plus',             label: 'Nueva Solicitud',              variant: 'primary',   path: '/dashboard/solicitud/new' },
-    { icon: 'fa-money-bill-1',     label: 'Ver Pagos',                    variant: 'success',   path: '/dashboard/pagos' },
-    { icon: 'fa-clock-rotate-left',label: 'Ver Historial de Solicitudes', variant: 'neutral',   path: '/dashboard/solicitud/history' },
+    { icon: 'fa-money-bill-1',     label: 'Ver Pagos',                    variant: 'info',   path: '/dashboard/pagos' },
+    { icon: 'fa-clock-rotate-left',label: 'Ver Historial de Solicitudes', variant: 'success',   path: '/dashboard/solicitud/history' },
 ];
 
 export default function QuickActions() {
@@ -24,7 +24,7 @@ export default function QuickActions() {
                 {actionButtons.map((action, index) => (
                     <button
                         key={index}
-                        className={`btn btn-${action.variant} btn-soft w-full flex items-center gap-4 px-5 py-3.5 transition-colors cursor-pointer`}
+                        className={`btn btn-outline btn-${action.variant} w-full flex items-center gap-4 px-5 py-3.5 transition-colors cursor-pointer`}
                         onClick={() => { navigate(action.path ?? '#', { replace: true }) }}
                     >
                         <i className={`fas ${action.icon} w-5 text-center text-lg`}></i>

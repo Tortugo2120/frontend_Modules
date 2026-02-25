@@ -44,7 +44,7 @@ export default function RecentReq({ solicitudes, loading = false }: RecentReqPro
                         <tr className="text-left text-gray-500 text-xs lg:text-sm font-medium uppercase tracking-wide">
                             <th className="pb-4">N° Expediente</th>
                             <th className="pb-4">Tipo</th>
-                            <th className="pb-4">Solicitante</th>
+                            <th className="pb-4">Contrayente</th>
                             <th className="pb-4">Estado</th>
                             <th className="pb-4">Fecha</th>
                         </tr>
