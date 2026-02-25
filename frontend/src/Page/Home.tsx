@@ -18,7 +18,7 @@ export default function Home() {
     // Mapear ApplicationItem al formato que espera RecentReq
     const solicitudesRecientes: Solicitud[] = solicitudes.slice(0, 5).map(s => {
         const contrayente = s.participantes?.find(
-            p => p.rol === 'contrayente' || p.rol === 'divorciado' || p.rol === 'solicitante'
+            p => ['contrayente', 'divorciado', 'solicitante'].includes(p.rol.toLowerCase())
         );
         const solicitante = contrayente
             ? contrayente.nombre ?? '—'
