@@ -53,6 +53,7 @@ export function Nav({ onLinkClick }: NavProps) {
                         </ul>
                     )}
                 </li>
+                {/* Documentos 
                 <li>
                     <button onClick={handleDocumentosToggle} className="w-full flex items-center justify-between gap-4 px-4 py-3.5 text-white hover:bg-slate hover:text-slate-300 transition-colors rounded">
                         <div className="flex items-center gap-4">
@@ -78,6 +79,8 @@ export function Nav({ onLinkClick }: NavProps) {
                         </ul>
                     )}
                 </li>
+                */}
+                
                 <li>
                     <Link to={"/dashboard/pagos"} onClick={onLinkClick} className="flex items-center gap-4 px-4 py-3.5 text-white hover:bg-slate hover:text-slate-300 transition-colors">
                         <i className="fas fa-wallet w-5 text-center text-md"></i>
