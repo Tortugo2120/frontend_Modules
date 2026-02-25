@@ -26,6 +26,19 @@ export default function TableList({ data }: Props) {
         return clases[estadoNormalizado] || "bg-gray-100 text-gray-800";
     };
 
+    const getEstadoIcon = (estado: string): string => {
+        const estadoNormalizado = estado.toLowerCase();
+        const iconos: Record<string, string> = {
+            "pendiente": "fa-clock",
+            "en proceso": "fa-spinner",
+            "completada": "fa-check-circle",
+            "anulada": "fa-ban",
+            "cancelado": "fa-ban",
+            "observado": "fa-exclamation-circle"
+        };
+        return iconos[estadoNormalizado] || "fa-circle";
+    };
+
     const formatearFechaHora = (fecha: string): string => {
         try {
             const date = new Date(fecha);
@@ -65,6 +78,7 @@ export default function TableList({ data }: Props) {
                                     {item.expediente}
                                 </Link>
                                 <span className={`badge ${getEstadoClasses(item.estado)} border-none py-2 px-3 text-xs`}>
+                                    <i className={`fas ${getEstadoIcon(item.estado)} mr-1`}></i>
                                     {item.estado}
                                 </span>
                             </div>
@@ -126,13 +140,13 @@ export default function TableList({ data }: Props) {
                 </div>
 
                 {/* Vista desktop - Tabla */}
-                <div className="hidden lg:block overflow-x-auto">
+                <div className="hidden lg:block">
                     <table className="w-full min-w-250">
                         <thead className="bg-info-content text-white">
                             <tr>
                                 <th className="px-2 py-3 text-center text-sm font-semibold">Expediente</th>
-                                <th className="px-2 py-3 w-45 text-center text-sm font-semibold">Tipo de Solicitud</th>
-                                <th className="px-2 py-3 text-center text-sm font-semibold">Nombres</th>
+                                <th className="px-2 py-3 w-40 text-center text-sm font-semibold">Tipo de Solicitud</th>
+                                <th className="px-2 py-3 w-40 text-center text-sm font-semibold">Nombres</th>
                                 <th className="px-2 py-3 text-center text-sm font-semibold">Documento</th>
                                 <th className="px-2 py-3 text-center text-sm font-semibold">Fecha Trámite</th>
                                 <th className="px-2 py-3 text-center text-sm font-semibold">Estado</th>
@@ -142,7 +156,7 @@ export default function TableList({ data }: Props) {
                         </thead>
                         <tbody className={"divide-y divide-gray-100"}>
                             {data.map((item, index) => (
-                                <tr key={`${item.id}-${index}`} className="hover:bg-indigo-100/50 transition-colors duration-150 border-b border-b-gray-300">
+                                <tr key={`${item.id}-${index}`} className="hover:bg-green-100/50 hover:shadow-lg hover:shadow-indigo-200/50 hover:scale-101 hover:z-10 relative transition-all duration-200 border-b border-b-gray-300">
                                     <td className="px-3 py-3 text-md font-mono font-bold ">
                                         <Link to="/dashboard/solicitud/detalles" state={{ id: item.id }}>
                                             {item.expediente}
@@ -171,8 +185,8 @@ export default function TableList({ data }: Props) {
                                         </div>
                                     </td>
 
-                                    <td className="px-3 py-2">
-                                        <div className="flex flex-col gap-2">
+                                    <td className="py-2">
+                                        <div className="flex flex-col items-center gap-2">
                                             {item.participantes && item.participantes.length > 0 ? (
                                                 item.participantes
                                                     .filter(p => p.rol.toLowerCase().includes('contrayente') || p.rol.toLowerCase().includes('divorciado'))
@@ -194,16 +208,17 @@ export default function TableList({ data }: Props) {
                                         </div>
                                     </td>
                                     <td className="text-center">
-                                        <span className={`badge ${getEstadoClasses(item.estado)} border-none py-3 px-4`}>
+                                        <span className={`badge ${getEstadoClasses(item.estado)} border-none rounded-full py-3 px-2 font-semibold`}>
+                                            <i className={`fas ${getEstadoIcon(item.estado)}`}></i>
                                             {item.estado}
                                         </span>
                                     </td>
-                                    <td className="text-center">
+                                    <td className="pl-2 text-center">
                                         <span className="font-semibold text-green-600">
                                             {formatearPrecio(item.precio)}
                                         </span>
                                     </td>
-                                    <td className="pr-4">
+                                    <td className="px-2">
                                         <div className="flex items-center justify-center gap-2">
                                             {!['cancelado', 'anulada', 'completada'].includes(item.estado.toLowerCase()) && (
                                                 <button

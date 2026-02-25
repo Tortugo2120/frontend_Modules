@@ -31,8 +31,8 @@ export default function TablaPagos({ data, loading, error }: Props) {
     }
 
     return (
-        <div className="overflow-x-auto rounded-md border border-gray-100">
-            <table className="w-full text-sm">
+        <div className="overflow-x-auto rounded-md border border-gray-300">
+            <table className="w-full text-base">
                 <thead className="bg-info-content text-white">
                     <tr>
                         {HEADERS.map(h => (
@@ -49,7 +49,7 @@ export default function TablaPagos({ data, loading, error }: Props) {
                             </td>
                         </tr>
                     ) : data.map(item => (
-                        <tr key={item.id} className="border-t border-gray-50 hover:bg-gray-50 transition-colors">
+                        <tr key={item.id} className="border-t border-gray-300 hover:bg-gray-50 transition-colors">
                             <td className="px-4 py-3 font-mono text-sky-600 font-medium whitespace-nowrap">
                                 {item.expediente}
                             </td>
@@ -70,7 +70,7 @@ export default function TablaPagos({ data, loading, error }: Props) {
                                 {!(item.estado_solicitud === "Anulada" && item.estado === "Pendiente") && (
                                     <button
                                         onClick={() => navigate("/dashboard/actualizar/pagos", { state: { id: String(item.id_solicitud) } })}
-                                        className="inline-flex items-center gap-1.5 bg-sky-50 hover:bg-sky-100 text-sky-600 text-xs font-semibold px-3 py-1.5 rounded-lg border border-sky-200 transition-colors whitespace-nowrap"
+                                        className="inline-flex items-center gap-1.5 bg-sky-50 hover:bg-sky-100 text-sky-600 text-md font-semibold px-3 py-1.5 rounded-lg border border-sky-200 transition-colors whitespace-nowrap cursor-pointer"
                                     >
                                         <i className="fas fa-credit-card"></i> Ver Pago
                                     </button>

@@ -13,25 +13,35 @@ interface Props {
 export default function FiltrosPagos({ filters, tiposolicitud, onUpdateFilter, onApply, onReset }: Props) {
     return (
         <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 mb-6">
-            <input
-                type="text"
-                placeholder="N° Expediente"
-                value={filters.expedientNumber || ""}
-                onChange={e => onUpdateFilter("expedientNumber", e.target.value)}
-                className={INPUT_CLASS}
-            />
-            <input 
-                type="date"
-                value={filters.beginDate || ""}
-                onChange={e => onUpdateFilter("beginDate", e.target.value)}
-                className={INPUT_CLASS}
-            />
-            <input
-                type="date"
-                value={filters.endDate || ""}
-                onChange={e => onUpdateFilter("endDate", e.target.value)}
-                className={INPUT_CLASS}
-            />
+            <div className="col-span-2">
+                <span className="block mb-2 font-semibold">Buscar por N° Expediente</span>
+                <input
+                    type="text"
+                    placeholder="N° Expediente"
+                    value={filters.expedientNumber || ""}
+                    onChange={e => onUpdateFilter("expedientNumber", e.target.value)}
+                    className={INPUT_CLASS}
+                />
+            </div>
+            <div>
+                <span className="block mb-2 font-semibold">Desde</span>
+                <input
+                    type="date"
+                    value={filters.beginDate || ""}
+                    onChange={e => onUpdateFilter("beginDate", e.target.value)}
+                    className={INPUT_CLASS}
+                />
+            </div>
+            <div>
+                <span className="block mb-2 font-semibold">Hasta</span>
+                <input
+                    type="date"
+                    value={filters.endDate || ""}
+                    onChange={e => onUpdateFilter("endDate", e.target.value)}
+                    className={INPUT_CLASS}
+                />
+            </div>
+            <div className="col-span-4 font-bold">Filtar por:</div>
             <select
                 value={filters.state || ""}
                 onChange={e => onUpdateFilter("state", e.target.value)}
@@ -48,18 +58,18 @@ export default function FiltrosPagos({ filters, tiposolicitud, onUpdateFilter, o
             >
                 <option value="">Todos los tipos</option>
                 {tiposolicitud.map(t => (
-                    <option key={t.id} value={t.nombre_solicitud}>{t.nombre_solicitud}</option>
+                    <option key={t.id} value={t.id}>{t.nombre_solicitud}</option>
                 ))}
             </select>
             <button
                 onClick={onApply}
-                className="bg-sky-500 hover:bg-sky-600 text-white text-sm font-semibold px-4 py-2 rounded-lg transition-colors"
+                className="bg-sky-500 hover:bg-sky-600 text-white text-sm font-semibold px-4 py-2 rounded-lg transition-colors cursor-pointer"
             >
                 <i className="fas fa-search mr-1.5"></i> Filtrar
             </button>
             <button
                 onClick={onReset}
-                className="bg-gray-100 hover:bg-gray-200 text-gray-600 text-sm font-semibold px-4 py-2 rounded-lg border border-gray-300 transition-colors"
+                className="bg-gray-100 hover:bg-gray-200 text-gray-600 text-sm font-semibold px-4 py-2 rounded-lg border border-gray-300 transition-colors cursor-pointer"
             >
                 <i className="fas fa-times mr-1.5"></i> Limpiar
             </button>
