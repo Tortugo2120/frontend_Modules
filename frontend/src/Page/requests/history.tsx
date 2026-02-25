@@ -23,6 +23,8 @@ export default function History() {
         totalRegistros,
         cambiarPagina
     } = useApplicationHistory();
+
+    // Estado de paginación para filtros
     const states = new Map<number, string>([[1, "Pendiente"], [2, "En Proceso"], [3, "Completada"], [4, "Anulada"]]);
     const [filtersAvanzados, setFiltersAvanzados] = useState<Map<string, string>>(new Map());
     const [showAlert, setShowAlert] = useState(false);
@@ -36,7 +38,7 @@ export default function History() {
         applicationType: ""
     });
 
-    const { enabled, updateFilter, data, applyFilters, applyQuickState, resetFilters } = useFilterApplications();
+    const { enabled, updateFilter, data, pagination: filterPagination, applyFilters, applyQuickState, resetFilters, changePage: changeFilterPage } = useFilterApplications();
 
     const {
         query: searchQuery,
@@ -114,6 +116,22 @@ export default function History() {
         }
         applyFilters();
     }
+
+    // Paginación activa: si el filtro está activo usa los datos del filtro, si no usa el historial
+    const activePage = enabled ? (filterPagination?.currentPage ?? 1) : paginaActual;
+    const activeTotalPages = enabled ? (filterPagination?.lastPage ?? 1) : totalPaginas;
+    const activeTotalRecords = enabled ? (filterPagination?.total ?? 0) : totalRegistros;
+    const activeDataLength = enabled ? data.length : solicitudes.length;
+
+    const handleChangePage = (page: number) => {
+        if (page < 1 || page > activeTotalPages) return;
+        if (enabled) {
+            changeFilterPage(page);
+        } else {
+            cambiarPagina(page);
+        }
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+    };
 
     const volverAHistorial = () => {
         resetFilters();
@@ -197,7 +215,7 @@ export default function History() {
                             <p className="text-gray-600 text-xs sm:text-sm mt-1">
                                 {searchIsActive
                                     ? `${searchResults.length} resultado${searchResults.length !== 1 ? 's' : ''} de búsqueda`
-                                    : `${totalRegistros} solicitud${totalRegistros !== 1 ? 'es' : ''} encontrada${totalRegistros !== 1 ? 's' : ''}`
+                                    : `${activeTotalRecords} solicitud${activeTotalRecords !== 1 ? 'es' : ''} encontrada${activeTotalRecords !== 1 ? 's' : ''}`
                                 }
                             </p>
                         </div>
@@ -375,48 +393,48 @@ export default function History() {
                 </div>
             </div>
             {/* Paginación */}
-            {totalPaginas > 1 && (
+            {activeTotalPages > 1 && (
                 <div className="flex flex-col sticky top-18 z-30 sm:flex-row items-center justify-between gap-2 sm:gap-4 mt-4 sm:mt-6 bg-white rounded-t-md shadow-lg px-3 sm:px-5 py-2 sm:py-3">
                     <div className="text-xs sm:text-sm text-gray-600 text-center sm:text-left">
-                        <span className="hidden sm:inline">Mostrando {solicitudes.length} de {totalRegistros} solicitudes</span>
-                        <span className="sm:hidden">{solicitudes.length}/{totalRegistros}</span>
-                        {' '}(Pág. {paginaActual}/{totalPaginas})
+                        <span className="hidden sm:inline">Mostrando {activeDataLength} de {activeTotalRecords} solicitudes</span>
+                        <span className="sm:hidden">{activeDataLength}/{activeTotalRecords}</span>
+                        {' '}(Pág. {activePage}/{activeTotalPages})
                     </div>
                     <div className="flex gap-1 sm:gap-2">
                         <button
-                            onClick={() => cambiarPagina(1)}
-                            disabled={paginaActual === 1}
+                            onClick={() => handleChangePage(1)}
+                            disabled={activePage === 1}
                             className="btn btn-sm bg-white border-gray-300 disabled:opacity-50 disabled:cursor-not-allowed hover:bg-gray-50"
                             title="Primera página"
                         >
                             <i className="fas fa-angle-double-left"></i>
                         </button>
                         <button
-                            onClick={() => cambiarPagina(paginaActual - 1)}
-                            disabled={paginaActual === 1}
+                            onClick={() => handleChangePage(activePage - 1)}
+                            disabled={activePage === 1}
                             className="btn btn-sm bg-white border-gray-300 disabled:opacity-50 disabled:cursor-not-allowed hover:bg-gray-50"
                         >
                             <i className="fas fa-chevron-left"></i>
                         </button>
 
                         <div className="flex gap-1">
-                            {Array.from({ length: Math.min(5, totalPaginas) }, (_, i) => {
+                            {Array.from({ length: Math.min(5, activeTotalPages) }, (_, i) => {
                                 let pageNum;
-                                if (totalPaginas <= 5) {
+                                if (activeTotalPages <= 5) {
                                     pageNum = i + 1;
-                                } else if (paginaActual <= 3) {
+                                } else if (activePage <= 3) {
                                     pageNum = i + 1;
-                                } else if (paginaActual >= totalPaginas - 2) {
-                                    pageNum = totalPaginas - 4 + i;
+                                } else if (activePage >= activeTotalPages - 2) {
+                                    pageNum = activeTotalPages - 4 + i;
                                 } else {
-                                    pageNum = paginaActual - 2 + i;
+                                    pageNum = activePage - 2 + i;
                                 }
 
                                 return (
                                     <button
                                         key={pageNum}
-                                        onClick={() => cambiarPagina(pageNum)}
-                                        className={`btn btn-sm ${paginaActual === pageNum
+                                        onClick={() => handleChangePage(pageNum)}
+                                        className={`btn btn-sm ${activePage === pageNum
                                             ? 'bg-info-content text-white hover:bg-info-content/95'
                                             : 'bg-white border-gray-300 hover:bg-gray-50'
                                             }`}
@@ -428,15 +446,15 @@ export default function History() {
                         </div>
 
                         <button
-                            onClick={() => cambiarPagina(paginaActual + 1)}
-                            disabled={paginaActual === totalPaginas}
+                            onClick={() => handleChangePage(activePage + 1)}
+                            disabled={activePage === activeTotalPages}
                             className="btn btn-sm bg-white border-gray-300 disabled:opacity-50 disabled:cursor-not-allowed hover:bg-gray-50"
                         >
                             <i className="fas fa-chevron-right"></i>
                         </button>
                         <button
-                            onClick={() => cambiarPagina(totalPaginas)}
-                            disabled={paginaActual === totalPaginas}
+                            onClick={() => handleChangePage(activeTotalPages)}
+                            disabled={activePage === activeTotalPages}
                             className="btn btn-sm bg-white border-gray-300 disabled:opacity-50 disabled:cursor-not-allowed hover:bg-gray-50"
                             title="Última página"
                         >
