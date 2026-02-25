@@ -27,7 +27,7 @@ export default function QuickActions() {
                         className={`btn btn-outline btn-${action.variant} w-full flex items-center gap-4 px-5 py-3.5 transition-colors cursor-pointer`}
                         onClick={() => { navigate(action.path ?? '#', { replace: true }) }}
                     >
-                        <i className={`fas ${action.icon} w-5 text-center`}></i>
+                        <i className={`fas ${action.icon} w-5 text-center text-lg`}></i>
                         <span className="text-lg font-medium">{action.label}</span>
                     </button>
                 ))}

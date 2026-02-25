@@ -8,9 +8,16 @@ type Solicitud = {
 
 type RecentReqProps = {
     solicitudes: Solicitud[];
+    loading?: boolean;
 }
 
-export default function RecentReq({ solicitudes }: RecentReqProps) {
+export default function RecentReq({ solicitudes, loading = false }: RecentReqProps) {
+    const formatFecha = (fecha: string) => {
+        const solo = fecha?.split(' ')[0] ?? fecha;
+        const [y, m, d] = solo.split('-');
+        return `${d}/${m}/${y}`;
+    };
+
     const getEstadoClasses = (estado: string) => {
         switch (estado) {
             case 'Pendiente':
@@ -43,19 +50,37 @@ export default function RecentReq({ solicitudes }: RecentReqProps) {
                         </tr>
                     </thead>
                     <tbody className="text-sm">
-                        {solicitudes.map((solicitud, index) => (
-                            <tr key={index} className="border-t border-gray-100">
-                                <td className="py-4 font-medium text-gray-800">{solicitud.expediente}</td>
-                                <td className="py-4 text-gray-600 font-normal">{solicitud.tipo}</td>
-                                <td className="py-4 text-gray-600 font-normal">{solicitud.solicitante}</td>
-                                <td className="py-4">
-                                    <span className={`${getEstadoClasses(solicitud.estado)} px-3 py-1 text-xs font-medium`}>
-                                        {solicitud.estado}
-                                    </span>
+                        {loading ? (
+                            Array.from({ length: 5 }).map((_, i) => (
+                                <tr key={i} className="border-t border-gray-100">
+                                    {Array.from({ length: 5 }).map((__, j) => (
+                                        <td key={j} className="py-4">
+                                            <div className="h-4 bg-gray-200 rounded animate-pulse w-3/4" />
+                                        </td>
+                                    ))}
+                                </tr>
+                            ))
+                        ) : solicitudes.length === 0 ? (
+                            <tr>
+                                <td colSpan={5} className="py-8 text-center text-gray-400 text-sm">
+                                    No hay solicitudes recientes
                                 </td>
-                                <td className="py-4 text-gray-500 font-normal">{solicitud.fecha}</td>
                             </tr>
-                        ))}
+                        ) : (
+                            solicitudes.map((solicitud, index) => (
+                                <tr key={index} className="border-t border-gray-100">
+                                    <td className="py-4 font-medium text-gray-800">{solicitud.expediente}</td>
+                                    <td className="py-4 text-gray-600 font-normal">{solicitud.tipo}</td>
+                                    <td className="py-4 text-gray-600 font-normal">{solicitud.solicitante}</td>
+                                    <td className="py-4">
+                                        <span className={`${getEstadoClasses(solicitud.estado)} px-3 py-1 text-xs font-medium`}>
+                                            {solicitud.estado}
+                                        </span>
+                                    </td>
+                                    <td className="py-4 text-gray-500 font-normal">{formatFecha(solicitud.fecha)}</td>
+                                </tr>
+                            ))
+                        )}
                     </tbody>
                 </table>
             </div>

@@ -2,54 +2,36 @@
 import StatsCard from '../components/home/StatsCard';
 import RecentReq from '../components/home/RecentReq';
 import QuickActions from '../components/home/QuickActions';
-import type { Solicitud } from '../Types/index';
+import type { Solicitud } from '../Types';
 import useAplicatCountPendig from "../hooks/useAplicatCountPendig.ts";
 import useAplicatCountComplet from "../hooks/useAplicCountComple.ts";
 import {usePagosResumen} from "../hooks/usePagosResumen.ts";
+import { useApplicationHistory } from "../hooks/useApplicationHistory.ts";
 
 export default function Home() {
-
-    const solicitudes: Solicitud[] = [
-        {
-            expediente: "EXP-2026-001245",
-            tipo: "Matrimonio",
-            solicitante: "María García López",
-            estado: "Pendiente",
-            fecha: "28/01/2026"
-        },
-        {
-            expediente: "EXP-2026-001244",
-            tipo: "Matrimonio",
-            solicitante: "Juan Pérez Torres",
-            estado: "Completado",
-            fecha: "27/01/2026"
-        },
-        {
-            expediente: "EXP-2026-001243",
-            tipo: "Divorcio",
-            solicitante: "Carlos Mendoza Ruiz",
-            estado: "En Proceso",
-            fecha: "27/01/2026"
-        },
-        {
-            expediente: "EXP-2026-001242",
-            tipo: "Copia de expediente",
-            solicitante: "Ana Díaz Vega",
-            estado: "Completado",
-            fecha: "26/01/2026"
-        },
-        {
-            expediente: "EXP-2026-001241",
-            tipo: "Divorcio",
-            solicitante: "Luis Sánchez Paredes",
-            estado: "Observado",
-            fecha: "26/01/2026"
-        }
-    ];
 
     const {aplicatCountPendig} = useAplicatCountPendig();
     const {aplicatCountComplet} = useAplicatCountComplet();
     const {data} = usePagosResumen();
+    const { solicitudes, loading } = useApplicationHistory();
+
+    // Mapear ApplicationItem al formato que espera RecentReq
+    const solicitudesRecientes: Solicitud[] = solicitudes.slice(0, 5).map(s => {
+        const contrayente = s.participantes?.find(
+            p => p.rol === 'contrayente' || p.rol === 'divorciado' || p.rol === 'solicitante'
+        );
+        const solicitante = contrayente
+            ? contrayente.nombre ?? '—'
+            : '—';
+
+        return {
+            expediente: s.expediente,
+            tipo: s.nombreSolicitud,
+            solicitante,
+            estado: s.estado as Solicitud['estado'],
+            fecha: s.fecha,
+        };
+    });
 
     const formatPayment = new Intl.NumberFormat('es-PE', {
         style: 'currency',
@@ -93,8 +75,8 @@ export default function Home() {
 
                 <div className="grid grid-cols-1 xl:grid-cols-12 gap-4 lg:gap-6">
                     {/* Tabla de Solicitudes Recientes */}
-                    <RecentReq solicitudes={solicitudes} />
-                    
+                    <RecentReq solicitudes={solicitudesRecientes} loading={loading} />
+
                     {/* Panel lateral */}
                     <div className="xl:col-span-4 space-y-4 lg:space-y-6">
                         {/* Acciones Rápidas */}
