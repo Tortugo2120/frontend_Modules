@@ -4,8 +4,8 @@ import GraficoRecaudacion from "../components/pagos/GraficoRecaudacion";
 
 export default function PagosDashboard() {
     return (
-        <div className="min-h-screen bg-blue-300/40 p-4 sm:p-6">
-            <div className="max-w-7xl mx-auto">
+        <div className="bg-blue-300/40 p-4 sm:p-6">
+            <div className="mx-auto">
                 <div className="flex flex-row items-center gap-2 mb-6">
                     <div className="w-12 h-12 bg-info-content rounded-xl flex items-center justify-center shadow-lg text-2xl">
                         <i className="fas fa-credit-card text-white"></i>

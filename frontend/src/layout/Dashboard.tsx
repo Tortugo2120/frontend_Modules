@@ -1,68 +1,130 @@
 import { Nav } from "../components/Sidebar.tsx";
 import { Outlet } from "react-router-dom";
-import { useState } from "react";
+import { useState, useEffect, useRef, useCallback } from "react";
 import logo from '../assets/logo-muni.jpg';
 import NavBar from "../components/NavBar.tsx";
 import { Auth } from "../context/AuthContext.tsx";
 
 export default function Dashboard() {
-  const [sidebarOpen, setSidebarOpen] = useState(false);
   const [activeView, setActiveView] = useState("home");
-  const toggleSidebar = () => setSidebarOpen((v) => !v);
-  const closeSidebar = () => setSidebarOpen(false);
+  const [collapsed, setCollapsed] = useState(true);
   const { user, logout } = Auth();
   const handleLogout = async () => { await logout(); };
+  const autoCloseTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  const resetAutoCloseTimer = useCallback(() => {
+    if (autoCloseTimerRef.current) {
+      clearTimeout(autoCloseTimerRef.current);
+      autoCloseTimerRef.current = null;
+    }
+    if (!collapsed) {
+      autoCloseTimerRef.current = setTimeout(() => {
+        setCollapsed(true);
+      }, 5000);
+    }
+  }, [collapsed]);
+
+  // Iniciar timer cuando se abre el sidebar
+  useEffect(() => {
+    resetAutoCloseTimer();
+    return () => {
+      if (autoCloseTimerRef.current) {
+        clearTimeout(autoCloseTimerRef.current);
+        autoCloseTimerRef.current = null;
+      }
+    };
+  }, [collapsed, resetAutoCloseTimer]);
+
+  const toggleCollapse = () => setCollapsed(!collapsed);
+
   return (
-    <div className={"flex min-h-screen"}>
+    <div className="drawer lg:drawer-open">
+      <input id="sidebar-drawer" type="checkbox" className="drawer-toggle" />
 
-      <div
-        className={`${sidebarOpen ? "block" : "hidden"} lg:hidden fixed inset-0 bg-black/40 z-40`}
-        onClick={closeSidebar}
-      />
+      {/* Main Content */}
+      <div className="drawer-content flex flex-col">
+        {/* Navbar */}
+        <NavBar collapsed={collapsed} toggleCollapse={toggleCollapse} />
+        {/* Page Content */}
+        <main className="flex-1">
+          <Outlet context={{ activeView, setActiveView }} />
+        </main>
+      </div>
 
-      <aside
-        className={`${sidebarOpen ? "translate-x-0" : "-translate-x-full"} w-72 bg-info-content text-slate-50 flex flex-col min-h-svh fixed left-0 top-0 bottom-0 z-50 transition-transform duration-300 lg:translate-x-0`}
-      >
-        <div className="px-8 py-4 border-b border-slate-700">
-          <div className="flex items-center flex-col gap-2 ">
-            <img src={logo} alt="Logo" className="w-16 h-16 object-contain realtive rounded-full" />
+      {/* Sidebar */}
+      <div className="drawer-side z-40">
+        <label htmlFor="sidebar-drawer" aria-label="close sidebar" className="drawer-overlay"></label>
+        <div
+          className={`flex min-h-full flex-col bg-info-content text-slate-50 transition-all duration-300 ease-in-out overflow-hidden
+            ${collapsed ? 'w-15 cursor-pointer' : 'w-65'}`}
+          onMouseMove={!collapsed ? resetAutoCloseTimer : undefined}
+          onClick={() => {
+            if (collapsed) setCollapsed(false);
+            else resetAutoCloseTimer();
+          }}
+        >
 
-            <div className="text-center">
-              <div className="flex flex-col items-center">
-                <h1 className="text-base font-semibold tracking-wide">
-                  MÓDULO
-                </h1>
-                <p className="text-xs">de</p>
-                <h1 className="text-base font-semibold tracking-wide">
-                  REGISTRO CIVIL
-                </h1>
+          {/* Logo Header */}
+          <div className={`py-4 border-b border-slate-700/50 transition-all duration-300 ${collapsed ? 'px-2' : 'px-4'}`}>
+            <div className={`flex items-center ${collapsed ? 'justify-center' : 'flex-col gap-2'}`}>
+              <img
+                src={logo}
+                alt="Logo"
+                className={`object-contain rounded-full transition-all duration-300 
+                  ${collapsed ? 'w-9 h-9' : 'w-14 h-14'}`}
+              />
+              {!collapsed && (
+                <div className="text-center mt-1 animate-fade-in">
+                  <div className="flex flex-col items-center leading-tight">
+                    <h1 className="text-sm font-semibold tracking-wide">MÓDULO</h1>
+                    <p className="text-[10px] text-slate-400">de</p>
+                    <h1 className="text-sm font-semibold tracking-wide">REGISTRO CIVIL</h1>
+                  </div>
+                  <p className="text-slate-400 text-xs font-normal mt-0.5">- José Leonardo Ortiz -</p>
+                </div>
+              )}
+            </div>
+          </div>
+
+          {/* Navigation */}
+          <Nav setActiveView={setActiveView} collapsed={collapsed} onExpand={() => setCollapsed(false)} />
+
+          {/* User Footer */}
+          <div className={`border-t border-slate-700/50 mt-auto transition-all duration-300 ${collapsed ? 'px-2 py-3' : 'px-3 py-4'}`}>
+            <div className={`flex items-center ${collapsed ? 'justify-center' : 'gap-3 px-2 py-1'}`}>
+              <div className={`group relative bg-indigo-600/30 flex items-center justify-center shrink-0 rounded-full transition-all duration-300
+                ${collapsed ? 'w-9 h-9 cursor-pointer hover:bg-indigo-600/50' : 'w-9 h-9'}`}
+                onClick={collapsed ? toggleCollapse : undefined}
+              >
+                <i className="fas fa-user text-slate-200 text-xs"></i>
+                {/* Tooltip en colapsado */}
+                {collapsed && (
+                  <span className="absolute left-full ml-3 px-2.5 py-1.5 rounded-md bg-slate-700 text-white text-xs font-medium
+                    opacity-0 invisible group-hover:opacity-100 group-hover:visible
+                    transition-all duration-200 pointer-events-none z-50 shadow-lg whitespace-nowrap">
+                    {user?.sub.toUpperCase()}
+                  </span>
+                )}
               </div>
-              <p className="text-white-200 text-md font-normal">
-                - José Leonardo Ortiz -
-              </p>
+              {!collapsed && (
+                <>
+                  <div className="flex-1 min-w-0">
+                    <p className="font-medium text-sm truncate">{user?.sub.toUpperCase()}</p>
+                    <p className="text-slate-400 text-xs font-normal">Administrador</p>
+                  </div>
+                  <button
+                    className="text-slate-400 hover:text-white transition-colors p-1.5 cursor-pointer rounded-lg hover:bg-white/10"
+                    onClick={handleLogout}
+                    title="Cerrar sesión"
+                  >
+                    <i className="fas fa-sign-out-alt"></i>
+                  </button>
+                </>
+              )}
             </div>
           </div>
         </div>
-        <Nav onLinkClick={closeSidebar} setActiveView={setActiveView} />
-        <div className="px-5 py-5 border-t border-slate-700">
-          <div className="flex items-center gap-3 px-3 py-2">
-            <div className="w-10 h-10 bg-slate flex items-center justify-center shrink-0">
-              <i className="fas fa-user text-slate-50 text-sm"></i>
-            </div>
-            <div className="flex-1 min-w-0">
-              <p className="font-medium text-sm truncate">{user?.sub.toUpperCase()}</p>
-              <p className="text-slate-50 text-xs font-normal">Administrador</p>
-            </div>
-            <button className="text-slate-50 hover:text-slate-400 transition-colors p-2 cursor-pointer" onClick={handleLogout}>
-              <i className="fas fa-sign-out-alt"></i>
-            </button>
-          </div>
-        </div>
-      </aside>
-      <main className={"flex-1 min-h-screen lg:ml-72"}>
-        <NavBar toggleSidebar={toggleSidebar} sidebarOpen={sidebarOpen} />
-        <Outlet context={{ toggleSidebar, sidebarOpen, activeView, setActiveView }} />
-      </main>
+      </div>
     </div>
   );
 }
