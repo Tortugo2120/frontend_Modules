@@ -8,6 +8,13 @@ import { getRequisitoKey, formatearTamaño, MAX_FILE_SIZE } from './utils';
 
 const REQUISITOS_INICIALES: Requisito[] = [];
 
+// ── Extrae el requirementId numérico desde cualquier formato de clave ──
+// Soporta: "8-ctry1", "8-ctry2", "8-general"
+const extractRequisitoId = (key: string): number => {
+    const match = key.match(/^(\d+)-/);
+    return match ? parseInt(match[1], 10) : parseInt(key, 10);
+};
+
 export const useRequisitosMatrimonio = () => {
     const [requisitos, setRequisitos] = useState<Requisito[]>(REQUISITOS_INICIALES);
     const [archivos] = useState<ArchivoSubido[]>([]);
@@ -15,12 +22,12 @@ export const useRequisitosMatrimonio = () => {
     const [requisitosEstados, setRequisitosEstados] = useState<Map<string, number>>(new Map());
     const [observacionesMap, setObservacionesMap] = useState<Map<string, string>>(new Map());
     const [erroresArchivo, setErroresArchivo] = useState<Map<string, string>>(new Map());
-    
+
     const { formDataAplication, updateRequisitos } = useApplicationContext();
     const { requirements, fetchRequirements } = useGetRequirements();
     const { addDocument, deleteDocument } = useDocument();
 
-    // Obtener los contrayentes del formulario
+    // ── Obtener los contrayentes del formulario ──
     const contrayentes = useMemo<ContrayenteInfo[]>(() => {
         const ctrys = formDataAplication.participants
             .filter(p => p.rol === 'contrayente')
@@ -38,7 +45,7 @@ export const useRequisitosMatrimonio = () => {
         return ctrys.length >= 2 ? ctrys.slice(0, 2) : ctrys;
     }, [formDataAplication.participants]);
 
-    // Cargar requisitos guardados desde el contexto al iniciar
+    // ── Cargar estados guardados desde el contexto al iniciar ──
     useEffect(() => {
         if (formDataAplication.requirements && formDataAplication.requirements.length > 0) {
             const estadosMap = new Map<string, number>(
@@ -61,7 +68,7 @@ export const useRequisitosMatrimonio = () => {
         }
     }, []);
 
-    // Cargar archivos guardados desde IndexedDB al iniciar
+    // ── Cargar archivos guardados desde IndexedDB al iniciar ──
     useEffect(() => {
         const cargarArchivosGuardados = async () => {
             try {
@@ -77,7 +84,6 @@ export const useRequisitosMatrimonio = () => {
                             tipo: doc.file.type,
                             archivo: doc.file
                         };
-
                         const key = String(doc.requirementId);
                         const archivosExistentes = newMap.get(key) || [];
                         newMap.set(key, [...archivosExistentes, archivo]);
@@ -93,33 +99,42 @@ export const useRequisitosMatrimonio = () => {
         cargarArchivosGuardados();
     }, []);
 
-    // Actualizar requisitos en el contexto
+    // ── Actualizar requisitos en el contexto ──
     useEffect(() => {
         if (requirements.length === 0) return;
-        
-        const requisitosArray: { requirementId: string; delivered: number; observation: string }[] = [];
-        
-        contrayentes.forEach((ctry, ctryIndex) => {
-            requirements.forEach(req => {
-                const condicion = req.condicion || 'GENERAL';
-                if (condicion === 'GENERAL' || ctry.condiciones.has(condicion)) {
-                    const key = getRequisitoKey(req.id, ctryIndex + 1);
-                    const estadoEntregado = requisitosEstados.get(key) ?? 0;
-                    const observation = observacionesMap.get(key) ?? '';
 
-                    requisitosArray.push({
-                        requirementId: key,
-                        delivered: estadoEntregado,
-                        observation,
-                    });
-                }
-            });
+        const requisitosArray: { requirementId: string; delivered: number; observation: string }[] = [];
+
+        requirements.forEach(req => {
+            const condicion = req.condicion || 'GENERAL';
+
+            if (req.tipo_requisito === 'general') {
+                // Requisito general: una sola entrada compartida
+                const key = getRequisitoKey(req.id, 0, 'general');
+                requisitosArray.push({
+                    requirementId: key,
+                    delivered: requisitosEstados.get(key) ?? 0,
+                    observation: observacionesMap.get(key) ?? '',
+                });
+            } else {
+                // Requisito individual: una entrada por contrayente que aplique
+                contrayentes.forEach((ctry, ctryIndex) => {
+                    if (condicion === 'GENERAL' || ctry.condiciones.has(condicion)) {
+                        const key = getRequisitoKey(req.id, ctryIndex + 1);
+                        requisitosArray.push({
+                            requirementId: key,
+                            delivered: requisitosEstados.get(key) ?? 0,
+                            observation: observacionesMap.get(key) ?? '',
+                        });
+                    }
+                });
+            }
         });
 
         updateRequisitos(requisitosArray);
     }, [requisitosEstados, observacionesMap, requirements, contrayentes, updateRequisitos]);
 
-    // Cargar requerimientos según tipo de solicitud
+    // ── Cargar requerimientos según tipo de solicitud ──
     useEffect(() => {
         const obtenerCondiciones = () => {
             const conds = new Set<string>(["GENERAL"]);
@@ -142,26 +157,25 @@ export const useRequisitosMatrimonio = () => {
         }
     }, [formDataAplication.application.applicationTypeId, formDataAplication.participants, fetchRequirements]);
 
-    // Calcular progreso por contrayente
+    // ── Calcular progreso por contrayente (solo individuales) ──
     const calcularProgresoPorContrayente = useCallback((contrayenteIndex: number): ProgresoInfo => {
         if (requirements.length === 0) return { completados: 0, total: 0, porcentaje: 0 };
-        
+
         const ctry = contrayentes[contrayenteIndex - 1];
         if (!ctry) return { completados: 0, total: 0, porcentaje: 0 };
-        
+
         const requisitosCtry = requirements.filter(req => {
+            if (req.tipo_requisito === 'general') return false;
             const condicion = req.condicion || 'GENERAL';
             return condicion === 'GENERAL' || ctry.condiciones.has(condicion);
         });
-        
+
         const total = requisitosCtry.length;
         let completados = 0;
-        
+
         requisitosCtry.forEach(req => {
             const key = getRequisitoKey(req.id, contrayenteIndex);
-            if (requisitosEstados.get(key) === 1) {
-                completados++;
-            }
+            if (requisitosEstados.get(key) === 1) completados++;
         });
 
         return {
@@ -171,16 +185,26 @@ export const useRequisitosMatrimonio = () => {
         };
     }, [requirements, requisitosEstados, contrayentes]);
 
-    // Calcular progreso total
+    // ── Calcular progreso total (generales cuentan UNA vez) ──
     const calcularProgreso = useCallback((): ProgresoInfo => {
         let total = 0;
         let completados = 0;
-        
+
         if (requirements.length > 0) {
+            // Generales: contar una sola vez
+            requirements.forEach(req => {
+                if (req.tipo_requisito === 'general') {
+                    total++;
+                    const key = getRequisitoKey(req.id, 0, 'general');
+                    if (requisitosEstados.get(key) === 1) completados++;
+                }
+            });
+
+            // Individuales: contar por contrayente
             contrayentes.forEach((_, ctryIndex) => {
-                const progCtry = calcularProgresoPorContrayente(ctryIndex + 1);
-                total += progCtry.total;
-                completados += progCtry.completados;
+                const prog = calcularProgresoPorContrayente(ctryIndex + 1);
+                total += prog.total;
+                completados += prog.completados;
             });
         } else {
             total = requisitos.length;
@@ -192,46 +216,55 @@ export const useRequisitosMatrimonio = () => {
             total,
             porcentaje: total > 0 ? Math.round((completados / total) * 100) : 0
         };
-    }, [requisitos, requirements, contrayentes, calcularProgresoPorContrayente]);
+    }, [requisitos, requirements, contrayentes, calcularProgresoPorContrayente, requisitosEstados]);
 
-    // Manejar cambio de checkbox
+    // ── handleCheckboxChange: contrayenteIndex=0 → general ──
     const handleCheckboxChange = useCallback((requisitoId: string | number, contrayenteIndex: number) => {
         if (requirements.length > 0) {
-            const key = getRequisitoKey(requisitoId, contrayenteIndex);
+            const key = contrayenteIndex === 0
+                ? getRequisitoKey(requisitoId, 0, 'general')
+                : getRequisitoKey(requisitoId, contrayenteIndex);
+
             setRequisitosEstados(prev => {
                 const newMap = new Map(prev);
-                const estadoActual = newMap.get(key) ?? 0;
-                newMap.set(key, estadoActual === 1 ? 0 : 1);
+                newMap.set(key, newMap.get(key) === 1 ? 0 : 1);
                 return newMap;
             });
         } else {
             setRequisitos(prev =>
-                prev.map(req =>
-                    req.id === requisitoId ? { ...req, completado: !req.completado } : req
-                )
+                prev.map(req => req.id === requisitoId ? { ...req, completado: !req.completado } : req)
             );
         }
     }, [requirements]);
 
-    // Marcar todos los requisitos
+    // ── Marcar todos los requisitos ──
     const marcarTodosObligatorios = useCallback((contrayenteIndex?: number) => {
         if (requirements.length > 0) {
             setRequisitosEstados(prev => {
                 const newMap = new Map(prev);
-                const indices = contrayenteIndex ? [contrayenteIndex] : contrayentes.map((_, i) => i + 1);
-                
-                indices.forEach(idx => {
-                    const ctry = contrayentes[idx - 1];
-                    if (!ctry) return;
-                    
-                    requirements.forEach(req => {
-                        const condicion = req.condicion || 'GENERAL';
-                        if (condicion === 'GENERAL' || ctry.condiciones.has(condicion)) {
-                            const key = getRequisitoKey(req.id, idx);
-                            newMap.set(key, 1);
+
+                requirements.forEach(req => {
+                    if (req.tipo_requisito === 'general') {
+                        // Los generales solo se marcan cuando no se filtra por contrayente
+                        if (!contrayenteIndex) {
+                            newMap.set(getRequisitoKey(req.id, 0, 'general'), 1);
                         }
-                    });
+                    } else {
+                        const indices = contrayenteIndex
+                            ? [contrayenteIndex]
+                            : contrayentes.map((_, i) => i + 1);
+
+                        indices.forEach(idx => {
+                            const ctry = contrayentes[idx - 1];
+                            if (!ctry) return;
+                            const condicion = req.condicion || 'GENERAL';
+                            if (condicion === 'GENERAL' || ctry.condiciones.has(condicion)) {
+                                newMap.set(getRequisitoKey(req.id, idx), 1);
+                            }
+                        });
+                    }
                 });
+
                 return newMap;
             });
         } else {
@@ -241,25 +274,33 @@ export const useRequisitosMatrimonio = () => {
         }
     }, [requirements, contrayentes]);
 
-    // Desmarcar todos los requisitos
+    // ── Desmarcar todos los requisitos ──
     const desmarcarTodos = useCallback(async (contrayenteIndex?: number) => {
         if (requirements.length > 0) {
             setRequisitosEstados(prev => {
                 const newMap = new Map(prev);
-                const indices = contrayenteIndex ? [contrayenteIndex] : contrayentes.map((_, i) => i + 1);
-                
-                indices.forEach(idx => {
-                    const ctry = contrayentes[idx - 1];
-                    if (!ctry) return;
-                    
-                    requirements.forEach(req => {
-                        const condicion = req.condicion || 'GENERAL';
-                        if (condicion === 'GENERAL' || ctry.condiciones.has(condicion)) {
-                            const key = getRequisitoKey(req.id, idx);
-                            newMap.set(key, 0);
+
+                requirements.forEach(req => {
+                    if (req.tipo_requisito === 'general') {
+                        if (!contrayenteIndex) {
+                            newMap.set(getRequisitoKey(req.id, 0, 'general'), 0);
                         }
-                    });
+                    } else {
+                        const indices = contrayenteIndex
+                            ? [contrayenteIndex]
+                            : contrayentes.map((_, i) => i + 1);
+
+                        indices.forEach(idx => {
+                            const ctry = contrayentes[idx - 1];
+                            if (!ctry) return;
+                            const condicion = req.condicion || 'GENERAL';
+                            if (condicion === 'GENERAL' || ctry.condiciones.has(condicion)) {
+                                newMap.set(getRequisitoKey(req.id, idx), 0);
+                            }
+                        });
+                    }
                 });
+
                 return newMap;
             });
 
@@ -271,14 +312,17 @@ export const useRequisitosMatrimonio = () => {
 
             setArchivosRequisitos(new Map());
         } else {
-            setRequisitos(prev =>
-                prev.map(req => ({ ...req, completado: false }))
-            );
+            setRequisitos(prev => prev.map(req => ({ ...req, completado: false })));
         }
     }, [requirements, contrayentes]);
 
-    // Manejar cambio de archivo
-    const handleRequisitoFileChange = useCallback(async (requisitoKey: string, e: React.ChangeEvent<HTMLInputElement>) => {
+    // ── Manejar cambio de archivo ──
+    // FIX: usa extractRequisitoId() en lugar de split('-ctry')[0]
+    // para soportar claves "-general" y "-ctryN"
+    const handleRequisitoFileChange = useCallback(async (
+        requisitoKey: string,
+        e: React.ChangeEvent<HTMLInputElement>
+    ) => {
         const files = e.target.files;
         if (!files || files.length === 0) return;
         const file = files[0];
@@ -286,7 +330,10 @@ export const useRequisitosMatrimonio = () => {
         if (file.size > MAX_FILE_SIZE) {
             setErroresArchivo(prev => {
                 const newMap = new Map(prev);
-                newMap.set(requisitoKey, `El archivo "${file.name}" supera el límite de 5 MB (${formatearTamaño(file.size)}). Por favor selecciona un archivo más pequeño.`);
+                newMap.set(
+                    requisitoKey,
+                    `El archivo "${file.name}" supera el límite de 5 MB (${formatearTamaño(file.size)}). Por favor selecciona un archivo más pequeño.`
+                );
                 return newMap;
             });
             e.target.value = '';
@@ -306,9 +353,10 @@ export const useRequisitosMatrimonio = () => {
             tipo: file.type,
             archivo: file
         };
-        
-        const requisitoId = parseInt(requisitoKey.split('-ctry')[0]);
-        
+
+        // ✅ CORRECCIÓN: extraer ID correctamente desde cualquier formato de clave
+        const requisitoId = extractRequisitoId(requisitoKey);
+
         try {
             await db.documents.where('requirementId').equals(requisitoId).delete();
             await addDocument({
@@ -329,10 +377,12 @@ export const useRequisitosMatrimonio = () => {
         e.target.value = '';
     }, [addDocument]);
 
-    // Eliminar archivo
+    // ── Eliminar archivo ──
+    // FIX: usa extractRequisitoId() en lugar de split('-ctry')[0]
     const handleEliminarArchivoRequisito = useCallback(async (requisitoKey: string) => {
-        const requisitoId = parseInt(requisitoKey.split('-ctry')[0]);
-        
+        // ✅ CORRECCIÓN: extraer ID correctamente desde cualquier formato de clave
+        const requisitoId = extractRequisitoId(requisitoKey);
+
         try {
             await deleteDocument(requisitoId);
         } catch (error) {
@@ -352,7 +402,7 @@ export const useRequisitosMatrimonio = () => {
         });
     }, [deleteDocument]);
 
-    // Manejar cambio de observación
+    // ── Manejar cambio de observación ──
     const handleObservacionChange = useCallback((requisitoKey: string, value: string) => {
         setObservacionesMap(prev => {
             const next = new Map(prev);
@@ -362,7 +412,7 @@ export const useRequisitosMatrimonio = () => {
         });
     }, []);
 
-    // Limpiar error
+    // ── Limpiar error de archivo ──
     const handleErrorClear = useCallback((requisitoKey: string) => {
         setErroresArchivo(prev => {
             const newMap = new Map(prev);
@@ -371,19 +421,18 @@ export const useRequisitosMatrimonio = () => {
         });
     }, []);
 
-    // Agrupar requisitos por condición para un contrayente
+    // ── Agrupar requisitos por condición para un contrayente (solo individuales) ──
     const requisitosAgrupadosPorContrayente = useCallback((contrayenteIndex: number) => {
         const ctry = contrayentes[contrayenteIndex - 1];
         if (!ctry) return {};
-        
+
         const grupos: { [key: string]: typeof requirements } = {};
 
         requirements.forEach(req => {
+            if (req.tipo_requisito === 'general') return; // los generales se renderizan aparte
             const condicion = req.condicion || 'GENERAL';
             if (condicion === 'GENERAL' || ctry.condiciones.has(condicion)) {
-                if (!grupos[condicion]) {
-                    grupos[condicion] = [];
-                }
+                if (!grupos[condicion]) grupos[condicion] = [];
                 grupos[condicion].push(req);
             }
         });
@@ -401,12 +450,12 @@ export const useRequisitosMatrimonio = () => {
         erroresArchivo,
         contrayentes,
         requirements,
-        
+
         // Funciones de cálculo
         calcularProgreso,
         calcularProgresoPorContrayente,
         requisitosAgrupadosPorContrayente,
-        
+
         // Handlers
         handleCheckboxChange,
         marcarTodosObligatorios,

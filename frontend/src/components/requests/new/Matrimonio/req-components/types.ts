@@ -1,6 +1,7 @@
 export interface Requisito {
     id: string;
     titulo: string;
+    tipo_requisito: string;
     descripcion: string;
     obligatorio: boolean;
     completado: boolean;

@@ -1,5 +1,6 @@
 export interface Requirement {
   id: number | string;
+  tipo_requisito: string;
   nombre_requisito: string;
   nombre_solicitud: string;
   descripcion: string;
