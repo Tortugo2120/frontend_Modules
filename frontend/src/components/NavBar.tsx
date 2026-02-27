@@ -77,7 +77,7 @@ const NavBar = ({ collapsed, toggleCollapse }: NavBarProps) => {
                         ) : (
                             <div className="flex flex-col">
                                 <p className="text-sm font-medium text-blue-900 italic">"{phrase}"</p>
-                                <p className="text-xs text-blue-700 text-right">- {author}</p>
+                                <p className="text-xs text-blue-700 text-left">- {author}</p>
                             </div>
                         )}
                     </div>

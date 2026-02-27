@@ -33,7 +33,7 @@ function NavItem({ to, icon, label, collapsed, isActive }: NavItemProps) {
                 <span className={`font-medium text-base whitespace-nowrap transition-all duration-300
                     ${collapsed ? 'hidden' : 'opacity-100'}`}
                 >
-                    {label}
+                    {label} 
                 </span>
 
                 {collapsed && (

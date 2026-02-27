@@ -76,11 +76,11 @@ export default function Dashboard() {
               {!collapsed && (
                 <div className="text-center mt-1 animate-fade-in">
                   <div className="flex flex-col items-center leading-tight">
-                    <h1 className="text-sm font-semibold tracking-wide">MÓDULO</h1>
-                    <p className="text-[10px] text-slate-400">de</p>
-                    <h1 className="text-sm font-semibold tracking-wide">REGISTRO CIVIL</h1>
+                    <h1 className="text-base font-semibold tracking-wide">MÓDULO</h1>
+                    <p className="text-sm text-slate-400">de</p>
+                    <h1 className="font-semibold tracking-wide">REGISTRO CIVIL</h1>
                   </div>
-                  <p className="text-slate-400 text-xs font-normal mt-0.5">- José Leonardo Ortiz -</p>
+                  <p className="text-slate-400 text-sm font-normal mt-0.5">- José Leonardo Ortiz -</p>
                 </div>
               )}
             </div>
@@ -92,7 +92,7 @@ export default function Dashboard() {
           {/* User Footer */}
           <div className={`border-t border-slate-700/50 mt-auto transition-all duration-300 ${collapsed ? 'px-2 py-3' : 'px-3 py-4'}`}>
             <div className={`flex items-center ${collapsed ? 'justify-center' : 'gap-3 px-2 py-1'}`}>
-              <div className={`group relative bg-indigo-600/30 flex items-center justify-center shrink-0 rounded-full transition-all duration-300
+              <div className={`group relative bg-slate border border-slate-50/10 flex items-center justify-center shrink-0 rounded-full transition-all duration-300
                 ${collapsed ? 'w-9 h-9 cursor-pointer hover:bg-indigo-600/50' : 'w-9 h-9'}`}
                 onClick={collapsed ? toggleCollapse : undefined}
               >

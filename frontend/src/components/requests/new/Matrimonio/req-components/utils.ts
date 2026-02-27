@@ -1,13 +1,11 @@
-/**
- * Genera una clave única para cada requisito por contrayente
- */
+// Genera una clave única para cada requisito por contrayente
+
 export const getRequisitoKey = (requisitoId: number | string, contrayenteIndex: number): string => {
     return `${requisitoId}-ctry${contrayenteIndex}`;
 };
 
-/**
- * Formatea el tamaño de un archivo en bytes a una cadena legible
- */
+// Formatea el tamaño de un archivo en bytes a una cadena legible
+
 export const formatearTamaño = (bytes: number): string => {
     if (bytes === 0) return '0 Bytes';
     const k = 1024;
@@ -16,9 +14,8 @@ export const formatearTamaño = (bytes: number): string => {
     return Math.round(bytes / Math.pow(k, i) * 100) / 100 + ' ' + sizes[i];
 };
 
-/**
- * Obtiene el icono de FontAwesome según el tipo de archivo
- */
+// Obtiene el icono de FontAwesome según el tipo de archivo
+
 export const getIconoArchivo = (tipo: string): string => {
     if (tipo.includes('pdf')) return 'fa-file-pdf text-red-500';
     if (tipo.includes('image')) return 'fa-file-image text-blue-500';
@@ -27,14 +24,14 @@ export const getIconoArchivo = (tipo: string): string => {
     return 'fa-file text-gray-500';
 };
 
-/**
- * Obtiene el nombre legible de una condición
- */
+// Obtiene el nombre legible de una condición
+
 export const getNombreCondicion = (condicion: string): string => {
     const nombres: { [key: string]: string } = {
         'GENERAL': 'Requisitos Generales',
         'DIVORCED': 'Requisitos para Divorciados',
-        'WIDOWED': 'Requisitos para Viudos'
+        'WIDOWED': 'Requisitos para Viudos',
+        'FOREIGNERS': 'Requisitos para Extranjeros'
     };
     return nombres[condicion] || condicion;
 };
@@ -46,7 +43,8 @@ export const getIconoCondicion = (condicion: string): string => {
     const iconos: { [key: string]: string } = {
         'GENERAL': 'fa-clipboard-list',
         'DIVORCED': 'fa-user-slash',
-        'WIDOWED': 'fa-heart-broken'
+        'WIDOWED': 'fa-heart-broken',
+        'FOREIGNERS': 'fa-globe-americas'
     };
     return iconos[condicion] || 'fa-file-alt';
 };
@@ -58,7 +56,8 @@ export const getColorCondicion = (condicion: string): string => {
     const colores: { [key: string]: string } = {
         'GENERAL': 'blue',
         'DIVORCED': 'orange',
-        'WIDOWED': 'purple'
+        'WIDOWED': 'purple',
+        'FOREIGNERS': 'green'
     };
     return colores[condicion] || 'gray';
 };

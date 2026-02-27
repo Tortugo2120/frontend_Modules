@@ -28,7 +28,7 @@ export const useGetRequirements = () => {
         setLoading(false);
       }
     },
-    [] // 👈 no depende de nada externo
+    [] 
   );
 
   return {
