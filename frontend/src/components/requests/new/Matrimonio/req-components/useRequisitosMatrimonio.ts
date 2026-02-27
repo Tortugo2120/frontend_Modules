@@ -93,12 +93,15 @@ export const useRequisitosMatrimonio = () => {
         cargarArchivosGuardados();
     }, []);
 
+    // ID del requerimiento compartido (Publicación de edicto matrimonial)
+    const REQUISITO_COMPARTIDO_ID = 12;
+
     // Actualizar requisitos en el contexto
     useEffect(() => {
         if (requirements.length === 0) return;
-        
-        const requisitosArray: { requirementId: string; delivered: number; observation: string }[] = [];
-        
+
+        const requisitosArray: { requirementId: number | string; delivered: number; observation: string; cui: string | null }[] = [];
+
         contrayentes.forEach((ctry, ctryIndex) => {
             requirements.forEach(req => {
                 const condicion = req.condicion || 'GENERAL';
@@ -107,10 +110,14 @@ export const useRequisitosMatrimonio = () => {
                     const estadoEntregado = requisitosEstados.get(key) ?? 0;
                     const observation = observacionesMap.get(key) ?? '';
 
+                    // Si es el requerimiento compartido (id 12), cui va null
+                    const esCompartido = Number(req.id) === REQUISITO_COMPARTIDO_ID;
+
                     requisitosArray.push({
-                        requirementId: key,
+                        requirementId: req.id,
                         delivered: estadoEntregado,
                         observation,
+                        cui: esCompartido ? null : ctry.cui,
                     });
                 }
             });

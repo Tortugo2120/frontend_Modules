@@ -100,6 +100,7 @@ export interface RequisitoEstado {
     requirementId: number | string;
     delivered: number;
     observation?: string;
+    cui: string | null;
 }
 
 export interface MarriageDetails{
