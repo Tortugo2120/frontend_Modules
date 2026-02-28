@@ -1,6 +1,12 @@
 // Genera una clave única para cada requisito por contrayente
-
-export const getRequisitoKey = (requisitoId: number | string, contrayenteIndex: number): string => {
+export const getRequisitoKey = (
+    requisitoId: number | string,
+    contrayenteIndex?: number,
+    tipoRequisito?: string
+): string => {
+    if (tipoRequisito === 'general' || contrayenteIndex === 0) {
+        return `${requisitoId}-general`;
+    }
     return `${requisitoId}-ctry${contrayenteIndex}`;
 };
 
