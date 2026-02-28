@@ -7,7 +7,7 @@ export const getRequisitoKey = (
     if (tipoRequisito === 'general' || contrayenteIndex === 0) {
         return `${requisitoId}-general`;
     }
-    return `${requisitoId}-ctry${contrayenteIndex}`;
+    return `${requisitoId}`;
 };
 
 // Formatea el tamaño de un archivo en bytes a una cadena legible

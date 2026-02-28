@@ -103,28 +103,35 @@ export const useRequisitosMatrimonio = () => {
     useEffect(() => {
         if (requirements.length === 0) return;
 
-        const requisitosArray: { requirementId: string; delivered: number; observation: string }[] = [];
+        const requisitosArray: { requirementId: string; delivered: number; observation: string; cui: string | null }[] = [];
+
+        // ID del requisito "Publicación de edicto matrimonial" → cui siempre null
+        const REQUISITO_EDICTO_ID = 12;
 
         requirements.forEach(req => {
             const condicion = req.condicion || 'GENERAL';
 
             if (req.tipo_requisito === 'general') {
-                // Requisito general: una sola entrada compartida
+                // Requisito general: una sola entrada compartida, cui null
                 const key = getRequisitoKey(req.id, 0, 'general');
                 requisitosArray.push({
                     requirementId: key,
                     delivered: requisitosEstados.get(key) ?? 0,
                     observation: observacionesMap.get(key) ?? '',
+                    cui: null,
                 });
             } else {
                 // Requisito individual: una entrada por contrayente que aplique
                 contrayentes.forEach((ctry, ctryIndex) => {
                     if (condicion === 'GENERAL' || ctry.condiciones.has(condicion)) {
                         const key = getRequisitoKey(req.id, ctryIndex + 1);
+                        // Si es el edicto matrimonial, cui va null aunque sea individual
+                        const cuiValue = req.id === REQUISITO_EDICTO_ID ? null : (ctry.cui ?? null);
                         requisitosArray.push({
                             requirementId: key,
                             delivered: requisitosEstados.get(key) ?? 0,
                             observation: observacionesMap.get(key) ?? '',
+                            cui: cuiValue,
                         });
                     }
                 });
