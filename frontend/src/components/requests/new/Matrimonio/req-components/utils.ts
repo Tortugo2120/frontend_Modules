@@ -1,27 +1,27 @@
-// Genera una clave única para cada requisito por contrayente
+// Genera una clave única por requisito y por contrayente
 export const getRequisitoKey = (
     requisitoId: number | string,
     contrayenteIndex?: number,
     tipoRequisito?: string
 ): string => {
+    // Requisito general compartido, sin contrayente específico
     if (tipoRequisito === 'general' || contrayenteIndex === 0) {
-        return `${requisitoId}`;
+        return `${requisitoId}-general`;
     }
-    return `${requisitoId}`;
+    // Requisito individual invluye el índice para que cada contrayente tenga su propia clave
+    return `${requisitoId}-${contrayenteIndex}`;
 };
 
-// Formatea el tamaño de un archivo en bytes a una cadena legible
-
+// Formatea bytes a cadena legible 
 export const formatearTamaño = (bytes: number): string => {
     if (bytes === 0) return '0 Bytes';
     const k = 1024;
     const sizes = ['Bytes', 'KB', 'MB', 'GB'];
     const i = Math.floor(Math.log(bytes) / Math.log(k));
-    return Math.round(bytes / Math.pow(k, i) * 100) / 100 + ' ' + sizes[i];
+    return Math.round((bytes / Math.pow(k, i)) * 100) / 100 + ' ' + sizes[i];
 };
 
-// Obtiene el icono de FontAwesome según el tipo de archivo
-
+// Icono FontAwesome 
 export const getIconoArchivo = (tipo: string): string => {
     if (tipo.includes('pdf')) return 'fa-file-pdf text-red-500';
     if (tipo.includes('image')) return 'fa-file-image text-blue-500';
@@ -30,50 +30,47 @@ export const getIconoArchivo = (tipo: string): string => {
     return 'fa-file text-gray-500';
 };
 
-// Obtiene el nombre legible de una condición
-
+// Nombre legible de condición 
 export const getNombreCondicion = (condicion: string): string => {
-    const nombres: { [key: string]: string } = {
-        'GENERAL': 'Requisitos Generales',
-        'DIVORCED': 'Requisitos para Divorciados',
-        'WIDOWED': 'Requisitos para Viudos',
-        'FOREIGNERS': 'Requisitos para Extranjeros'
+    const nombres: Record<string, string> = {
+        'GENERAL':    'Requisitos Generales',
+        'DIVORCIADO':   'Requisitos para Divorciados',
+        'VIUDO':    'Requisitos para Viudos',
+        'EXTRANJEROS': 'Requisitos para Extranjeros',
+        'MARRIED':    'Requisitos para Casados',
+        'SEPARATED':  'Requisitos para Separados',
     };
-    return nombres[condicion] || condicion;
+    return nombres[condicion] ?? condicion;
 };
 
-/**
- * Obtiene el icono de FontAwesome para una condición
- */
+// Icono FontAwesome por condición 
 export const getIconoCondicion = (condicion: string): string => {
-    const iconos: { [key: string]: string } = {
-        'GENERAL': 'fa-clipboard-list',
-        'DIVORCED': 'fa-user-slash',
-        'WIDOWED': 'fa-heart-broken',
-        'FOREIGNERS': 'fa-globe-americas'
+    const iconos: Record<string, string> = {
+        'GENERAL':    'fa-clipboard-list',
+        'DIVORCIADO':   'fa-user-slash',
+        'VIUDO':    'fa-heart-broken',
+        'EXTRANJEROS': 'fa-globe-americas',
+        'MARRIED':    'fa-rings-wedding',
+        'SEPARATED':  'fa-user-minus',
     };
-    return iconos[condicion] || 'fa-file-alt';
+    return iconos[condicion] ?? 'fa-file-alt';
 };
 
-/**
- * Obtiene el color de Tailwind para una condición
- */
+// Color Tailwind por condición 
 export const getColorCondicion = (condicion: string): string => {
-    const colores: { [key: string]: string } = {
-        'GENERAL': 'blue',
-        'DIVORCED': 'orange',
-        'WIDOWED': 'purple',
-        'FOREIGNERS': 'green'
+    const colores: Record<string, string> = {
+        'GENERAL':    'blue',
+        'DIVORCIADO':   'orange',
+        'VIUDO':    'purple',
+        'EXTRANJEROS': 'green',
+        'MARRIED':    'pink',
+        'SEPARATED':  'yellow',
     };
-    return colores[condicion] || 'gray';
+    return colores[condicion] ?? 'gray';
 };
 
-/**
- * Tamaño máximo de archivo en bytes (5 MB)
- */
+//  Tamaño máximo de archivo (5 MB) 
 export const MAX_FILE_SIZE = 5 * 1024 * 1024;
 
-/**
- * Tipos de archivo permitidos
- */
+// Tipos de archivo permitidos
 export const ACCEPTED_FILE_TYPES = '.pdf,.jpg,.jpeg,.png';
