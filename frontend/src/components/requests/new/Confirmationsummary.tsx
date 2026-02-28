@@ -13,6 +13,10 @@ interface ConfirmationSummaryProps {
     isSubmitting: boolean;
 }
 
+// ── Roles que se consideran "involucrados principales" ──
+// Igual que en useRequisitosMatrimonio — centralizar aquí también
+const ROLES_INVOLUCRADOS = ['contrayente', 'divorciado'];
+
 export default function ConfirmationSummary({
     tipoNombre,
     descriptionSolicitud,
@@ -24,17 +28,37 @@ export default function ConfirmationSummary({
     // Detectar el tipo de flujo automáticamente a partir del nombre
     const flowType = tipoNombre ? detectFlowType(tipoNombre) : 'generico';
     const esMatrimonio = flowType === 'matrimonio';
+    const esDivorcio   = flowType === 'divorcio';
 
     // Extraer datos del solicitante principal (participante con role 'solicitante')
     const solicitante = applicationData.participants.find(p => p.rol === 'solicitante');
 
-    // Extraer contrayentes y testigos
-    const contrayentes = applicationData.participants.filter(p => p.rol === 'contrayente');
+    // ✅ FIX: incluye tanto 'contrayente' (matrimonio) como 'divorciado' (divorcio)
+    const involucrados = applicationData.participants.filter(p =>
+        ROLES_INVOLUCRADOS.includes(p.rol)
+    );
+
     const testigos = applicationData.participants.filter(p => p.rol === 'testigo');
 
-    // Label dinámico según flujo
-    const labelInvolucrados = esMatrimonio ? 'Prometidos' : 'Involucrados';
-    const iconInvolucrados = esMatrimonio ? 'fa-user-friends' : 'fa-users';
+    // Label e icono dinámicos según flujo
+    const labelInvolucrados = esMatrimonio
+        ? 'Prometidos'
+        : esDivorcio
+            ? 'Involucrados en el Divorcio'
+            : 'Involucrados';
+
+    const iconInvolucrados = esMatrimonio
+        ? 'fa-user-friends'
+        : esDivorcio
+            ? 'fa-handshake-slash'
+            : 'fa-users';
+
+    const labelCard = (index: number) =>
+        esMatrimonio
+            ? `Prometido ${index + 1}`
+            : esDivorcio
+                ? index === 0 ? 'Demandante' : 'Demandado'
+                : `Involucrado ${index + 1}`;
 
     // Resolver nombre del oficiante
     const { oficiantes } = useGetOficiantes('oficiante');
@@ -99,7 +123,7 @@ export default function ConfirmationSummary({
                     </>
                 )}
 
-                {/* Mostrar número de expediente si existe */}
+                {/* Número de expediente si existe */}
                 {applicationData.application.expedientNumber && (
                     <div className="flex justify-between items-start border-b border-blue-200 pb-3">
                         <span className="text-gray-600 font-medium">N° Expediente:</span>
@@ -107,7 +131,7 @@ export default function ConfirmationSummary({
                     </div>
                 )}
 
-                {/* Mostrar participantes adicionales */}
+                {/* Participantes adicionales */}
                 {applicationData.participants.length > 1 && (
                     <div className="flex justify-between items-start border-b border-blue-200 pb-3">
                         <span className="text-gray-600 font-medium">Participantes:</span>
@@ -115,7 +139,7 @@ export default function ConfirmationSummary({
                     </div>
                 )}
 
-                {/* Mostrar requisitos si existen */}
+                {/* Requisitos */}
                 {applicationData.requirements && applicationData.requirements.length > 0 && (
                     <div className="flex justify-between items-start border-b border-blue-200 pb-3">
                         <span className="text-gray-600 font-medium">Requisitos:</span>
@@ -124,58 +148,60 @@ export default function ConfirmationSummary({
                         </span>
                     </div>
                 )}
-                {/* Mostrar Precio de solicitud */}
+
+                {/* Precio */}
                 <div className="flex justify-between items-start">
                     <span className="text-gray-600 font-medium">Precio:</span>
-                    <span className="font-semibold text-gray-900">
-                        S/. {precio} 
-                    </span>
+                    <span className="font-semibold text-gray-900">S/. {precio}</span>
                 </div>
-
             </div>
 
-            {/* Sección de Contrayentes / Involucrados */}
-            {contrayentes.length > 0 && (
-                <div className="mt-6 bg-linear-to-br from-blue-50 to-blue-100 rounded-xl p-6 border border-blue-200">
+            {/* ─── Sección de Involucrados / Contrayentes / Divorciados ─── */}
+            {involucrados.length > 0 && (
+                <div className={`mt-6 rounded-xl p-6 border ${
+                    esDivorcio
+                        ? 'bg-linear-to-br from-orange-50 to-amber-50 border-orange-200'
+                        : 'bg-linear-to-br from-blue-50 to-blue-100 border-blue-200'
+                }`}>
                     <h3 className="text-lg font-bold text-gray-900 mb-4 flex items-center gap-2">
-                        <i className={`fas ${iconInvolucrados} text-blue-600`}></i>
-                        {labelInvolucrados} ({contrayentes.length})
+                        <i className={`fas ${iconInvolucrados} ${esDivorcio ? 'text-orange-600' : 'text-blue-600'}`}></i>
+                        {labelInvolucrados} ({involucrados.length})
                     </h3>
                     <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-2 gap-4">
-                        {contrayentes.map((contrayente: Participant, index: number) => (
-                            <div key={contrayente.cui} className="bg-white rounded-lg p-4 shadow-sm">
+                        {involucrados.map((involucrado: Participant, index: number) => (
+                            <div key={involucrado.cui} className="bg-white rounded-lg p-4 shadow-sm">
                                 <h4 className="font-semibold text-gray-800 mb-3 flex items-center gap-2">
-                                    <i className="fas fa-user-circle text-blue-500"></i>
-                                    {esMatrimonio ? `Prometido ${index + 1}` : `Involucrado ${index + 1}`}
+                                    <i className={`fas fa-user-circle ${esDivorcio ? 'text-orange-500' : 'text-blue-500'}`}></i>
+                                    {labelCard(index)}
                                 </h4>
                                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                                     <div>
                                         <span className="text-xs text-gray-500">Nombres Completos:</span>
                                         <p className="text-sm font-medium text-gray-900">
-                                            {contrayente.names} {contrayente.paternalSurname} {contrayente.maternalSurname}
+                                            {involucrado.names} {involucrado.paternalSurname} {involucrado.maternalSurname}
                                         </p>
                                     </div>
                                     <div>
                                         <span className="text-xs text-gray-500">DNI:</span>
-                                        <p className="text-sm font-medium text-gray-900">{contrayente.cui}</p>
+                                        <p className="text-sm font-medium text-gray-900">{involucrado.cui}</p>
                                     </div>
                                     <div>
                                         <span className="text-xs text-gray-500">Sexo:</span>
                                         <p className="text-sm font-medium text-gray-900">
-                                            {contrayente.gender === 'M' ? 'Masculino' : 'Femenino'}
+                                            {involucrado.gender === 'M' ? 'Masculino' : 'Femenino'}
                                         </p>
                                     </div>
                                     <div>
                                         <span className="text-xs text-gray-500">Estado Civil:</span>
-                                        <p className="text-sm font-medium text-gray-900">{contrayente.maritalStatus}</p>
+                                        <p className="text-sm font-medium text-gray-900">{involucrado.maritalStatus}</p>
                                     </div>
                                     <div>
                                         <span className="text-xs text-gray-500">Teléfono:</span>
-                                        <p className="text-sm font-medium text-gray-900">{contrayente.phone}</p>
+                                        <p className="text-sm font-medium text-gray-900">{involucrado.phone}</p>
                                     </div>
                                     <div>
                                         <span className="text-xs text-gray-500">Email:</span>
-                                        <p className="text-sm font-medium text-gray-900">{contrayente.email}</p>
+                                        <p className="text-sm font-medium text-gray-900">{involucrado.email}</p>
                                     </div>
                                 </div>
                             </div>
@@ -184,7 +210,7 @@ export default function ConfirmationSummary({
                 </div>
             )}
 
-            {/* Sección de Testigos — solo matrimonio */}
+            {/* ─── Sección de Testigos — solo matrimonio ─── */}
             {esMatrimonio && testigos.length > 0 && (
                 <div className="mt-6 bg-linear-to-br from-green-50 to-green-100 rounded-xl p-6 border border-green-200">
                     <h3 className="text-lg font-bold text-gray-900 mb-4 flex items-center gap-2">
@@ -234,8 +260,13 @@ export default function ConfirmationSummary({
                 </div>
             )}
 
-            {/* Sección de Detalles del Matrimonio — solo matrimonio */}
-            {esMatrimonio && marriageDetails && (marriageDetails.marriageDate || marriageDetails.marriagePlace || marriageDetails.marriageTime || marriageDetails.marriageOfficiantId) && (
+            {/* ─── Sección de Detalles del Matrimonio — solo matrimonio ─── */}
+            {esMatrimonio && marriageDetails && (
+                marriageDetails.marriageDate ||
+                marriageDetails.marriagePlace ||
+                marriageDetails.marriageTime ||
+                marriageDetails.marriageOfficiantId
+            ) && (
                 <div className="mt-6 bg-linear-to-br from-purple-50 to-pink-50 rounded-xl p-6 border border-purple-200">
                     <h3 className="text-lg font-bold text-gray-900 mb-4 flex items-center gap-2">
                         <i className="fas fa-ring text-purple-600"></i>
@@ -256,7 +287,7 @@ export default function ConfirmationSummary({
                                 <p className="text-sm font-medium text-gray-900">{marriageDetails.marriageTime || 'No especificada'}</p>
                             </div>
                         </div>
-                        <div className="bg-white rounded-lg p-4 shadow-sm flex items-start gap-3 ">
+                        <div className="bg-white rounded-lg p-4 shadow-sm flex items-start gap-3">
                             <i className="fas fa-map-marker-alt text-purple-500 mt-0.5"></i>
                             <div>
                                 <span className="text-xs text-gray-500">Lugar del Matrimonio:</span>
@@ -268,7 +299,11 @@ export default function ConfirmationSummary({
                             <div>
                                 <span className="text-xs text-gray-500">Oficiante:</span>
                                 <p className="text-sm font-medium text-gray-900">
-                                    {oficianteEncontrado ? oficianteEncontrado.full_name : (marriageDetails.marriageOfficiantId ? `ID: ${marriageDetails.marriageOfficiantId}` : 'No asignado')}
+                                    {oficianteEncontrado
+                                        ? oficianteEncontrado.full_name
+                                        : (marriageDetails.marriageOfficiantId
+                                            ? `ID: ${marriageDetails.marriageOfficiantId}`
+                                            : 'No asignado')}
                                 </p>
                             </div>
                         </div>

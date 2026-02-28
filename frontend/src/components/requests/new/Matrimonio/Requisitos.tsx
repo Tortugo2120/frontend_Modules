@@ -342,9 +342,9 @@ const GeneralReqRow = memo(({
 GeneralReqRow.displayName = 'GeneralReqRow';
 
 const CONDICION_META: Record<string, { tagClass: string; tagLabel: string }> = {
-    GENERAL:  { tagClass: 'bg-blue-100 text-blue-800',   tagLabel: 'General'     },
+    GENERAL: { tagClass: 'bg-blue-100 text-blue-800', tagLabel: 'General' },
     DIVORCED: { tagClass: 'bg-orange-100 text-orange-800', tagLabel: 'Divorciado' },
-    WIDOWED:  { tagClass: 'bg-purple-100 text-purple-800', tagLabel: 'Viudo'      },
+    WIDOWED: { tagClass: 'bg-purple-100 text-purple-800', tagLabel: 'Viudo' },
 };
 
 const RequisitosMatrimonio = ({
@@ -377,7 +377,7 @@ const RequisitosMatrimonio = ({
 
     // Notificar cambios al padre
     useEffect(() => { onRequisitosChange?.(requisitos); }, [requisitos, onRequisitosChange]);
-    useEffect(() => { onArchivosChange?.(archivos); },   [archivos,   onArchivosChange]);
+    useEffect(() => { onArchivosChange?.(archivos); }, [archivos, onArchivosChange]);
     useEffect(() => {
         if (onValidationChange) {
             onValidationChange(progreso.completados > 0 && erroresArchivo.size === 0);
@@ -407,23 +407,26 @@ const RequisitosMatrimonio = ({
         archivosRequisitos,
         observacionesMap,
         erroresArchivo,
-        onCheckboxChange:    handleCheckboxChange,
-        onFileChange:        handleRequisitoFileChange,
-        onFileDelete:        handleEliminarArchivoRequisito,
+        onCheckboxChange: handleCheckboxChange,
+        onFileChange: handleRequisitoFileChange,
+        onFileDelete: handleEliminarArchivoRequisito,
         onObservacionChange: handleObservacionChange,
-        onErrorClear:        handleErrorClear,
+        onErrorClear: handleErrorClear,
     };
 
     return (
         <div className="space-y-5">
 
             {/* ─── HEADER ─── */}
-            <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-3 sm:gap-2 pb-3 border-b border-b-blue-300">
-                <h3 className="text-base sm:text-lg font-semibold text-gray-900 flex items-center gap-2">
-                    <i className="fas fa-clipboard-check text-blue-600"></i>
-                    <span className="text-lg">Requisitos para el Matrimonio</span>
-                </h3>
-                {tipoSolicitudNombre && (
+            {tipoSolicitudNombre && (
+                <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-3 sm:gap-2 pb-3 border-b border-b-blue-300">
+
+
+                    <h3 className="text-base sm:text-lg font-semibold text-gray-900 flex items-center gap-2">
+                        <i className="fas fa-clipboard-check text-blue-600"></i>
+                        <span className="text-lg">Requisitos para el {tipoSolicitudNombre}</span>
+
+                    </h3>
                     <span className="bg-blue-100 text-blue-800 text-xs sm:text-sm font-medium px-3 sm:px-4 py-1.5 sm:py-2 rounded-lg flex flex-col items-center w-fit">
                         <div>
                             <i className="fas fa-file-alt mr-2"></i>
@@ -431,46 +434,51 @@ const RequisitosMatrimonio = ({
                         </div>
                         <span className="text-xs">{descriptionSolicitud}</span>
                     </span>
-                )}
-            </div>
+
+                </div>
+            )}
 
             {/* ─── PROGRESO ─── */}
-            <div className="bg-white rounded-xl px-5 py-4 shadow-sm border border-gray-200 flex items-center gap-5">
-                <div className="flex-1">
-                    <div className="text-base text-gray-500 font-medium uppercase tracking-wider">
-                        Progreso de Requisitos
+            <div className="fixed flex flex-row bottom-0 left-21 right-6 z-10 ">
+                <div className="bg-info-content px-5 flex-1 py-4 rounded-l-lg flex items-center gap-5">
+                    <div className="flex-1">
+                        <div className='flex flex-row gap-5'>
+                            <div className="text-sm text-white font-semibold uppercase tracking-wider">
+                                Progreso de Requisitos:
+                            </div>
+                            <div className="text-sm font-medium text-gray-200 mt-0.5">
+                                {progreso.completados} de {progreso.total} requisitos completados
+                            </div>
+                        </div>
+                        <div className="w-full bg-gray-200 rounded-full h-2 mt-2 overflow-hidden">
+                            <div
+                                className={`h-full rounded-full transition-all duration-500 ${progreso.porcentaje === 100 ? 'bg-green-500' : 'bg-blue-600'}`}
+                                style={{ width: `${progreso.porcentaje}%` }}
+                            />
+                        </div>
                     </div>
-                    <div className="text-sm font-semibold text-gray-800 mt-0.5">
-                        {progreso.completados} de {progreso.total} requisitos completados
-                    </div>
-                    <div className="w-full bg-gray-200 rounded-full h-2 mt-2 overflow-hidden">
-                        <div
-                            className={`h-full rounded-full transition-all duration-500 ${progreso.porcentaje === 100 ? 'bg-green-500' : 'bg-blue-600'}`}
-                            style={{ width: `${progreso.porcentaje}%` }}
-                        />
+                    <div className={`text-2xl font-bold min-w-15 text-right ${progreso.porcentaje === 100 ? 'text-green-600' : 'text-blue-600'}`}>
+                        {progreso.porcentaje}%
                     </div>
                 </div>
-                <div className={`text-3xl font-bold min-w-15 text-right ${progreso.porcentaje === 100 ? 'text-green-600' : 'text-blue-600'}`}>
-                    {progreso.porcentaje}%
-                </div>
-            </div>
 
-            {/* ─── BOTONES ACCIÓN ─── */}
-            <div className="flex gap-2 flex-wrap">
-                <button
-                    type="button"
-                    onClick={() => marcarTodosObligatorios()}
-                    className="flex-1 sm:flex-none px-4 py-1.5 text-xs bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors flex items-center justify-center gap-1.5 cursor-pointer"
-                >
-                    <i className="fas fa-check-double"></i> Marcar Todos
-                </button>
-                <button
-                    type="button"
-                    onClick={() => desmarcarTodos()}
-                    className="flex-1 sm:flex-none px-4 py-1.5 text-xs border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors flex items-center justify-center gap-1.5 cursor-pointer"
-                >
-                    <i className="fas fa-times-circle"></i> Desmarcar Todos
-                </button>
+                {/* ─── BOTONES ACCIÓN ─── */}
+                <div className="flex flex-col gap-1 justify-center flex-wrap bg-info-content px-5 rounded-r-lg">
+                    <button
+                        type="button"
+                        onClick={() => marcarTodosObligatorios()}
+                        className="flex-1 sm:flex-none px-4 py-1.5 text-xs bg-green-600 text-white rounded-md hover:bg-green-700 transition-colors flex items-center justify-center gap-1.5 cursor-pointer"
+                    >
+                        <i className="fas fa-check-double"></i> Marcar Todos
+                    </button>
+                    <button
+                        type="button"
+                        onClick={() => desmarcarTodos()}
+                        className="flex-1 bg-white sm:flex-none px-4 py-1.5 text-xs border border-gray-300 text-gray-700 rounded-md hover:bg-gray-200 transition-colors flex items-center justify-center gap-1.5 cursor-pointer"
+                    >
+                        <i className="fas fa-times-circle"></i> Desmarcar Todos
+                    </button>
+                </div>
             </div>
 
             {/* ─── GRUPOS DE REQUISITOS ─── */}
@@ -482,7 +490,7 @@ const RequisitosMatrimonio = ({
                 const meta = CONDICION_META[condicion] || CONDICION_META.GENERAL;
 
                 // Separar por tipo
-                const reqsGenerales   = reqs.filter(r => r.tipo_requisito === 'general');
+                const reqsGenerales = reqs.filter(r => r.tipo_requisito === 'general');
                 const reqsIndividuales = reqs.filter(r => r.tipo_requisito !== 'general');
 
                 return (
@@ -558,7 +566,7 @@ const RequisitosMatrimonio = ({
                                         return (
                                             <div key={req.id} className="grid grid-cols-4">
                                                 {/* Celda descripción */}
-                                                <div className="p-4 border-b border-l border-r border-gray-300 col-span-2 flex flex-row justify-between">
+                                                <div className="p-4 border-b border-l border-gray-300 col-span-2 flex flex-row justify-between">
                                                     <div>
                                                         <div className="flex items-start">
                                                             <span className="inline-flex items-center justify-center w-5 h-5 bg-info-content text-white text-[0.68rem] font-bold rounded-full shrink-0 mr-2 mt-0.5 leading-none">
@@ -605,7 +613,7 @@ const RequisitosMatrimonio = ({
                                                         {...handlerProps}
                                                     />
                                                 ) : (
-                                                    <div className="p-4 border-b border-r border-blue-300 flex items-center justify-center">
+                                                    <div className="p-4 border-b border-r border-l border-blue-300 flex items-center justify-center">
                                                         <span className="text-xs text-gray-500 italic">No aplica</span>
                                                     </div>
                                                 )}

@@ -15,6 +15,29 @@ const extractRequisitoId = (key: string): number => {
     return match ? parseInt(match[1], 10) : parseInt(key, 10);
 };
 
+// ── Roles que se consideran "contrayentes" en el sistema ──
+// ✅ FIX PRINCIPAL: incluye 'contrayente' (matrimonio) Y 'divorciado' (divorcio)
+const ROLES_CONTRAYENTE = ['contrayente', 'divorciado'];
+
+// ── Mapa de normalización: español → clave inglesa usada en la BD ──
+const MARITAL_STATUS_TO_CONDICION: Record<string, string> = {
+    'DIVORCIADO':  'DIVORCED',
+    'DIVORCIADA':  'DIVORCED',
+    'VIUDO':       'WIDOWED',
+    'VIUDA':       'WIDOWED',
+    'CASADO':      'MARRIED',
+    'CASADA':      'MARRIED',
+    'SEPARADO':    'SEPARATED',
+    'SEPARADA':    'SEPARATED',
+};
+
+/**
+ * Convierte un maritalStatus en español al código de condición usado en la BD.
+ * Si no encuentra correspondencia, devuelve el valor en mayúsculas tal cual.
+ */
+const normalizeCondicion = (maritalStatus: string): string =>
+    MARITAL_STATUS_TO_CONDICION[maritalStatus.toUpperCase()] ?? maritalStatus.toUpperCase();
+
 export const useRequisitosMatrimonio = () => {
     const [requisitos, setRequisitos] = useState<Requisito[]>(REQUISITOS_INICIALES);
     const [archivos] = useState<ArchivoSubido[]>([]);
@@ -30,11 +53,11 @@ export const useRequisitosMatrimonio = () => {
     // ── Obtener los contrayentes del formulario ──
     const contrayentes = useMemo<ContrayenteInfo[]>(() => {
         const ctrys = formDataAplication.participants
-            .filter(p => p.rol === 'contrayente')
+            .filter(p => ROLES_CONTRAYENTE.includes(p.rol))
             .map((p) => {
                 const condiciones = new Set<string>(["GENERAL"]);
-                if (p.maritalStatus && p.maritalStatus !== "Soltero") {
-                    condiciones.add(p.maritalStatus.toUpperCase());
+                if (p.maritalStatus && p.maritalStatus !== "Soltero" && p.maritalStatus !== "Soltera") {
+                    condiciones.add(normalizeCondicion(p.maritalStatus));
                 }
                 return {
                     cui: p.cui,
@@ -99,7 +122,7 @@ export const useRequisitosMatrimonio = () => {
         cargarArchivosGuardados();
     }, []);
 
-    // ── Actualizar requisitos en el contexto ──
+    // ── Actualizar requisitos en el contexto cada vez que cambian estados u observaciones ──
     useEffect(() => {
         if (requirements.length === 0) return;
 
@@ -134,13 +157,19 @@ export const useRequisitosMatrimonio = () => {
         updateRequisitos(requisitosArray);
     }, [requisitosEstados, observacionesMap, requirements, contrayentes, updateRequisitos]);
 
-    // ── Cargar requerimientos según tipo de solicitud ──
+    // ── Cargar requerimientos según tipo de solicitud y condiciones de los participantes ──
     useEffect(() => {
+        /**
+         * Construye la cadena de condiciones para enviar a la API.
+         * ✅ FIX 1: usa ROLES_CONTRAYENTE para no excluir participantes con rol 'divorciado'.
+         * ✅ FIX 2: usa normalizeCondicion() para que "Divorciado" → "DIVORCED".
+         */
         const obtenerCondiciones = () => {
             const conds = new Set<string>(["GENERAL"]);
             formDataAplication.participants.forEach((p) => {
-                if (p.maritalStatus && p.maritalStatus !== "Soltero" && p.rol !== "testigo") {
-                    conds.add(p.maritalStatus.toUpperCase());
+                const esRelevante = ROLES_CONTRAYENTE.includes(p.rol);
+                if (esRelevante && p.maritalStatus && p.maritalStatus !== "Soltero" && p.maritalStatus !== "Soltera") {
+                    conds.add(normalizeCondicion(p.maritalStatus));
                 }
             });
             return Array.from(conds).join(',');
@@ -149,6 +178,21 @@ export const useRequisitosMatrimonio = () => {
         const cargarRequeriments = async () => {
             const applicationTypeId = formDataAplication.application.applicationTypeId;
             const condition = obtenerCondiciones();
+
+            // Debug: verificar valores en consola
+            console.log('[fetchRequirements] applicationTypeId:', applicationTypeId);
+            console.log('[fetchRequirements] condition enviada a la API:', condition);
+            console.log('[fetchRequirements] participantes encontrados:',
+                formDataAplication.participants
+                    .filter(p => ROLES_CONTRAYENTE.includes(p.rol))
+                    .map(p => ({
+                        nombre: `${p.names} ${p.paternalSurname}`,
+                        rol: p.rol,
+                        maritalStatus: p.maritalStatus,
+                        condicionNormalizada: p.maritalStatus ? normalizeCondicion(p.maritalStatus) : 'GENERAL'
+                    }))
+            );
+
             await fetchRequirements(applicationTypeId, condition);
         };
 
@@ -157,7 +201,7 @@ export const useRequisitosMatrimonio = () => {
         }
     }, [formDataAplication.application.applicationTypeId, formDataAplication.participants, fetchRequirements]);
 
-    // ── Calcular progreso por contrayente (solo individuales) ──
+    // ── Calcular progreso por contrayente (solo requisitos individuales) ──
     const calcularProgresoPorContrayente = useCallback((contrayenteIndex: number): ProgresoInfo => {
         if (requirements.length === 0) return { completados: 0, total: 0, porcentaje: 0 };
 
@@ -185,7 +229,7 @@ export const useRequisitosMatrimonio = () => {
         };
     }, [requirements, requisitosEstados, contrayentes]);
 
-    // ── Calcular progreso total (generales cuentan UNA vez) ──
+    // ── Calcular progreso total (generales cuentan UNA sola vez) ──
     const calcularProgreso = useCallback((): ProgresoInfo => {
         let total = 0;
         let completados = 0;
@@ -237,7 +281,7 @@ export const useRequisitosMatrimonio = () => {
         }
     }, [requirements]);
 
-    // ── Marcar todos los requisitos ──
+    // ── Marcar todos los requisitos como entregados ──
     const marcarTodosObligatorios = useCallback((contrayenteIndex?: number) => {
         if (requirements.length > 0) {
             setRequisitosEstados(prev => {
@@ -274,7 +318,7 @@ export const useRequisitosMatrimonio = () => {
         }
     }, [requirements, contrayentes]);
 
-    // ── Desmarcar todos los requisitos ──
+    // ── Desmarcar todos los requisitos y limpiar archivos ──
     const desmarcarTodos = useCallback(async (contrayenteIndex?: number) => {
         if (requirements.length > 0) {
             setRequisitosEstados(prev => {
@@ -317,8 +361,6 @@ export const useRequisitosMatrimonio = () => {
     }, [requirements, contrayentes]);
 
     // ── Manejar cambio de archivo ──
-    // FIX: usa extractRequisitoId() en lugar de split('-ctry')[0]
-    // para soportar claves "-general" y "-ctryN"
     const handleRequisitoFileChange = useCallback(async (
         requisitoKey: string,
         e: React.ChangeEvent<HTMLInputElement>
@@ -354,7 +396,6 @@ export const useRequisitosMatrimonio = () => {
             archivo: file
         };
 
-        // ✅ CORRECCIÓN: extraer ID correctamente desde cualquier formato de clave
         const requisitoId = extractRequisitoId(requisitoKey);
 
         try {
@@ -377,10 +418,8 @@ export const useRequisitosMatrimonio = () => {
         e.target.value = '';
     }, [addDocument]);
 
-    // ── Eliminar archivo ──
-    // FIX: usa extractRequisitoId() en lugar de split('-ctry')[0]
+    // ── Eliminar archivo adjunto a un requisito ──
     const handleEliminarArchivoRequisito = useCallback(async (requisitoKey: string) => {
-        // ✅ CORRECCIÓN: extraer ID correctamente desde cualquier formato de clave
         const requisitoId = extractRequisitoId(requisitoKey);
 
         try {
@@ -429,7 +468,7 @@ export const useRequisitosMatrimonio = () => {
         const grupos: { [key: string]: typeof requirements } = {};
 
         requirements.forEach(req => {
-            if (req.tipo_requisito === 'general') return; // los generales se renderizan aparte
+            if (req.tipo_requisito === 'general') return;
             const condicion = req.condicion || 'GENERAL';
             if (condicion === 'GENERAL' || ctry.condiciones.has(condicion)) {
                 if (!grupos[condicion]) grupos[condicion] = [];

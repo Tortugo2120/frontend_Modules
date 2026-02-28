@@ -86,3 +86,11 @@ export interface RequisitosContrayenteProps {
     getIconoCondicion: (condicion: string) => string;
     getColorCondicion: (condicion: string) => string;
 }
+
+export interface RequisitoAPI {
+    id: number | string;
+    nombre_requisito: string;
+    descripcion?: string;
+    condicion?: string;
+    tipo_requisito: string;
+}
