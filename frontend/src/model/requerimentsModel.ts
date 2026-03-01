@@ -21,6 +21,7 @@ export interface RequirementByApplication {
   entregado: number;
   fecha_entrega: string;
   observacion: string | null;
+  numero_documento: string | null;
 }
 
 export interface RequirementByApplicationResponse {

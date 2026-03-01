@@ -5,7 +5,7 @@ export function usePersonSearch(){
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState(null);
 
-    const fetchPersonSearch = async (documentNumber:string,documentType:number) => {
+    const fetchPersonSearch = async (documentNumber:string,documentType:number = 1) => {
         setLoading(true);
         setError(null);
 
