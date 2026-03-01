@@ -97,7 +97,7 @@ export interface ApplicationData {
 }
 
 export interface RequisitoEstado {
-    requirementId: number | string;
+    requirementId: number;
     delivered: number;
     observation?: string;
     cui: string | null;
