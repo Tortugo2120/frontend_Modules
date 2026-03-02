@@ -37,10 +37,8 @@ function NavItem({ to, icon, label, collapsed, isActive }: NavItemProps) {
                 </span>
 
                 {collapsed && (
-                    <span className="absolute left-full ml-3 px-2.5 py-1.5 rounded-md bg-gray-900 text-white text-base font-medium
-                        opacity-0 invisible group-hover:opacity-100 group-hover:visible
-                        transition-all duration-200 pointer-events-none z-50 shadow-lg whitespace-nowrap">
-                        {label}
+                    <span className="absolute left-full ml-3 px-2.5 py-1.5 rounded-md bg-gray-900 text-white text-base font-medium opacity-0 invisible group-hover:opacity-100 group-hover:visible                   transition-all duration-200 pointer-events-none z-max shadow-lg whitespace-nowrap">
+                        {label} Dickens
                     </span>
                 )}
 

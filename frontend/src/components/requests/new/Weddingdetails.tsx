@@ -224,9 +224,9 @@ const Weddingdetails = (props: Solicitud) => {
                                 value={weddingDetails.fechaBoda}
                                 onChange={handleInputChange}
                                 min={new Date().toISOString().split('T')[0]}
-                                className={`w-full px-3 sm:px-4 py-2 text-sm sm:text-base border rounded-lg bg-white outline-0 transition-all focus:ring-2 focus:ring-blue-500 focus:border-transparent ${
-                                    dateError ? 'border-red-500' : 'border-gray-300'
-                                }`}
+                                max="9999-12-31"
+                                className={`w-full px-3 sm:px-4 py-2 text-sm sm:text-base border rounded-lg bg-white outline-0 transition-all focus:ring-2 focus:ring-blue-500 focus:border-transparent ${dateError ? 'border-red-500' : 'border-gray-300'
+                                    }`}
                             />
                             {dateError && (
                                 <p className="text-red-500 text-xs mt-1 flex items-start gap-1">
@@ -286,7 +286,7 @@ const Weddingdetails = (props: Solicitud) => {
                     <p><span className="font-semibold">Tipo de Solicitud:</span> {tipoSolicitudNombre?.toUpperCase()}</p>
                     <p><span className="font-semibold">Descripción:</span> {descriptionSolicitud?.toUpperCase()}</p>
                     <p>
-                        <span className="font-semibold">Oficial/Sacerdote:</span>{' '}
+                        <span className="font-semibold">Oficial:</span>{' '}
                         {weddingDetails.oficiante
                             ? oficiantes.find(o => o.id === weddingDetails.oficiante)?.full_name || weddingDetails.oficiante
                             : '-'

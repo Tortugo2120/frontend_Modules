@@ -1,7 +1,41 @@
+import { useMemo, useEffect } from "react";
 import type { CreateApplicationPayload } from "../../../model/aplicationModel.ts";
 import type { Participant } from "../../../model/aplicationModel.ts";
 import { useGetOficiantes } from "../../../hooks/useGetOficiantes.ts";
+import { useGetRequirements } from "../../../hooks/useGetRequeriments.ts";
 import { detectFlowType } from "../../../config/stepsConfig.ts";
+
+// ── helpers para parsear las claves compuestas de requisitos ──
+const extractReqId = (key: string | number): number => {
+    const str = String(key);
+    const match = str.match(/^(\d+)-/);
+    return match ? parseInt(match[1], 10) : parseInt(str, 10);
+};
+const isGeneralKey = (key: string | number): boolean =>
+    String(key).endsWith('-general');
+
+// ── misma lógica de condiciones que useRequisitosMatrimonio ──
+const ROLES_CONTRAYENTE_CONF = ['contrayente', 'divorciado'];
+const DOCUMENT_TYPE_IDS_EXTRANJERO_CONF = [2, 3];
+const MARITAL_STATUS_MAP: Record<string, string> = {
+    'DIVORCIADO': 'DIVORCIADO', 'DIVORCIADA': 'DIVORCIADA',
+    'VIUDO': 'VIUDO',           'VIUDA': 'VIUDA',
+    'CASADO': 'CASADO',         'CASADA': 'CASADA',
+    'SEPARADO': 'SEPARATED',    'SEPARADA': 'SEPARATED',
+};
+const buildCondicionString = (participants: CreateApplicationPayload['participants']): string => {
+    const conds = new Set<string>(['GENERAL']);
+    participants.forEach(p => {
+        if (!ROLES_CONTRAYENTE_CONF.includes(p.rol)) return;
+        if (p.maritalStatus && !['Soltero', 'Soltera', 'soltero', 'soltera'].includes(p.maritalStatus)) {
+            conds.add(MARITAL_STATUS_MAP[p.maritalStatus.toUpperCase()] ?? p.maritalStatus.toUpperCase());
+        }
+        if (p.documentTypeId && DOCUMENT_TYPE_IDS_EXTRANJERO_CONF.includes(p.documentTypeId)) {
+            conds.add('FOREIGNERS');
+        }
+    });
+    return Array.from(conds).sort().join(',');
+};
 
 interface ConfirmationSummaryProps {
     tipoSolicitud: number | null;
@@ -59,6 +93,53 @@ export default function ConfirmationSummary({
             : esDivorcio
                 ? index === 0 ? 'Demandante' : 'Demandado'
                 : `Involucrado ${index + 1}`;
+
+    // ── Cargar nombres de requisitos para mostrar en el resumen ──
+    const { requirements: reqCatalog, fetchRequirements } = useGetRequirements();
+    const conditionString = useMemo(
+        () => buildCondicionString(applicationData.participants),
+        [applicationData.participants]
+    );
+    useEffect(() => {
+        const typeId = applicationData.application.applicationTypeId;
+        if (typeId > 0) fetchRequirements(typeId, conditionString);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [applicationData.application.applicationTypeId, conditionString]);
+
+    // Mapa id → nombre para búsqueda O(1)
+    const reqNamesMap = useMemo(() => {
+        const m = new Map<number, string>();
+        reqCatalog.forEach(r => m.set(Number(r.id), r.nombre_requisito));
+        return m;
+    }, [reqCatalog]);
+
+    // Agrupar requisitos: generales vs. por-contrayente (usando cui)
+    const { generalReqs, reqsByCui } = useMemo(() => {
+        const gen: NonNullable<typeof applicationData.requirements> = [];
+        const byCui = new Map<string, NonNullable<typeof applicationData.requirements>>();
+        (applicationData.requirements ?? []).forEach(r => {
+            if (isGeneralKey(r.requirementId)) {
+                gen.push(r);
+            } else {
+                const key = r.cui ?? '__sin_cui__';
+                if (!byCui.has(key)) byCui.set(key, []);
+                byCui.get(key)!.push(r);
+            }
+        });
+        return { generalReqs: gen, reqsByCui: byCui };
+    }, [applicationData.requirements]);
+
+    // Contar entregados por contrayente
+    const contadoPorCui = useMemo(() => {
+        const counts = new Map<string, { total: number; entregados: number }>();
+        reqsByCui.forEach((reqs, cui) => {
+            counts.set(cui, {
+                total: reqs.length,
+                entregados: reqs.filter(r => r.delivered === 1).length,
+            });
+        });
+        return counts;
+    }, [reqsByCui]);
 
     // Resolver nombre del oficiante
     const { oficiantes } = useGetOficiantes('oficiante');
@@ -210,8 +291,108 @@ export default function ConfirmationSummary({
                 </div>
             )}
 
-            {/* ─── Sección de Testigos — solo matrimonio ─── */}
-            {esMatrimonio && testigos.length > 0 && (
+            {/* ─── Sección de Requisitos por Contrayente ─── */}
+            {(esMatrimonio || esDivorcio) && (applicationData.requirements ?? []).length > 0 && (
+                <div className={`mt-6 bg-linear-to-br rounded-xl p-6 border ${esDivorcio ? 'from-orange-50 to-amber-50 border-orange-200' : 'from-indigo-50 to-violet-50 border-indigo-200'}`}>
+                    <h3 className="text-lg font-bold text-gray-900 mb-4 flex items-center gap-2">
+                        <i className={`fas fa-clipboard-check ${esDivorcio ? 'text-orange-600' : 'text-indigo-600'}`}></i>
+                        Requisitos Presentados
+                        <span className={`ml-auto text-sm font-normal px-2.5 py-1 rounded-full ${esDivorcio ? 'bg-orange-100 text-orange-700' : 'bg-indigo-100 text-indigo-700'}`}>
+                            {(applicationData.requirements ?? []).filter(r => r.delivered === 1).length}
+                            &nbsp;/ {(applicationData.requirements ?? []).length} entregados
+                        </span>
+                    </h3>
+
+                    {/* — Requisitos por contrayente — */}
+                    {involucrados.map((inv, idx) => {
+                        const reqs = reqsByCui.get(inv.cui) ?? [];
+                        if (reqs.length === 0) return null;
+                        const { entregados, total } = contadoPorCui.get(inv.cui) ?? { entregados: 0, total: 0 };
+                        const pct = total > 0 ? Math.round((entregados / total) * 100) : 0;
+                        return (
+                            <div key={inv.cui} className="mb-5">
+                                {/* Cabecera contrayente */}
+                                <div className="flex items-center justify-between mb-2">
+                                    <div className="flex items-center gap-2">
+                                        <i className={`fas fa-user-circle text-base ${esDivorcio ? 'text-orange-400' : 'text-indigo-400'}`}></i>
+                                        <span className="text-sm font-semibold text-gray-800">
+                                            {labelCard(idx)}: {inv.names} {inv.paternalSurname} {inv.maternalSurname}
+                                        </span>
+                                    </div>
+                                    <span className={`text-xs font-semibold px-2 py-0.5 rounded-full ${pct === 100 ? 'bg-green-100 text-green-700' : esDivorcio ? 'bg-orange-100 text-orange-700' : 'bg-indigo-100 text-indigo-700'}`}>
+                                        {entregados}/{total}
+                                    </span>
+                                </div>
+                                {/* Barra de progreso */}
+                                <div className="w-full bg-gray-200 rounded-full h-1.5 mb-3">
+                                    <div
+                                        className={`h-1.5 rounded-full transition-all ${pct === 100 ? 'bg-green-500' : esDivorcio ? 'bg-orange-500' : 'bg-indigo-500'}`}
+                                        style={{ width: `${pct}%` }}
+                                    />
+                                </div>
+                                {/* Lista de requisitos */}
+                                <div className="space-y-1.5">
+                                    {reqs.map(r => {
+                                        const nombre = reqNamesMap.get(extractReqId(r.requirementId)) ?? `Requisito ${extractReqId(r.requirementId)}`;
+                                        return (
+                                            <div key={String(r.requirementId)} className={`flex items-start gap-2.5 rounded-lg px-3 py-2 text-sm ${r.delivered === 1 ? 'bg-green-50 border border-green-200' : 'bg-white border border-gray-200'}`}>
+                                                <i className={`fas mt-0.5 ${r.delivered === 1 ? 'fa-check-circle text-green-500' : 'fa-times-circle text-gray-300'}`}></i>
+                                                <div className="flex-1 min-w-0">
+                                                    <p className={`font-medium leading-tight ${r.delivered === 1 ? 'text-gray-800' : 'text-gray-400 line-through'}`}>{nombre}</p>
+                                                    {r.observation && (
+                                                        <p className="text-xs text-gray-500 mt-0.5 italic">
+                                                            <i className="fas fa-comment-alt mr-1"></i>{r.observation}
+                                                        </p>
+                                                    )}
+                                                </div>
+                                                <span className={`shrink-0 text-xs font-semibold px-1.5 py-0.5 rounded ${r.delivered === 1 ? 'bg-green-100 text-green-700' : 'bg-gray-100 text-gray-400'}`}>
+                                                    {r.delivered === 1 ? 'Presentado' : 'Pendiente'}
+                                                </span>
+                                            </div>
+                                        );
+                                    })}
+                                </div>
+                            </div>
+                        );
+                    })}
+
+                    {/* Requisitos Generales */}
+                    {generalReqs.length > 0 && (
+                        <div className="mt-3">
+                            <div className="flex items-center gap-2 mb-2">
+                                <i className={`fas fa-layer-group text-base ${esDivorcio ? 'text-orange-400' : 'text-violet-400'}`}></i>
+                                <span className="text-sm font-semibold text-gray-800">Requisitos Generales</span>
+                                <span className={`ml-auto text-xs font-semibold px-2 py-0.5 rounded-full ${generalReqs.filter(r => r.delivered === 1).length === generalReqs.length ? 'bg-green-100 text-green-700' : esDivorcio ? 'bg-orange-100 text-orange-700' : 'bg-violet-100 text-violet-700'}`}>
+                                    {generalReqs.filter(r => r.delivered === 1).length}/{generalReqs.length}
+                                </span>
+                            </div>
+                            <div className="space-y-1.5">
+                                {generalReqs.map(r => {
+                                    const nombre = reqNamesMap.get(extractReqId(r.requirementId)) ?? `Requisito ${extractReqId(r.requirementId)}`;
+                                    return (
+                                        <div key={String(r.requirementId)} className={`flex items-start gap-2.5 rounded-lg px-3 py-2 text-sm ${r.delivered === 1 ? 'bg-green-50 border border-green-200' : 'bg-white border border-gray-200'}`}>
+                                            <i className={`fas mt-0.5 ${r.delivered === 1 ? 'fa-check-circle text-green-500' : 'fa-times-circle text-gray-300'}`}></i>
+                                            <div className="flex-1 min-w-0">
+                                                <p className={`font-medium leading-tight ${r.delivered === 1 ? 'text-gray-800' : 'text-gray-400 line-through'}`}>{nombre}</p>
+                                                {r.observation && (
+                                                    <p className="text-xs text-gray-500 mt-0.5 italic">
+                                                        <i className="fas fa-comment-alt mr-1"></i>{r.observation}
+                                                    </p>
+                                                )}
+                                            </div>
+                                            <span className={`shrink-0 text-xs font-semibold px-1.5 py-0.5 rounded ${r.delivered === 1 ? 'bg-green-100 text-green-700' : 'bg-gray-100 text-gray-400'}`}>
+                                                {r.delivered === 1 ? 'Presentado' : 'Pendiente'}
+                                            </span>
+                                        </div>
+                                    );
+                                })}
+                            </div>
+                        </div>
+                    )}
+                </div>
+            )}
+
+            {/* ─── Sección de Testigos — solo matrimonio ─── */}            {esMatrimonio && testigos.length > 0 && (
                 <div className="mt-6 bg-linear-to-br from-green-50 to-green-100 rounded-xl p-6 border border-green-200">
                     <h3 className="text-lg font-bold text-gray-900 mb-4 flex items-center gap-2">
                         <i className="fas fa-users text-green-600"></i>

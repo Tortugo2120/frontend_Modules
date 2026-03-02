@@ -19,7 +19,7 @@ export default function SolicitudOption({
         <button
             type="button"
             onClick={() => onSelect(id)}
-            className={`w-full text-left p-4 rounded-lg transition-all duration-300 mb-2 ${isSelected
+            className={`w-full text-left p-4 rounded-lg transition-all duration-300 mb-2 cursor-pointer ${isSelected
                 ? 'bg-blue-200 text-white shadow-lg ring-2 ring-blue-600'
                 : 'bg-gray-50 hover:bg-blue-50 border border-gray-200 hover:border-blue-300'
                 }`}

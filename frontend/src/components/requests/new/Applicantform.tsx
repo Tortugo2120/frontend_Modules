@@ -169,6 +169,9 @@ export default function ApplicantForm({
                                     type="text"
                                     value={expedientNumber}
                                     onChange={handleExpedientInput}
+                                    onKeyDown={(e) => {
+                                        if (e.key === 'Enter') handleValidateClick();
+                                    }}
                                     className={`px-4 rounded-l-lg  border-2 border-yellow-300 w-full font-bold text-2xl uppercase outline-0 ${
                                         isChecking
                                             ? 'input-warning'

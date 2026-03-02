@@ -30,7 +30,7 @@ export default function NavigationButtons({
                     disabled={isFirstStep || isLoading}
                     className={`flex items-center justify-center gap-2 px-4 sm:px-6 py-2.5 sm:py-3 rounded-lg font-medium transition-all ${isFirstStep || isLoading
                         ? 'bg-gray-200 text-gray-400 cursor-not-allowed'
-                        : 'bg-white text-gray-700 border border-gray-300 hover:bg-gray-50 hover:shadow-md'
+                        : 'bg-white text-gray-700 border border-gray-300 hover:bg-gray-50 hover:scale-105 cursor-pointer'
                         }`}
                 >
                     <i className="fas fa-arrow-left text-sm"></i>
