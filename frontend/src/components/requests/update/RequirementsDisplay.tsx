@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from "react";
+﻿import { useState, useEffect, useRef } from "react";
 import type { RequirementByApplication } from "../../../model/requerimentsModel.ts";
 
 interface ArchivoRequisito {
@@ -26,7 +26,7 @@ export const RequirementsDisplay = ({ requirements, onRequirementsChange, nombre
     const [archivos, setArchivos] = useState<Map<string | number, ArchivoRequisito>>(new Map());
     const [observaciones, setObservaciones] = useState<Map<string | number, string>>(new Map());
 
-    // Usar useRef para mantener la referencia actualizada de la función
+    // Usar useRef para mantener la referencia actualizada de la funciÃ³n
     const onRequirementsChangeRef = useRef(onRequirementsChange);
 
     useEffect(() => {
@@ -124,6 +124,189 @@ export const RequirementsDisplay = ({ requirements, onRequirementsChange, nombre
         return Math.round((totalCompletados / safeRequirements.length) * 100);
     };
 
+    // Agrupar requisitos por contrayente (numero_documento)
+    const groupedByDocument = new Map<string, RequirementByApplication[]>();
+    for (const req of safeRequirements) {
+        const key = req.numero_documento || 'general';
+        if (!groupedByDocument.has(key)) groupedByDocument.set(key, []);
+        groupedByDocument.get(key)!.push(req);
+    }
+    const generalGroup = groupedByDocument.get('general') ?? [];
+    const contrayenteGroups = Array.from(groupedByDocument.entries()).filter(([key]) => key !== 'general');
+
+    const getNombreContrayente = (docNum: string): string => {
+        if (docNum === 'general') return 'General';
+        return nombresPersonas?.get(docNum) || docNum;
+    };
+
+    const renderColumna = (docNum: string, reqs: RequirementByApplication[]) => {
+        const nombre = getNombreContrayente(docNum);
+        const entregadosCol = reqs.filter(r => r.entregado === 1).length;
+        const pendientesCol = reqs.filter(r => r.entregado === 0).length;
+        const isGeneral = docNum === 'general';
+
+        return (
+            <div key={docNum} className="flex flex-col rounded-md border border-gray-200 overflow-hidden shadow-sm">
+                {/* Cabecera de columna */}
+                <div className={`px-4 py-3 flex items-center justify-between gap-2 ${isGeneral ? 'bg-info-content' : 'bg-info-content'}`}>
+                    <div className="flex items-center gap-2 min-w-0">
+                        <i className={`fas ${isGeneral ? 'fa-layer-group' : 'fa-user'} text-white text-sm shrink-0`}></i>
+                        <span className="text-white font-semibold text-sm truncate" title={nombre}>
+                            {nombre}
+                        </span>
+                    </div>
+                    <div className="flex items-center gap-1 shrink-0">
+                        <span className="badge badge-success badge-sm gap-1">
+                            <i className="fas fa-check text-xs"></i>
+                            {entregadosCol}
+                        </span>
+                        <span className="badge badge-warning badge-sm gap-1">
+                            <i className="fas fa-clock text-xs"></i>
+                            {pendientesCol}
+                        </span>
+                    </div>
+                </div>
+
+                {/* Lista de requisitos */}
+                <div className="flex flex-col divide-y divide-gray-100 bg-white">
+                    {reqs.map((requisito) => {
+                        const isEntregado = requisito.entregado === 1;
+                        const isChecked = checkedIds.has(requisito.id);
+                        const archivo = archivos.get(requisito.id);
+
+                        return (
+                            <div
+                                key={requisito.id}
+                                className={`p-3 transition-all ${
+                                    isEntregado
+                                        ? 'bg-green-50/60'
+                                        : isChecked
+                                            ? 'bg-blue-50/50'
+                                            : 'bg-white hover:bg-gray-50'
+                                }`}
+                            >
+                                {/* Fila: nombre + badge estado */}
+                                <div className="flex items-start justify-between gap-2">
+                                    <div className="flex items-start gap-2 min-w-0">
+                                        {isEntregado ? (
+                                            <i className="fas fa-check-circle text-green-500 text-base mt-0.5 shrink-0"></i>
+                                        ) : (
+                                            <i className="fas fa-circle-notch text-yellow-500 text-base mt-0.5 shrink-0"></i>
+                                        )}
+                                        <span className="text-sm font-medium text-gray-800 leading-snug">
+                                            {requisito.nombre_requisito}
+                                        </span>
+                                    </div>
+                                    {isEntregado ? (
+                                        <span className="badge badge-success badge-sm shrink-0">
+                                            <i className="fa-regular fa-square-check mr-1 text-xs"></i>
+                                            Entregado
+                                        </span>
+                                    ) : isChecked ? (
+                                        <span className="badge badge-info badge-sm shrink-0">
+                                            <i className="fas fa-check mr-1 text-xs"></i>
+                                            Por entregar
+                                        </span>
+                                    ) : (
+                                        <span className="badge badge-warning badge-sm shrink-0">
+                                            <i className="fas fa-clock mr-1 text-xs"></i>
+                                            Pendiente
+                                        </span>
+                                    )}
+                                </div>
+
+                                {/* Detalles extra: fecha / observación */}
+                                <div className="mt-1 ml-6 space-y-0.5 text-xs text-gray-500">
+                                    {isEntregado ? (
+                                        <>
+                                            <p><span className="font-medium">Entregado:</span> {formatearFecha(requisito.fecha_entrega)}</p>
+                                            {requisito.observacion && requisito.observacion.trim() !== "" && (
+                                                <p><span className="font-medium">Obs.:</span> {requisito.observacion}</p>
+                                            )}
+                                        </>
+                                    ) : (
+                                        <p><span className="font-medium">Actualizado:</span> {formatearFecha(requisito.fecha_entrega)}</p>
+                                    )}
+                                </div>
+
+                                {/* Pendientes*/}
+                                {!isEntregado && (
+                                    <div className="mt-2 ml-6 space-y-2">
+                                        <label className="inline-flex items-center gap-2 cursor-pointer select-none">
+                                            <input
+                                                type="checkbox"
+                                                checked={isChecked}
+                                                onChange={() => handleCheckboxChange(requisito.id)}
+                                                className="w-4 h-4 text-blue-600 bg-white border-gray-300 rounded focus:ring-blue-500 focus:ring-2 cursor-pointer"
+                                            />
+                                            <span className="text-xs font-medium text-gray-600">Marcar como entregado</span>
+                                        </label>
+
+                                        {isChecked && (
+                                            <div className="space-y-2 pt-2 border-t border-blue-100">
+                                                {!archivo ? (
+                                                    <label className="cursor-pointer flex items-center gap-1.5 w-fit">
+                                                        <input
+                                                            type="file"
+                                                            className="hidden"
+                                                            accept=".pdf,.jpg,.jpeg,.png,.docx"
+                                                            onChange={(e) => handleFileChange(requisito.id, e)}
+                                                        />
+                                                        <span className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-blue-600 text-white text-xs font-medium rounded-lg hover:bg-blue-700 transition-colors">
+                                                            <i className="fas fa-paperclip"></i>
+                                                            Adjuntar documento
+                                                        </span>
+                                                        <span className="text-xs text-gray-400">opcional &lt;5MB</span>
+                                                    </label>
+                                                ) : (
+                                                    <div className="flex items-center justify-between bg-white rounded-lg border border-blue-200 px-3 py-1.5">
+                                                        <div className="flex items-center gap-1.5 min-w-0">
+                                                            <i className="fas fa-file text-blue-500 shrink-0 text-xs"></i>
+                                                            <div className="min-w-0">
+                                                                <p className="text-xs font-medium text-gray-900 truncate">{archivo.nombre}</p>
+                                                                <p className="text-xs text-gray-400">{formatearTamaño(archivo.filesize)}</p>
+                                                            </div>
+                                                        </div>
+                                                        <div className="flex items-center gap-2 ml-2 shrink-0">
+                                                            <label className="cursor-pointer">
+                                                                <input
+                                                                    type="file"
+                                                                    className="hidden"
+                                                                    accept=".pdf,.jpg,.jpeg,.png,.docx"
+                                                                    onChange={(e) => handleFileChange(requisito.id, e)}
+                                                                />
+                                                                <span className="text-xs text-blue-600 hover:underline">Cambiar</span>
+                                                            </label>
+                                                            <button
+                                                                onClick={() => setArchivos(prev => { const n = new Map(prev); n.delete(requisito.id); return n; })}
+                                                                className="text-red-400 hover:text-red-600 text-xs"
+                                                                title="Quitar archivo"
+                                                            >
+                                                                <i className="fas fa-times"></i>
+                                                            </button>
+                                                        </div>
+                                                    </div>
+                                                )}
+
+                                                <textarea
+                                                    value={observaciones.get(requisito.id) || ''}
+                                                    onChange={(e) => handleObservacionChange(requisito.id, e.target.value)}
+                                                    placeholder="Observación (opcional)..."
+                                                    className="w-full px-2 py-1.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-xs outline-none resize-none"
+                                                    rows={2}
+                                                />
+                                            </div>
+                                        )}
+                                    </div>
+                                )}
+                            </div>
+                        );
+                    })}
+                </div>
+            </div>
+        );
+    };
+
     return (
         <div className="space-y-6">
             {/* Resumen del progreso */}
@@ -142,8 +325,6 @@ export const RequirementsDisplay = ({ requirements, onRequirementsChange, nombre
                         <p className="text-xs text-gray-600">Progreso</p>
                     </div>
                 </div>
-
-                {/* Barra de progreso */}
                 <div className="w-full bg-gray-300 rounded-full h-3 overflow-hidden">
                     <div
                         className="bg-linear-to-r from-blue-500 to-purple-600 h-full rounded-full transition-all duration-300"
@@ -152,7 +333,7 @@ export const RequirementsDisplay = ({ requirements, onRequirementsChange, nombre
                 </div>
             </div>
 
-            {/* Estadísticas */}
+            {/* EstadÃ­sticas */}
             <div className="grid grid-cols-2 gap-4">
                 <div className="bg-green-50 rounded-lg p-4 border border-green-200">
                     <div className="flex items-center gap-3">
@@ -165,7 +346,6 @@ export const RequirementsDisplay = ({ requirements, onRequirementsChange, nombre
                         </div>
                     </div>
                 </div>
-
                 <div className="bg-yellow-50 rounded-lg p-4 border border-yellow-200">
                     <div className="flex items-center gap-3">
                         <div className="w-12 h-12 bg-yellow-100 rounded-full flex items-center justify-center">
@@ -179,209 +359,25 @@ export const RequirementsDisplay = ({ requirements, onRequirementsChange, nombre
                 </div>
             </div>
 
-            {/* Requerimientos Completados */}
-            {completados.length > 0 && (
-                <div className="space-y-3">
-                    <div className="flex items-center gap-2">
-                        <i className="fas fa-check-circle text-green-600 text-lg"></i>
-                        <h4 className="text-lg font-semibold text-gray-900">
-                            Requerimientos Entregados ({completados.length})
-                        </h4>
-                    </div>
-                    <div className="">
-                        {completados.map((requisito) => (
-                            <div
-                                key={requisito.id}
-                                className="bg-white border border-green-200 p-4 hover:shadow-md transition-shadow"
-                            >
-                                <div className="flex items-center justify-between gap-4">
-                                    <div className="flex-1">
-                                        <div className="flex items-start gap-3">
-                                            <i className="fas fa-check-circle text-green-500 text-lg mt-1"></i>
-                                            <div className="flex-1">
-                                                <h5 className="font-semibold text-gray-900">
-                                                    {requisito.nombre_requisito}
-                                                </h5>
-                                                <div className="mt-2 space-y-1 text-sm text-gray-600">
-                                                    <p>
-                                                        <span className="font-medium">Fecha de entrega:</span> {formatearFecha(requisito.fecha_entrega)}
-                                                    </p>
-                                                    {requisito.observacion && requisito.observacion.trim() !== "" && (
-                                                        <p>
-                                                            <span className="font-medium">Observación:</span> {requisito.observacion}
-                                                        </p>
-                                                    )}
-                                                    {requisito.numero_documento && (
-                                                        <p>
-                                                            <span className="font-medium">Contrayente: </span>
-                                                            <span className="font-semibold text-gray-800">
-                                                                {nombresPersonas?.get(requisito.numero_documento)
-                                                                    ? `${nombresPersonas.get(requisito.numero_documento)} (${requisito.numero_documento})`
-                                                                    : requisito.numero_documento
-                                                                }
-                                                            </span>
-                                                        </p>
-                                                    )}
-                                                </div>
-                                            </div>
-                                        </div>
-                                    </div>
-                                    <span className="badge badge-success gap-2 shrink-0">
-                                        <i className="fa-regular fa-square-check text-sm"></i>
-                                        Entregado
-                                    </span>
-                                </div>
-                            </div>
-                        ))}
+            {/* Requisitos generales â€” fila completa arriba */}
+            {safeRequirements.length > 0 && generalGroup.length > 0 && (
+                <div className="space-y-2">
+                    <h4 className="text-sm font-semibold text-gray-500 uppercase tracking-wide">Requisitos Generales</h4>
+                    {renderColumna('general', generalGroup)}
+                </div>
+            )}
+
+            {/* Requisitos por contrayente â€” 2 columnas abajo */}
+            {safeRequirements.length > 0 && contrayenteGroups.length > 0 && (
+                <div className="space-y-2">
+                    <h4 className="text-sm font-semibold text-gray-500 uppercase tracking-wide">Requisitos por Contrayente</h4>
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-5 items-start">
+                        {contrayenteGroups.map(([docNum, reqs]) => renderColumna(docNum, reqs))}
                     </div>
                 </div>
             )}
 
-            {/* Requerimientos Pendientes */}
-            {pendientes.length > 0 && (
-                <div className="space-y-3">
-                    <div className="flex justify-between gap-2">
-                        <div className="flex flex-row items-center">
-                            <i className="fas fa-hourglass text-yellow-600 text-lg"></i>
-                            <h4 className="text-lg font-semibold text-gray-900">
-                                Requerimientos Pendientes ({pendientes.length})
-                            </h4>
-                        </div>
-                        <span className="badge badge-warning gap-2 shrink-0 mr-4">
-                            <i className="fas fa-clock text-sm"></i>
-                            Pendientes
-                        </span>
-                    </div>
-                    <div className="">
-                        {pendientes.map((requisito) => {
-                            const isChecked = checkedIds.has(requisito.id);
-                            const archivo = archivos.get(requisito.id);
-                            return (
-                                <div
-                                    key={requisito.id}
-                                    className={`bg-white border p-4 hover:shadow-md transition-all ${isChecked ? "border-blue-300 bg-blue-50/30" : "border-yellow-200"}`}
-                                >
-                                    <div className="flex items-center justify-between gap-4">
-                                        <div className="flex-1">
-                                            <div className="flex items-start gap-3">
-                                                <i className="fas fa-circle-notch text-yellow-500 text-lg mt-1"></i>
-                                                <div className="flex-1">
-                                                    <h5 className="font-semibold text-gray-900">
-                                                        {requisito.nombre_requisito}
-                                                    </h5>
-                                                    <div className="mt-2 space-y-1 text-sm text-gray-600">
-                                                        <p>
-                                                            <span className="font-medium">Última actualización:</span> {formatearFecha(requisito.fecha_entrega)}
-                                                        </p>
-                                                        {requisito.numero_documento && (
-                                                            <p>
-                                                                <span className="font-medium">Contrayente: </span>
-                                                                <span className="font-semibold text-gray-800">
-                                                                    {nombresPersonas?.get(requisito.numero_documento)
-                                                                        ? `${nombresPersonas.get(requisito.numero_documento)} (${requisito.numero_documento})`
-                                                                        : requisito.numero_documento
-                                                                    }
-                                                                </span>
-                                                            </p>
-                                                        )}
-                                                        {requisito.observacion && requisito.observacion.trim() !== "" && (
-                                                            <p>
-                                                                <span className="font-medium">Observación:</span> {requisito.observacion}
-                                                            </p>
-                                                        )}
-                                                    </div>
-                                                </div>
-                                            </div>
-                                        </div>
-
-                                        {/* Checkbox de entregado */}
-                                        <div className="flex flex-col items-end gap-2 shrink-0">
-                                            <label className="flex items-center gap-2 cursor-pointer select-none">
-                                                <span className="text-sm font-medium text-gray-600">Entregar</span>
-                                                <input
-                                                    type="checkbox"
-                                                    id={`requisito-${requisito.id}`}
-                                                    checked={isChecked}
-                                                    onChange={() => handleCheckboxChange(requisito.id)}
-                                                    className="w-5 h-5 text-blue-600 bg-white border-gray-300 rounded focus:ring-blue-500 focus:ring-2 cursor-pointer"
-                                                />
-                                            </label>
-                                        </div>
-                                    </div>
-
-                                    {/* Sección de adjunto */}
-                                    {isChecked && (
-                                        <div className="mt-4 pt-4 border-t border-blue-200 space-y-3">
-                                            {!archivo ? (
-                                                <label className="cursor-pointer flex items-center gap-2 w-fit">
-                                                    <input
-                                                        type="file"
-                                                        className="hidden"
-                                                        accept=".pdf,.jpg,.jpeg,.png,.docx"
-                                                        onChange={(e) => handleFileChange(requisito.id, e)}
-                                                    />
-                                                    <span className="inline-flex items-center gap-2 px-4 py-2 bg-blue-600 text-white text-sm font-medium rounded-lg hover:bg-blue-700 transition-colors">
-                                                        <i className="fas fa-paperclip"></i>
-                                                        Adjuntar documento (Opcional)
-                                                    </span>
-                                                    <div className="flex flex-col gap-1">
-                                                        <span className='text-xs font-black text-red-800'>
-                                                            opcional*
-                                                        </span>
-                                                        <span className="text-xs text-gray-500">Menor a 5MB</span>
-                                                    </div>
-                                                </label>
-                                            ) : (
-                                                <div className="flex items-center justify-between bg-white rounded-lg border border-blue-200 px-4 py-2">
-                                                    <div className="flex items-center gap-2 min-w-0">
-                                                        <i className="fas fa-file text-blue-500 shrink-0"></i>
-                                                        <div className="min-w-0">
-                                                            <p className="text-sm font-medium text-gray-900 truncate">{archivo.nombre}</p>
-                                                            <p className="text-xs text-gray-500">{formatearTamaño(archivo.filesize)}</p>
-                                                        </div>
-                                                    </div>
-                                                    <label className="ml-3 cursor-pointer shrink-0">
-                                                        <input
-                                                            type="file"
-                                                            className="hidden"
-                                                            accept=".pdf,.jpg,.jpeg,.png,.docx"
-                                                            onChange={(e) => handleFileChange(requisito.id, e)}
-                                                        />
-                                                        <span className="text-xs text-blue-600 hover:underline">Cambiar</span>
-                                                    </label>
-                                                    <button
-                                                        onClick={() => setArchivos(prev => { const n = new Map(prev); n.delete(requisito.id); return n; })}
-                                                        className="ml-2 text-red-400 hover:text-red-600 text-xs shrink-0"
-                                                        title="Quitar archivo"
-                                                    >
-                                                        <i className="fas fa-times"></i>
-                                                    </button>
-                                                </div>
-                                            )}
-
-                                            {/* Campo de observación */}
-                                            <div>
-                                                <label className="block text-sm font-medium text-gray-700 mb-2">
-                                                    Observación (Opcional)
-                                                </label>
-                                                <textarea
-                                                    value={observaciones.get(requisito.id) || ''}
-                                                    onChange={(e) => handleObservacionChange(requisito.id, e.target.value)}
-                                                    placeholder="Agregar una observación sobre este requerimiento..."
-                                                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm outline-none resize-none"
-                                                    rows={2}
-                                                />
-                                            </div>
-                                        </div>
-                                    )}
-                                </div>
-                            );
-                        })}
-                    </div>
-                </div>
-            )}
-
-            {/* Estado vacío */}
+            {/* Estado vacÃ­o */}
             {safeRequirements.length === 0 && (
                 <div className="text-center py-12 bg-gray-50 rounded-lg border border-gray-200">
                     <i className="fas fa-inbox text-4xl text-gray-400 mb-4"></i>
