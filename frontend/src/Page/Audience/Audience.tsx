@@ -1,6 +1,8 @@
 
 export const Audience = () => {
   return (
-    <div>Audience</div>
+    <div>Audiencias de gran escala
+      
+    </div>
   )
 }
