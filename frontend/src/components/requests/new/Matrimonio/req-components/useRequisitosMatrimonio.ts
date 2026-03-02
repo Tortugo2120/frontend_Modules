@@ -85,21 +85,40 @@ export const useRequisitosMatrimonio = () => {
         return Array.from(conds).sort().join(',');
     }, [formDataAplication.participants]);
 
-    // Cargar estados desde el contexto 
+    // Cargar estados desde el contexto
+    // El contexto guarda requirementId como número y cui para identificar al contrayente.
+    // Se reconstruye la clave interna del Map: si cui es null → requisito general,
+    // si cui coincide con contrayente 1 → "-ctry1", si coincide con contrayente 2 → "-ctry2".
     useEffect(() => {
         if (!formDataAplication.requirements?.length) return;
-        const estadosMap = new Map<string, number>(
-            formDataAplication.requirements.map(r => [String(r.requirementId), r.delivered])
-        );
+        if (!contrayentes.length) return;
+
+        const estadosMap = new Map<string, number>();
+        const obsMap = new Map<string, string>();
+
+        formDataAplication.requirements.forEach(r => {
+            let internalKey: string;
+            if (r.cui === null || r.cui === undefined) {
+                // General o edicto matrimonial → clave general
+                internalKey = `${r.requirementId}-general`;
+            } else {
+                // Buscar a qué contrayente pertenece por cui
+                const ctryIndex = contrayentes.findIndex(c => c.cui === r.cui);
+                if (ctryIndex >= 0) {
+                    internalKey = `${r.requirementId}-ctry${ctryIndex + 1}`;
+                } else {
+                    // Fallback: no se encontró contrayente, usar la clave tal como está
+                    internalKey = String(r.requirementId);
+                }
+            }
+            estadosMap.set(internalKey, r.delivered);
+            if (r.observation) obsMap.set(internalKey, r.observation as string);
+        });
+
         setRequisitosEstados(estadosMap);
-        const obsMap = new Map<string, string>(
-            formDataAplication.requirements
-                .filter(r => r.observation)
-                .map(r => [String(r.requirementId), r.observation as string])
-        );
         setObservacionesMap(obsMap);
         // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, []);
+    }, [contrayentes]);
 
     // Cargar archivos desde IndexedDB 
     useEffect(() => {
@@ -129,19 +148,30 @@ export const useRequisitosMatrimonio = () => {
     // Sincronizar requisitos al contexto 
     useEffect(() => {
         if (requirements.length === 0) return;
-        const arr: { requirementId: string; delivered: number; observation: string; cui: string | null }[] = [];
+        const arr: { requirementId: number; delivered: number; observation: string; cui: string | null }[] = [];
 
         requirements.forEach(req => {
             const condicion = req.condicion || 'GENERAL';
+            const reqIdNum = typeof req.id === 'string' ? parseInt(req.id, 10) : req.id;
             if (req.tipo_requisito === 'general') {
                 const key = getRequisitoKey(req.id, 0, 'general');
-                arr.push({ requirementId: key, delivered: requisitosEstados.get(key) ?? 0, observation: observacionesMap.get(key) ?? '', cui: null });
+                arr.push({
+                    requirementId: reqIdNum,
+                    delivered: requisitosEstados.get(key) ?? 0,
+                    observation: observacionesMap.get(key) ?? '',
+                    cui: null,
+                });
             } else {
                 contrayentes.forEach((ctry, ctryIndex) => {
                     if (condicion === 'GENERAL' || ctry.condiciones.has(condicion)) {
                         const key = getRequisitoKey(req.id, ctryIndex + 1);
                         const cuiValue = req.id === REQUISITO_EDICTO_ID ? null : (ctry.cui ?? null);
-                        arr.push({ requirementId: key, delivered: requisitosEstados.get(key) ?? 0, observation: observacionesMap.get(key) ?? '', cui: cuiValue });
+                        arr.push({
+                            requirementId: reqIdNum,
+                            delivered: requisitosEstados.get(key) ?? 0,
+                            observation: observacionesMap.get(key) ?? '',
+                            cui: cuiValue,
+                        });
                     }
                 });
             }

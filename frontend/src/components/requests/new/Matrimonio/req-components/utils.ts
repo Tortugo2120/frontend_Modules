@@ -1,4 +1,6 @@
 // Genera una clave única por requisito y por contrayente
+// Las claves internas distinguen entre contrayentes para el Map de estados
+// NOTA: al enviar al backend se usa solo el id numérico, NO esta clave completa
 export const getRequisitoKey = (
     requisitoId: number | string,
     contrayenteIndex?: number,
@@ -8,8 +10,8 @@ export const getRequisitoKey = (
     if (tipoRequisito === 'general' || contrayenteIndex === 0) {
         return `${requisitoId}-general`;
     }
-    // Requisito individual invluye el índice para que cada contrayente tenga su propia clave
-    return `${requisitoId}-${contrayenteIndex}`;
+    // Requisito individual: clave única por contrayente usando su índice (1 o 2)
+    return `${requisitoId}-ctry${contrayenteIndex}`;
 };
 
 // Formatea bytes a cadena legible 

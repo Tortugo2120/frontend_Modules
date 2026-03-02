@@ -17,9 +17,10 @@ export interface RequirementUpdate {
 interface RequirementsDisplayProps {
     requirements: RequirementByApplication[];
     onRequirementsChange?: (updates: RequirementUpdate[]) => void;
+    nombresPersonas?: Map<string, string>;
 }
 
-export const RequirementsDisplay = ({ requirements, onRequirementsChange }: RequirementsDisplayProps) => {
+export const RequirementsDisplay = ({ requirements, onRequirementsChange, nombresPersonas }: RequirementsDisplayProps) => {
 
     const [checkedIds, setCheckedIds] = useState<Set<string | number>>(new Set());
     const [archivos, setArchivos] = useState<Map<string | number, ArchivoRequisito>>(new Map());
@@ -210,6 +211,17 @@ export const RequirementsDisplay = ({ requirements, onRequirementsChange }: Requ
                                                             <span className="font-medium">Observación:</span> {requisito.observacion}
                                                         </p>
                                                     )}
+                                                    {requisito.numero_documento && (
+                                                        <p>
+                                                            <span className="font-medium">Contrayente: </span>
+                                                            <span className="font-semibold text-gray-800">
+                                                                {nombresPersonas?.get(requisito.numero_documento)
+                                                                    ? `${nombresPersonas.get(requisito.numero_documento)} (${requisito.numero_documento})`
+                                                                    : requisito.numero_documento
+                                                                }
+                                                            </span>
+                                                        </p>
+                                                    )}
                                                 </div>
                                             </div>
                                         </div>
@@ -261,6 +273,17 @@ export const RequirementsDisplay = ({ requirements, onRequirementsChange }: Requ
                                                         <p>
                                                             <span className="font-medium">Última actualización:</span> {formatearFecha(requisito.fecha_entrega)}
                                                         </p>
+                                                        {requisito.numero_documento && (
+                                                            <p>
+                                                                <span className="font-medium">Contrayente: </span>
+                                                                <span className="font-semibold text-gray-800">
+                                                                    {nombresPersonas?.get(requisito.numero_documento)
+                                                                        ? `${nombresPersonas.get(requisito.numero_documento)} (${requisito.numero_documento})`
+                                                                        : requisito.numero_documento
+                                                                    }
+                                                                </span>
+                                                            </p>
+                                                        )}
                                                         {requisito.observacion && requisito.observacion.trim() !== "" && (
                                                             <p>
                                                                 <span className="font-medium">Observación:</span> {requisito.observacion}

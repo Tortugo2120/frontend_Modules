@@ -16,22 +16,22 @@ export default function useLogin(): UseLoginResult {
     setLoading(true);
     setError(null);
     try {
-      const  response = await authLogin(authData);
-       return response;
-    } catch (e: any) {
-      console.log("error", e.response);
-      const status = e?.response?.status;
+      const response = await authLogin(authData);
+      return response;
+    } catch (e: unknown) {
+      const status = (e as { response?: { status?: number } })?.response?.status;
 
       if (!status) {
         setError("No se pudo conectar al servidor");
-      }else if (status === 404) {
+      } else if (status === 404) {
         setError("Usuario no encontrado");
-      }else if (status === 401) {
+      } else if (status === 401) {
         setError("Contraseña incorrecta");
+      } else {
+        setError("Ocurrió un error inesperado");
       }
 
-      console.log("Login error:", e.message.error);
-      throw e;
+      return undefined;
     } finally {
       setLoading(false);
     }

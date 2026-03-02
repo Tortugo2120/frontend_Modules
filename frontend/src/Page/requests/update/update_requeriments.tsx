@@ -1,11 +1,12 @@
 import { useLocation, useNavigate } from "react-router-dom";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useGetRequirementsByApplication } from "../../../hooks/useGetRequirementsByApplication.ts";
 import { useUpdateRequeriments } from "../../../hooks/useUpdateRequeriments.ts";
 import { useUploadDocuments } from "../../../hooks/useUploadDocuments.ts";
 import { RequirementsDisplay } from "../../../components/requests/update/RequirementsDisplay.tsx";
 import type { RequirementUpdate } from "../../../components/requests/update/RequirementsDisplay.tsx";
 import type { RequieremntUpdate } from "../../../model/requerimentsModel.ts";
+import { usePersonSearch } from "../../../hooks/usePersonSearch.ts";
 
 const Update = () => {
     const location = useLocation();
@@ -14,7 +15,36 @@ const Update = () => {
     const applicationId = id ? parseInt(id, 10) : null;
     const { requirements, loading, error } = useGetRequirementsByApplication(applicationId);
     const { updateRequirements, isUpdating } = useUpdateRequeriments();
+    const { fetchPersonSearch } = usePersonSearch();
     const { uploadMultipleDocuments, isUploading, uploadProgress } = useUploadDocuments();
+
+    // Map de dni -> nombre completo de la persona
+    const [nombresPersonas, setNombresPersonas] = useState<Map<string, string>>(new Map());
+
+    useEffect(() => {
+        if (!requirements.length) return;
+
+        const dniUnicos = [...new Set(requirements.map(req => req.numero_documento))].filter(Boolean) as string[];
+        if (dniUnicos.length === 0) return;
+
+        const fetchNombres = async () => {
+            const resultados = await Promise.all(
+                dniUnicos.map(dni => fetchPersonSearch(dni))
+            );
+            const nuevoMapa = new Map<string, string>();
+            dniUnicos.forEach((dni, index) => {
+                const res = resultados[index];
+                if (res?.status && res.data) {
+                    const { name, paternalSurname, maternalSurname } = res.data;
+                    nuevoMapa.set(dni, `${name} ${paternalSurname} ${maternalSurname}`.trim());
+                }
+            });
+            setNombresPersonas(nuevoMapa);
+        };
+
+        fetchNombres();
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [requirements]);
 
     const [requirementUpdates, setRequirementUpdates] = useState<RequirementUpdate[]>([]);
     const [showSuccessAlert, setShowSuccessAlert] = useState(false);
@@ -167,6 +197,7 @@ const Update = () => {
                     <RequirementsDisplay
                         requirements={requirements}
                         onRequirementsChange={handleRequirementsChange}
+                        nombresPersonas={nombresPersonas}
                     />
                 </div>
 
